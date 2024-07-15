@@ -49,3 +49,7 @@ bld/
 .vs/
 *.filters
 *.user
+build/
+~*
+.*.swp
+.*.swo
