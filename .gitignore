@@ -49,3 +49,8 @@ bld/
 .vs/
 *.filters
 *.user
+*.cpp-*
+build*/
+~*
+.*.swp
+.*.swo
