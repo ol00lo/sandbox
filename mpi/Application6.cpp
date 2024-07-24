@@ -30,6 +30,8 @@ std::pair<int, int> iter(int seed) {
     return { n, nc };
 }
 
+//--------find pi
+
 //int main()
 //{
 //    MPI_Init(nullptr, nullptr);
@@ -64,6 +66,8 @@ std::pair<int, int> iter(int seed) {
 //    MPI_Finalize();
 //}
 
+//--------find product of matrices, 2 processors
+
 int main(int argc, char* argv[])
 {
     MPI_Init(nullptr, nullptr);
@@ -72,10 +76,11 @@ int main(int argc, char* argv[])
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
     int n = 4;
-    int* a = new int[n*n];
+    int* a = nullptr;
     int* b = new int [n*n];
 
     if (rank == 0) {
+        a = new int[n * n];
         for (int i = 0; i < n*n; i++) {
             a[i] = i + 1; 
             b[i] = i + 2;
@@ -84,7 +89,7 @@ int main(int argc, char* argv[])
     MPI_Bcast(b, n * n, MPI_INT, 0, MPI_COMM_WORLD);
     int* ha = new int[n * n / 2];
     MPI_Scatter(a, n * n / 2, MPI_INT, ha, n * n / 2, MPI_INT, 0, MPI_COMM_WORLD);
-    int* hc = new int(n * n / 2);
+    int* hc = new int[n * n / 2];
     for (int i = 0; i < n / 2;i++) {
         for (int j = 0; j < n; j++) {
             hc[n * i + j] = 0;
@@ -102,6 +107,11 @@ int main(int argc, char* argv[])
             }
             std::cout << std::endl;
         }
+        delete[]a;
     }
+    delete[]b;
+    delete[]ha;
+    delete[]hc;
+    delete[]c;
     MPI_Finalize();
 }
