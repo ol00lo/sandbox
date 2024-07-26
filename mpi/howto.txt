@@ -1,0 +1,10 @@
+скачать msmpi (https://www.microsoft.com/en-us/download/details.aspx?id=57467)
+#include "mpi.h" :
+	C/C++->доп. каталоги включаемых файлов-> C:\Program Files (x86)\Microsoft SDKs\MPI\Include
+	Компоновщик->доп. каталоги библиотек->C:\Program Files (x86)\Microsoft SDKs\MPI\Lib\x864
+	Компоновщик->Ввод->доп. зависимости->msmpi.lib
+СРедства->внешние инструменты
+	добавить
+	название - MPI; команда - C:\Program Files\Microsoft MPI\Bin\mpiexec.exe;
+	аргументы - -n 2 $(TargetName).exe; исходный каталог - $(BinDir)
+собрать и запускать через средства MPI
