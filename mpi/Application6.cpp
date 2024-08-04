@@ -134,9 +134,13 @@ void matrix_mult_n2()
 //--------find product of matrices
 void matrix_mult(int argc, char* argv[])
 {
-    char* v = argv[1];
-    int N = std::stoi(v);
+    int N = std::stoi(argv[1]);
     int M = std::stoi(argv[2]);
+
+    if (argc != 3 || N <= 0 || M <= 0)
+    {
+        throw std::runtime_error("incorrect input");
+    }
     int rank, mpi_size;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
@@ -145,7 +149,7 @@ void matrix_mult(int argc, char* argv[])
     int* c = nullptr;
     int* b = new int[M * N];
 
-    int nrows = N / mpi_size + ((N % mpi_size == 0) ? 0 : 1);
+    int nrows = std::ceil(N / mpi_size);
     int* ha = new int[nrows * M]();
     int* hc = new int[nrows * N]();
     if (rank == 0)
