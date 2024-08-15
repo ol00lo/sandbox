@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+    #colorText {
+        color: #ffa500;
+    }
+</style>
+</head>
+
+
+<body>
+    <h1 id="colorText">Я меняю цвет!!!!!!!</h1>
+    <p id="counter">0</p>
+    <button type="button" onclick='clicker(1)'>INCREASE</button>
+    <button type="button" onclick='clicker(-1)'>DECREASE</button>
+
+    <script>
+        let c = 0;
+        function clicker(x) {
+            c += x;
+            document.getElementById("counter").innerHTML = c;
+
+            const textElement = document.getElementById('colorText');
+            let currentColor = window.getComputedStyle(textElement).color; // Получаем текущий цвет
+
+            const rgb = rgbStringToRgb(currentColor);
+            if (rgb) {
+                const newR = rgb.r + 10 * x;
+                const newG = rgb.g + 5 * x;
+                const newB = rgb.b + 5 * x;
+                const newColor = `rgb(${newR}, ${newG}, ${newB})`;
+                textElement.style.color = newColor;
+            }
+        }
+
+        function rgbStringToRgb(rgbString) {
+            const result = rgbString.match(/\d+/g);
+            if (result) {
+                return { r: parseInt(result[0]), g: parseInt(result[1]), b: parseInt(result[2]) };
+            }
+            return null;
+        }
+
+    </script>
+</body>
+</html>

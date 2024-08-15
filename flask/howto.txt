@@ -1,0 +1,11 @@
+		построение контейнера: docker build -t flask-app .
+		запуск: docker run -p 5000:5000 flask-app
+	поиск id: docker ps (список работающих контейнеров)
+			  docker ps -a (список остановленных контейнеров)
+	экспорт в .tar: docker export <container_id> > flask_app.tar
+	копировать на Windows: 
+		общие папки: создать в настройках VirtualBox общую папку-> открыть её через krusader. (если ошибка-> открыть через root mode)
+		?scp: scp me@192.168.56.1:/home/me/Work/flaskdir/server.py c:\Users\mymri\repos\
+	запуск из .tar: docker load -i flask-app.tar
+	запустить на opensuse открыть на windows: пробросить порт
+		virtualbox->сеть->дополнительно->проброс портов->в данном случае порт гостя 5000.
