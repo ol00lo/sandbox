@@ -149,7 +149,7 @@ void matrix_mult(int argc, char* argv[])
     int* c = nullptr;
     int* b = new int[M * N];
 
-    int nrows = std::ceil(N / mpi_size);
+    int nrows = std::ceil(double(N)/ mpi_size);
     int* ha = new int[nrows * M]();
     int* hc = new int[nrows * N]();
     if (rank == 0)
@@ -220,11 +220,162 @@ void matrix_mult(int argc, char* argv[])
     delete[] hc;
 }
 
+//--------solution of SLAE
+void solution_slae()
+{
+    int N = 4;
+    int rank, mpi_size;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
+
+    int nrows = std::ceil(double(N) / mpi_size);
+
+    std::vector<double> A(N * nrows * mpi_size);
+    std::vector<double> b(nrows * mpi_size);
+    std::vector<double> x(nrows * mpi_size, 0.0);
+
+    // fill matrix
+
+    if (rank == 0)
+    {
+        // N = 3;
+        // A[0] = 2; A[1] = 1; A[2] = -1;
+        // A[3] = -3; A[4] = -1; A[5] = 2;
+        // A[6] = -2; A[7] = 1; A[8] = 2;
+        // b[0] = 8; b[1] = -11; b[2] = -3;
+
+        // N = 4;
+        A = {2, 3, 1, 4,
+            3, 4, 2, 4,
+            2, 1, 1, 2,
+            4, 4, 3, 2};
+        b = {2, 1, 3, 1};
+
+        // std::uniform_real_distribution<double> distr(1, 100);
+        // for (int i = 0; i < N; i++) {
+        //	b[i] = distr(gen);
+        //	for (int j = 0; j < N; j++) {
+        //		A[i * N + j] = distr(gen);
+        //	}
+        // }
+    }
+
+    std::vector<double> parta(N * nrows, 0.0);
+    std::vector<double> partb(nrows, 0.0);
+    MPI_Scatter(A.data(), N * nrows, MPI_DOUBLE, parta.data(), N * nrows, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    MPI_Scatter(b.data(), nrows, MPI_DOUBLE, partb.data(), nrows, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+    // forward elimination
+    for (int i = 0; i < N; i++)
+    {
+        int cur_rank = i / nrows;
+
+        if (rank < cur_rank)
+        {
+            continue;
+        }
+
+        std::vector<double> subtrrow(N);
+        double subtrb;
+
+        if (rank == cur_rank)
+        {
+            int irow = i - nrows * rank;
+            double diag = parta[N * irow + i];
+            partb[irow] /= diag;
+            for (int j = irow * N; j < irow * N + N; j++)
+            {
+                parta[j] /= diag;
+            }
+
+            for (int j = irow * N; j < irow * N + N; ++j)
+            {
+                subtrrow[j - irow * N] = parta[j];
+            }
+            subtrb = partb[irow];
+            for (int k = irow + 1; k < nrows; k++)
+            {
+                double coef = parta[k * N + i];
+                partb[k] -= coef * subtrb;
+                for (int j = 0; j < N; j++)
+                {
+                    parta[k * N + j] -= subtrrow[j] * coef;
+                }
+            }
+
+            for (int rank2 = cur_rank + 1; rank2 < mpi_size; ++rank2)
+            {
+                MPI_Send(subtrrow.data(), N, MPI_DOUBLE, rank2, 1, MPI_COMM_WORLD);
+                MPI_Send(&subtrb, 1, MPI_DOUBLE, rank2, 1, MPI_COMM_WORLD);
+            }
+        }
+
+        if (rank > cur_rank)
+        {
+            MPI_Recv(subtrrow.data(), N, MPI_DOUBLE, cur_rank, 1, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
+            MPI_Recv(&subtrb, 1, MPI_DOUBLE, cur_rank, 1, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
+
+            for (int k = 0; k < nrows; k++)
+            {
+                double coef = parta[k * N + i];
+                partb[k] -= coef * subtrb;
+                for (int j = 0; j < N; j++)
+                {
+                    parta[k * N + j] -= subtrrow[j] * coef;
+                }
+            }
+        }
+    }
+
+    // back substitution
+    for (int k = N - 1; k >= 0; k--)
+    {
+        int cur_rank = k / nrows;
+        if (rank < cur_rank)
+        {
+            continue;
+        }
+
+        if (rank > cur_rank)
+        {
+            int send_status = MPI_Send(x.data() + rank * nrows, nrows, MPI_DOUBLE, cur_rank, 1, MPI_COMM_WORLD);
+        }
+
+        if (rank == cur_rank)
+        {
+            for (int irank = cur_rank + 1; irank < mpi_size; irank++)
+            {
+                int recv_status =
+                    MPI_Recv(x.data() + irank * nrows, nrows, MPI_DOUBLE, irank, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            }
+
+            int irow = k - nrows * cur_rank;
+            x[k] = partb[irow];
+            for (int j = k + 1; j < N; j++)
+            {
+                x[k] -= parta[irow * N + j] * x[j];
+            }
+        }
+    }
+
+    // print
+    if (rank == 0)
+    {
+        for (int i = 0; i < N; i++)
+        {
+            std::cout << "x_" << i << " = " << x[i] << std::endl;
+        }
+    }
+
+}
+
+
 int main(int argc, char* argv[])
 {
     MPI_Init(&argc, &argv);
     // compute_pi();
     // matrix_mult_n2();
-    matrix_mult(argc, argv);
+    // matrix_mult(argc, argv);
+    solution_slae();
     MPI_Finalize();
 }
