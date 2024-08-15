@@ -1,8 +1,9 @@
 ﻿#include "mpi.h"
 #include <iostream>
 #include <random>
-#include <vector>
 #include <string>
+#include <vector>
+std::mt19937 gen(0);
 
 double heavyfunc(double init)
 {
@@ -149,7 +150,7 @@ void matrix_mult(int argc, char* argv[])
     int* c = nullptr;
     int* b = new int[M * N];
 
-    int nrows = std::ceil(double(N)/ mpi_size);
+    int nrows = std::ceil(double(N) / mpi_size);
     int* ha = new int[nrows * M]();
     int* hc = new int[nrows * N]();
     if (rank == 0)
@@ -221,16 +222,16 @@ void matrix_mult(int argc, char* argv[])
 }
 
 //--------solution of SLAE
-void solution_slae()
+void solution_slae(int argc, char* argv[])
 {
-    int N = 4;
+    int N = std::stoi(argv[1]);
     int rank, mpi_size;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
 
     int nrows = std::ceil(double(N) / mpi_size);
 
-    std::vector<double> A(N * nrows * mpi_size);
+    std::vector<double> A(N * nrows * mpi_size, 0.0);
     std::vector<double> b(nrows * mpi_size);
     std::vector<double> x(nrows * mpi_size, 0.0);
 
@@ -245,23 +246,25 @@ void solution_slae()
         // b[0] = 8; b[1] = -11; b[2] = -3;
 
         // N = 4;
-        A = {2, 3, 1, 4,
-            3, 4, 2, 4,
-            2, 1, 1, 2,
-            4, 4, 3, 2};
-        b = {2, 1, 3, 1};
+        // A = {2, 3, 1, 4,
+        //    3, 4, 2, 4,
+        //    2, 1, 1, 2,
+        //    4, 4, 3, 2};
+        // b = {2, 1, 3, 1};
 
-        // std::uniform_real_distribution<double> distr(1, 100);
-        // for (int i = 0; i < N; i++) {
-        //	b[i] = distr(gen);
-        //	for (int j = 0; j < N; j++) {
-        //		A[i * N + j] = distr(gen);
-        //	}
-        // }
+        std::uniform_real_distribution<double> distr(1, 100);
+        for (int i = 0; i < N; i++)
+        {
+            b[i] = distr(gen);
+            for (int j = 0; j < N; j++)
+            {
+                A[i * N + j] = distr(gen);
+            }
+        }
     }
 
-    std::vector<double> parta(N * nrows, 0.0);
-    std::vector<double> partb(nrows, 0.0);
+    std::vector<double> parta(N * nrows);
+    std::vector<double> partb(nrows);
     MPI_Scatter(A.data(), N * nrows, MPI_DOUBLE, parta.data(), N * nrows, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     MPI_Scatter(b.data(), nrows, MPI_DOUBLE, partb.data(), nrows, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
@@ -310,7 +313,7 @@ void solution_slae()
             }
         }
 
-        if (rank > cur_rank)
+        else if (rank > cur_rank)
         {
             MPI_Recv(subtrrow.data(), N, MPI_DOUBLE, cur_rank, 1, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
             MPI_Recv(&subtrb, 1, MPI_DOUBLE, cur_rank, 1, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
@@ -338,15 +341,14 @@ void solution_slae()
 
         if (rank > cur_rank)
         {
-            int send_status = MPI_Send(x.data() + rank * nrows, nrows, MPI_DOUBLE, cur_rank, 1, MPI_COMM_WORLD);
+            MPI_Send(x.data() + rank * nrows, nrows, MPI_DOUBLE, cur_rank, 1, MPI_COMM_WORLD);
         }
 
-        if (rank == cur_rank)
+        else if (rank == cur_rank)
         {
             for (int irank = cur_rank + 1; irank < mpi_size; irank++)
             {
-                int recv_status =
-                    MPI_Recv(x.data() + irank * nrows, nrows, MPI_DOUBLE, irank, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                MPI_Recv(x.data() + irank * nrows, nrows, MPI_DOUBLE, irank, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             }
 
             int irow = k - nrows * cur_rank;
@@ -366,9 +368,7 @@ void solution_slae()
             std::cout << "x_" << i << " = " << x[i] << std::endl;
         }
     }
-
 }
-
 
 int main(int argc, char* argv[])
 {
@@ -376,6 +376,6 @@ int main(int argc, char* argv[])
     // compute_pi();
     // matrix_mult_n2();
     // matrix_mult(argc, argv);
-    solution_slae();
+    solution_slae(argc, argv);
     MPI_Finalize();
 }
