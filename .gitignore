@@ -54,6 +54,3 @@ build*/
 ~*
 .*.swp
 .*.swo
-
-flask*/
-.tar
