@@ -232,7 +232,7 @@ void solution_slae(int argc, char* argv[])
     int nrows = std::ceil(double(N) / mpi_size);
 
     std::vector<double> A(N * nrows * mpi_size, 0.0);
-    std::vector<double> b(nrows * mpi_size);
+    std::vector<double> b(nrows * mpi_size, 0.0);
     std::vector<double> x(nrows * mpi_size, 0.0);
 
     // fill matrix
