@@ -225,6 +225,10 @@ void matrix_mult(int argc, char* argv[])
 void solution_slae(int argc, char* argv[])
 {
     int N = std::stoi(argv[1]);
+    if (N <= 0 || N > 10'000)
+    {
+        throw std::runtime_error("incorrect input");
+    }
     int rank, mpi_size;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
