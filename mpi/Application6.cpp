@@ -3,6 +3,7 @@
 #include <random>
 #include <string>
 #include <vector>
+#include "timer.hpp"
 std::mt19937 gen(0);
 
 double heavyfunc(double init)
@@ -365,7 +366,7 @@ void solution_slae(int argc, char* argv[])
     }
 
     // print
-    if (rank == 0)
+    if (rank == 0 && N<15)
     {
         for (int i = 0; i < N; i++)
         {
@@ -380,6 +381,9 @@ int main(int argc, char* argv[])
     // compute_pi();
     // matrix_mult_n2();
     // matrix_mult(argc, argv);
+    Timer t;
+    t.start();
     solution_slae(argc, argv);
+    std::cout << t.end() << std::endl;
     MPI_Finalize();
 }
