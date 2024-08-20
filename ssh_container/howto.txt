@@ -1,0 +1,35 @@
+построение контейнера: docker build -t my_ssh .
+запуск: docker run -p 2222:22 --name my_container myssh
+
+поиск id: docker ps (список работающих контейнеров)
+		  docker ps -a (список остановленных контейнеров)
+
+поиск IPAddres: docker inspect <ID> | grep "IPAddres"
+
+
+
+1. подключиться по ssh используя IPAddress контейнера и порт 22
+	ssh user1@IPAddress
+	(если ошибка: удалить старый ключ ssh-keygen -R <IPAddres> -f /home/me/.ssh/known_hosts)
+
+2. подключиться по ssh используя локалхост и маппинг портов
+	ssh user1@localhost -p 2222
+	
+3. Подключиться в Krusader'e
+	-в адрессной строке: sftp://user1:password@localhost:2222
+	-New Network Connection -> protocol: sftp:// -> host: localhost -> port: 2222 -> username: user2 -> password: liza -> connect 
+
+4. Перенести в виндоус и подключиться в TotalCommander
+	пробросить новый порт virtualbox->сеть->дополнительно->проброс портов->в данном случае порт guest'a 2222 и host'a 5000
+	сеть\Secure FTP Connections\<edit connections> -> IPAddress-virtualbox инструменты -> port-5000
+
+
+
+экспорт в .tar: 
+	-docker export <container_id> > flask_app.tar
+	-docker save -o container.tar my_ssh
+
+копировать на Windows: 
+	общие папки: создать в настройках VirtualBox общую папку-> открыть её через krusader. (если ошибка-> открыть через root mode)
+	?scp: scp me@192.168.56.1:/home/me/Work/flaskdir/server.py c:\Users\mymri\repos\
+запуск из .tar: docker load -i flask-app.tar

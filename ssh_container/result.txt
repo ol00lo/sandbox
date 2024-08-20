@@ -1,0 +1,2 @@
+alpinecontainer.tar -- 16M
+opensusecontainer.tar -- 260M 
