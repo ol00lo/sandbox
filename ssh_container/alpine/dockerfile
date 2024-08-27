@@ -1,0 +1,12 @@
+FROM alpine
+
+RUN apk update && apk add openssh && ssh-keygen -A
+
+RUN adduser -D user2 && echo "user2:liza" | chpasswd
+
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
+
+EXPOSE 22
+
+CMD ["/bin/sh", "/start.sh"]

@@ -1,0 +1,12 @@
+FROM opensuse/leap:15.6
+
+RUN zypper refresh && zypper install -y openssh && ssh-keygen -A
+
+RUN useradd -ms /bin/bash user1 && echo "user1:liza" | chpasswd
+
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
+
+EXPOSE 22
+
+CMD ["/bin/sh", "/start.sh"]
