@@ -1,0 +1,12 @@
+Построение и запуск контейнера на linux:
+	docker build -t cppcont .
+	docker run -v /home/me/Work/cpp/:/work  cppcont
+		(в папке home/me/Work/cpp/ лежат a.cpp и start.sh
+			и эта папка монтируется в рабочую)
+Конвертирование в .tar:
+	docker save cppcont -o cppcont.tar
+
+Построение и запуск контейнера на Windows из .tar:
+	docker load -i cppcont.tar
+	docker run -v d:\repos\docker_images\cpp\:/work  cppcont
+		(аналогично в папке d:\repos\docker_images\cpp\ должен лежать файл start.sh)
