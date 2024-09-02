@@ -393,11 +393,11 @@ void solution_slae_strings(int argc, char* argv[], int& rank, int& mpi_size)
     // fill matrix
     if (rank == 0)
     {
-        // A = { 2, 3, 1, 4, 5,     //
-        //	  3, 4, 2, 4, 4,   //
-        //	  2, 1, 1, 2, 3,   //
-        //	  4, 4, 3, 2, 4,
-        //	  1, 2, 4, 1, 5 };  //
+        // A = { 2, 3, 1, 4, 5,
+        //   3, 4, 2, 4, 4,
+        //   2, 1, 1, 2, 3,
+        //   4, 4, 3, 2, 4,
+        //   1, 2, 4, 1, 5 };
         // b = { 2, 1, 3, 1, 2 };
         std::uniform_real_distribution<double> distr(1, 100);
         for (int i = 0; i < N; i++)
@@ -498,7 +498,7 @@ void solution_slae_strings(int argc, char* argv[], int& rank, int& mpi_size)
             for (int j = i + 1; j < N; j++)
             {
                 int local_rank = j % mpi_size;
-                if (local_rank != rank)
+                if (j < std::min(i + mpi_size, N))
                 {
                     MPI_Recv(x.data() + j, 1, MPI_DOUBLE, local_rank, 0, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
                 }
@@ -508,10 +508,13 @@ void solution_slae_strings(int argc, char* argv[], int& rank, int& mpi_size)
 
         else
         {
-            for (int j = i + 1; j < N; j++)
+
+            for (int j = i + 1; j < std::min(i + mpi_size, N); j++)
             {
                 if (rank == j % mpi_size)
+                {
                     MPI_Send(x.data() + j, 1, MPI_DOUBLE, cur_rank, 0, MPI_COMM_WORLD);
+                }
             }
         }
     }
@@ -538,17 +541,18 @@ int main(int argc, char* argv[])
     MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
     Timer t;
     int time = 0;
-    for (int i = 0; i < 20; i++)
+     for (int i = 0; i < 20; i++)
     {
-        t.start();
-        solution_slae(argc, argv, rank, mpi_size);
-        if (rank == mpi_size - 1) time += t.end();
-    }
+         t.start();
+         solution_slae(argc, argv, rank, mpi_size);
+         if (rank == mpi_size - 1) time += t.end();
+     }
     //for (int i = 0; i < 20; i++)
     //{
     //    t.start();
     //    solution_slae_strings(argc, argv, rank, mpi_size);
-    //    if (rank == mpi_size - 1) time += t.end();
+    //    if (rank == mpi_size - 1)
+    //        time += t.end();
     //}
 
     std::cout << time / 20 << std::endl;
