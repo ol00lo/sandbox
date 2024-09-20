@@ -8,7 +8,7 @@ std::mt19937 gen(0);
 
 double heavyfunc(double init)
 {
-    int n = 5'000;
+    int n = 5000;
     double r = 0;
     for (int i = 0; i < n; ++i)
     {
@@ -226,7 +226,7 @@ void matrix_mult(int argc, char* argv[])
 void solution_slae(int argc, char* argv[], int& rank, int& mpi_size)
 {
     int N = std::stoi(argv[1]);
-    if (N <= 0 || N > 10'000)
+    if (N <= 0 || N > 10000)
     {
         throw std::runtime_error("incorrect input");
     }
@@ -242,16 +242,13 @@ void solution_slae(int argc, char* argv[], int& rank, int& mpi_size)
     if (rank == 0)
     {
         // N = 3;
-        // A[0] = 2; A[1] = 1; A[2] = -1;
-        // A[3] = -3; A[4] = -1; A[5] = 2;
-        // A[6] = -2; A[7] = 1; A[8] = 2;
-        // b[0] = 8; b[1] = -11; b[2] = -3;
-
+        // A = { 2, 1, -1, -3, -1, 2, -2, 1, 2};
+        // b = {8, -11, -3};
         // N = 4;
-        // A = {2, 3, 1, 4,
-        //    3, 4, 2, 4,
-        //    2, 1, 1, 2,
-        //    4, 4, 3, 2};
+        // A = {2, 3, 1, 4, //
+        //      3, 4, 2, 4, //
+        //      2, 1, 1, 2, //
+        //      4, 4, 3, 2};//
         // b = {2, 1, 3, 1};
 
         std::uniform_real_distribution<double> distr(1, 100);
@@ -376,7 +373,7 @@ void solution_slae(int argc, char* argv[], int& rank, int& mpi_size)
 void solution_slae_strings(int argc, char* argv[], int& rank, int& mpi_size)
 {
     int N = std::stoi(argv[1]);
-    if (N <= 0 || N > 10'000)
+    if (N <= 0 || N > 10000)
     {
         throw std::runtime_error("incorrect input");
     }
@@ -535,26 +532,23 @@ int main(int argc, char* argv[])
     // compute_pi();
     // matrix_mult_n2();
     // matrix_mult(argc, argv);
-    // solution_slae(argc, argv);
+    
     int rank, mpi_size;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
     Timer t;
     int time = 0;
-     for (int i = 0; i < 20; i++)
+    int n_starts = 20;
+    for (int i = 0; i < n_starts; i++)
     {
          t.start();
+         // solution_slae_strings(argc, argv, rank, mpi_size);
          solution_slae(argc, argv, rank, mpi_size);
-         if (rank == mpi_size - 1) time += t.end();
+         if (rank == mpi_size - 1) 
+             time += t.end();
      }
-    //for (int i = 0; i < 20; i++)
-    //{
-    //    t.start();
-    //    solution_slae_strings(argc, argv, rank, mpi_size);
-    //    if (rank == mpi_size - 1)
-    //        time += t.end();
-    //}
 
-    std::cout << time / 20 << std::endl;
+    std::cout << time / n_starts << std::endl;
+
     MPI_Finalize();
 }
