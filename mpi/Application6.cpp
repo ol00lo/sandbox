@@ -223,13 +223,16 @@ void matrix_mult(int argc, char* argv[])
 }
 
 //--------solution of SLAE
-void solution_slae(int argc, char* argv[], int& rank, int& mpi_size)
+void solution_slae(int argc, char* argv[])
 {
     int N = std::stoi(argv[1]);
     if (N <= 0 || N > 10'000)
     {
         throw std::runtime_error("incorrect input");
     }
+    int rank, mpi_size;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
 
     int nrows = std::ceil(double(N) / mpi_size);
 
@@ -242,16 +245,13 @@ void solution_slae(int argc, char* argv[], int& rank, int& mpi_size)
     if (rank == 0)
     {
         // N = 3;
-        // A[0] = 2; A[1] = 1; A[2] = -1;
-        // A[3] = -3; A[4] = -1; A[5] = 2;
-        // A[6] = -2; A[7] = 1; A[8] = 2;
-        // b[0] = 8; b[1] = -11; b[2] = -3;
-
+        // A = { 2, 1, -1, -3, -1, 2, -2, 1, 2};
+        // b = {8, -11, -3};
         // N = 4;
-        // A = {2, 3, 1, 4,
-        //    3, 4, 2, 4,
-        //    2, 1, 1, 2,
-        //    4, 4, 3, 2};
+        // A = {2, 3, 1, 4, //
+        //      3, 4, 2, 4, //
+        //      2, 1, 1, 2, //
+        //      4, 4, 3, 2};//
         // b = {2, 1, 3, 1};
 
         std::uniform_real_distribution<double> distr(1, 100);
@@ -373,14 +373,16 @@ void solution_slae(int argc, char* argv[], int& rank, int& mpi_size)
 }
 
 //--------solution of SLAE
-void solution_slae_strings(int argc, char* argv[], int& rank, int& mpi_size)
+void solution_slae_strings(int argc, char* argv[])
 {
     int N = std::stoi(argv[1]);
     if (N <= 0 || N > 10'000)
     {
         throw std::runtime_error("incorrect input");
     }
-
+    int rank, mpi_size;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
     int nrows = std::ceil(double(N) / mpi_size);
 
     std::vector<double> A(N * nrows * mpi_size, 0.0);
@@ -391,14 +393,15 @@ void solution_slae_strings(int argc, char* argv[], int& rank, int& mpi_size)
     std::vector<double> local_b(nrows, 0.0);
 
     // fill matrix
+
     if (rank == 0)
     {
-        // A = { 2, 3, 1, 4, 5,     //
-        //	  3, 4, 2, 4, 4,   //
-        //	  2, 1, 1, 2, 3,   //
-        //	  4, 4, 3, 2, 4,
-        //	  1, 2, 4, 1, 5 };  //
-        // b = { 2, 1, 3, 1, 2 };
+        // A = {2, 3, 1, 4, 5,  //
+        //      3, 4, 2, 4, 4,  //
+        //      2, 1, 1, 2, 3,  //
+        //      4, 4, 3, 2, 4,  //
+        //      1, 2, 4, 1, 5}; //
+        // b = {2, 1, 3, 1, 2};
         std::uniform_real_distribution<double> distr(1, 100);
         for (int i = 0; i < N; i++)
         {
@@ -425,6 +428,8 @@ void solution_slae_strings(int argc, char* argv[], int& rank, int& mpi_size)
             MPI_Send(A.data() + N * i, 1, row_type, i, 2, MPI_COMM_WORLD);
             MPI_Send(b.data() + i, 1, partb_type, i, 0, MPI_COMM_WORLD);
         }
+        MPI_Type_free(&row_type);
+        MPI_Type_free(&partb_type);
     }
     else
     {
@@ -498,7 +503,7 @@ void solution_slae_strings(int argc, char* argv[], int& rank, int& mpi_size)
             for (int j = i + 1; j < N; j++)
             {
                 int local_rank = j % mpi_size;
-                if (local_rank != rank)
+                if (j < std::min(i + mpi_size, N))
                 {
                     MPI_Recv(x.data() + j, 1, MPI_DOUBLE, local_rank, 0, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
                 }
@@ -508,10 +513,12 @@ void solution_slae_strings(int argc, char* argv[], int& rank, int& mpi_size)
 
         else
         {
-            for (int j = i + 1; j < N; j++)
+            int down = std::ceil(double(i + 1 - rank) / mpi_size);
+            int up = std::floor(double(i + mpi_size - rank) / mpi_size);
+            int j = down * mpi_size + rank;
+            if (down == up && j < N)
             {
-                if (rank == j % mpi_size)
-                    MPI_Send(x.data() + j, 1, MPI_DOUBLE, cur_rank, 0, MPI_COMM_WORLD);
+                MPI_Send(x.data() + j, 1, MPI_DOUBLE, cur_rank, 0, MPI_COMM_WORLD);
             }
         }
     }
@@ -532,25 +539,23 @@ int main(int argc, char* argv[])
     // compute_pi();
     // matrix_mult_n2();
     // matrix_mult(argc, argv);
-    // solution_slae(argc, argv);
+
     int rank, mpi_size;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
     Timer t;
     int time = 0;
-    for (int i = 0; i < 20; i++)
+    int n_starts = 20;
+    for (int i = 0; i < n_starts; i++)
     {
         t.start();
-        solution_slae(argc, argv, rank, mpi_size);
-        if (rank == mpi_size - 1) time += t.end();
+        solution_slae_strings(argc, argv);
+        // solution_slae(argc, argv);
+        if (rank == mpi_size - 1)
+            time += t.end();
     }
-    //for (int i = 0; i < 20; i++)
-    //{
-    //    t.start();
-    //    solution_slae_strings(argc, argv, rank, mpi_size);
-    //    if (rank == mpi_size - 1) time += t.end();
-    //}
 
-    std::cout << time / 20 << std::endl;
+    std::cout << time / n_starts << std::endl;
+
     MPI_Finalize();
 }
