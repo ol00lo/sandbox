@@ -1,26 +1,30 @@
 ﻿#include "game.hpp"
-#include <iomanip>
+std::random_device rd;
+std::mt19937 ran(rd());
 
-Game::Game(int Height, int Width) : nrows(Height), ncols(Width)
+GameOfLife::GameOfLife(int height, int width)
+    : _nrows(height), _ncols(width), _old_board(height * width, false), _new_board(height * width, false)
 {
-    new_board.resize(nrows, std::vector<bool>(ncols, false));
-    old_board.resize(nrows, std::vector<bool>(ncols, false));
+    if (height < 1 || width < 1)
+    {
+        throw std::runtime_error("incorrect input");
+    }
 }
 
-bool Game::step()
+bool GameOfLife::step()
 {
-    for (int i = 0; i < nrows; i++)
+    for (int i = 0; i < _nrows; i++)
     {
-        for (int j = 0; j < ncols; j++)
+        for (int j = 0; j < _ncols; j++)
         {
             int nneigh = count_of_neighbors(i, j);
-            if (old_board[i][j] && nneigh != 2 && nneigh != 3)
+            if (_old_board[i * _ncols + j] && nneigh != 2 && nneigh != 3)
             {
-                new_board[i][j] = false;
+                _new_board[i * _ncols + j] = false;
             }
-            else if (!old_board[i][j] && nneigh == 3)
+            else if (!_old_board[i * _ncols + j] && nneigh == 3)
             {
-                new_board[i][j] = true;
+                _new_board[i * _ncols + j] = true;
             }
         }
     }
@@ -28,37 +32,41 @@ bool Game::step()
     {
         return false;
     }
-    old_board = new_board;
+    _old_board = _new_board;
     return true;
 }
 
-void Game::initialize(std::vector<std::vector<bool>> in)
+void GameOfLife::initialize(const std::vector<bool>&& in)
 {
-    if (in.size() != nrows && in[0].size() != ncols)
+    if (in.size() != _nrows * _ncols)
     {
         throw std::runtime_error("incorrect input");
     }
-    new_board = in;
-    old_board = in;
+    _new_board = in;
+    _old_board = in;
 }
 
-bool Game::is_over() const
+bool GameOfLife::is_over() const
 {
     bool life = false;
     bool diff = false;
-    for (int i = 0; i < nrows; i++)
+    for (int i = 0; i < _nrows; i++)
     {
-        for (int j = 0; j < ncols; j++)
+        for (int j = 0; j < _ncols; j++)
         {
-            if (new_board[i][j] != old_board[i][j])
+            if (_new_board[i * _ncols + j] != _old_board[i * _ncols + j] && diff == false)
             {
                 diff = true;
             }
-            if (new_board[i][j])
+            if (_new_board[i * _ncols + j] && life == false)
             {
                 life = true;
             }
+            if (life && diff)
+                break;
         }
+        if (life && diff)
+            break;
     }
     if (diff == false || life == false)
         return true;
@@ -66,58 +74,45 @@ bool Game::is_over() const
         return false;
 }
 
-bool Game::is_alive(int row, int col) const
+bool GameOfLife::is_alive(int row, int col) const
 {
-    if (row >= nrows || row < 0 || col >= ncols || col < 0)
+    if (row >= _nrows || row < 0 || col >= _ncols || col < 0)
     {
         throw std::runtime_error("out of range");
     }
-    return new_board[row][col];
+    return _new_board[row * _ncols + col];
 }
 
-int Game::count_of_neighbors(int row, int col) const
+int GameOfLife::count_of_neighbors(int row, int col) const
 {
     int res = 0;
-    for (int i = -1; i <= 1; i++)
-    {
-        for (int j = -1; j <= 1; j++)
-        {
-            if (i == 0 && j == 0)
-            {
-                continue;
-            }
-            int irow = row + i;
-            int jcol = col + j;
-            if (irow >= 0 && jcol >= 0)
-            {
-                if (irow < nrows && jcol < ncols)
-                {
-                    if (old_board[irow][jcol] == true)
-                    {
-                        res++;
-                    }
-                }
-            }
-        }
-    }
+    res += (col > 0) ? int(_old_board[row * _ncols + col - 1]) : 0;
+    res += (row > 0) ? int(_old_board[(row - 1) * _ncols + col]) : 0;
+    res += (col < _ncols - 1) ? int(_old_board[row * _ncols + col + 1]) : 0;
+    res += (row < _nrows - 1) ? int(_old_board[(row + 1) * _ncols + col]) : 0;
+    res += (row > 0 && col > 0) ? int(_old_board[(row - 1) * _ncols + col - 1]) : 0;
+    res += (col > 0 && row < _nrows - 1) ? int(_old_board[(row + 1) * _ncols + col - 1]) : 0;
+    res += (row > 0 && col < _ncols - 1) ? int(_old_board[(row - 1) * _ncols + col + 1]) : 0;
+    res += (col < _ncols - 1 && row < _nrows - 1) ? int(_old_board[(row + 1) * _ncols + col + 1]) : 0;
+
     return res;
 }
 
-void Game::display() const
+void GameOfLife::display() const
 {
-    std::cout << "\033[H";
+    std::cout << "\033[2J\033[H";
 
     std::cout << " ";
-    for (int j = 0; j <= ncols; ++j)
+    for (int j = 0; j <= _ncols; ++j)
     {
         std::cout << "_";
     }
     std::cout << "\n";
 
-    for (int i = 0; i < nrows; ++i)
+    for (int i = 0; i < _nrows; ++i)
     {
         std::cout << "|";
-        for (int j = 0; j < ncols; ++j)
+        for (int j = 0; j < _ncols; ++j)
         {
             if (is_alive(i, j))
             {
@@ -132,43 +127,55 @@ void Game::display() const
     }
 
     std::cout << " ";
-    for (int j = 0; j <= ncols; ++j)
+    for (int j = 0; j <= _ncols; ++j)
     {
         std::cout << "-";
     }
+    std::cout << "\n";
 }
-void Game::over() const
+
+void GameOfLife::over() const
 {
     std::cout << "\033[H";
-
     std::cout << " ";
-    for (int j = 0; j <= ncols; ++j)
+    for (int j = 0; j <= _ncols; ++j)
     {
         std::cout << "_";
     }
     std::cout << "\n";
-
-    for (int i = 0; i < nrows; ++i)
+    for (int i = 0; i < _nrows; ++i)
     {
         std::cout << "|";
-        if (i == nrows / 2)
+        if (i == _nrows / 2)
         {
-            std::cout<<std::setw(ncols) << "ALLDEAD";
+            std::cout << std::setw(_ncols) << "ALLDEAD";
         }
         else
         {
-            for (int j = 0; j < ncols; ++j)
+            for (int j = 0; j < _ncols; ++j)
             {
                 std::cout << " ";
             }
         }
-
         std::cout << " |\n";
     }
-
     std::cout << " ";
-    for (int j = 0; j <= ncols; ++j)
+    for (int j = 0; j <= _ncols; ++j)
     {
         std::cout << "-";
+    }
+    std::cout << "\n";
+}
+
+void GameOfLife::random_initialize(int norganisms)
+{
+    std::uniform_int_distribution row(0, _nrows - 1);
+    std::uniform_int_distribution col(0, _ncols - 1);
+    for (int i = 0; i < norganisms; i++)
+    {
+        int irow = row(ran);
+        int icol = col(ran);
+        _old_board[irow * _ncols + icol] = true;
+        _new_board[irow * _ncols + icol] = true;
     }
 }

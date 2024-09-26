@@ -1,20 +1,24 @@
+#include <chrono>
+#include <iomanip>
 #include <iostream>
+#include <random>
 #include <vector>
 
-class Game
+class GameOfLife
 {
 public:
-    Game(int Height, int Width);
-    void initialize(std::vector<std::vector<bool>> in);
-    bool step();
-    bool is_alive(int row, int col) const;
+    GameOfLife(int height, int width);
+    void initialize(const std::vector<bool>&& in);
+    void random_initialize(int norganisms);
+    bool step(); // return "false" if game is over or "true" if step is successful
     void display() const;
     void over() const;
 
 private:
-    int nrows, ncols;
-    std::vector<std::vector<bool>> new_board;
-    std::vector<std::vector<bool>> old_board;
-    int count_of_neighbors(int x, int y) const;
+    const int _nrows, _ncols;
+    std::vector<bool> _new_board;
+    std::vector<bool> _old_board;
+    int count_of_neighbors(int row, int col) const;
+    bool is_alive(int row, int col) const;
     bool is_over() const;
 };
