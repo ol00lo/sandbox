@@ -4,11 +4,28 @@
 #include <random>
 #include <vector>
 
+class Board
+{
+public:
+    Board(int ncols, int nrows);
+    void operator=(const Board& other);
+    bool operator==(const Board& other) const;
+    void add_data(std::vector<bool>&& in);
+    bool at(int irow, int icol) const;
+    void set_at(int irow, int icol, bool val);
+    void set_at(int ind, bool val);
+    bool is_alldead() const;
+
+private:
+    const int _nrows, _ncols;
+    std::vector<bool> _board;
+};
+
 class GameOfLife
 {
 public:
     GameOfLife(int height, int width);
-    void initialize(const std::vector<bool>&& in);
+    void initialize(std::vector<bool>&& in);
     void random_initialize(int norganisms);
     bool step(); // return "false" if game is over or "true" if step is successful
     void display() const;
@@ -16,8 +33,8 @@ public:
 
 private:
     const int _nrows, _ncols;
-    std::vector<bool> _new_board;
-    std::vector<bool> _old_board;
+    Board _new_board;
+    Board _old_board;
     int count_of_neighbors(int row, int col) const;
     bool is_alive(int row, int col) const;
     bool is_over() const;

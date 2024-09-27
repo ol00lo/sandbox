@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
         }
         game.over();
     }
-    catch (std::exception e)
+    catch (std::exception& e)
     {
         std::cout << e.what() << std::endl;
     }

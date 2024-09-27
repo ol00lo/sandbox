@@ -3,7 +3,7 @@ std::random_device rd;
 std::mt19937 ran(rd());
 
 GameOfLife::GameOfLife(int height, int width)
-    : _nrows(height), _ncols(width), _old_board(height * width, false), _new_board(height * width, false)
+    : _nrows(height), _ncols(width), _old_board(_nrows, _ncols), _new_board(_nrows, _ncols)
 {
     if (height < 1 || width < 1)
     {
@@ -18,13 +18,13 @@ bool GameOfLife::step()
         for (int j = 0; j < _ncols; j++)
         {
             int nneigh = count_of_neighbors(i, j);
-            if (_old_board[i * _ncols + j] && nneigh != 2 && nneigh != 3)
+            if (_old_board.at(i, j) && nneigh != 2 && nneigh != 3)
             {
-                _new_board[i * _ncols + j] = false;
+                _new_board.set_at(i, j, false);
             }
-            else if (!_old_board[i * _ncols + j] && nneigh == 3)
+            else if (!_old_board.at(i, j) && nneigh == 3)
             {
-                _new_board[i * _ncols + j] = true;
+                _new_board.set_at(i, j, true);
             }
         }
     }
@@ -36,39 +36,22 @@ bool GameOfLife::step()
     return true;
 }
 
-void GameOfLife::initialize(const std::vector<bool>&& in)
+void GameOfLife::initialize(std::vector<bool>&& in)
 {
     if (in.size() != _nrows * _ncols)
     {
         throw std::runtime_error("incorrect input");
     }
-    _new_board = in;
-    _old_board = in;
+    _new_board.add_data(std::move(in));
+    _old_board = _new_board;
 }
 
 bool GameOfLife::is_over() const
 {
-    bool life = false;
-    bool diff = false;
-    for (int i = 0; i < _nrows; i++)
-    {
-        for (int j = 0; j < _ncols; j++)
-        {
-            if (_new_board[i * _ncols + j] != _old_board[i * _ncols + j] && diff == false)
-            {
-                diff = true;
-            }
-            if (_new_board[i * _ncols + j] && life == false)
-            {
-                life = true;
-            }
-            if (life && diff)
-                break;
-        }
-        if (life && diff)
-            break;
-    }
-    if (diff == false || life == false)
+    bool diff = (_new_board == _old_board);
+    bool life = _new_board.is_alldead();
+
+    if (diff || !life)
         return true;
     else
         return false;
@@ -80,20 +63,28 @@ bool GameOfLife::is_alive(int row, int col) const
     {
         throw std::runtime_error("out of range");
     }
-    return _new_board[row * _ncols + col];
+    return _new_board.at(row, col);
 }
 
 int GameOfLife::count_of_neighbors(int row, int col) const
 {
     int res = 0;
-    res += (col > 0) ? int(_old_board[row * _ncols + col - 1]) : 0;
-    res += (row > 0) ? int(_old_board[(row - 1) * _ncols + col]) : 0;
-    res += (col < _ncols - 1) ? int(_old_board[row * _ncols + col + 1]) : 0;
-    res += (row < _nrows - 1) ? int(_old_board[(row + 1) * _ncols + col]) : 0;
-    res += (row > 0 && col > 0) ? int(_old_board[(row - 1) * _ncols + col - 1]) : 0;
-    res += (col > 0 && row < _nrows - 1) ? int(_old_board[(row + 1) * _ncols + col - 1]) : 0;
-    res += (row > 0 && col < _ncols - 1) ? int(_old_board[(row - 1) * _ncols + col + 1]) : 0;
-    res += (col < _ncols - 1 && row < _nrows - 1) ? int(_old_board[(row + 1) * _ncols + col + 1]) : 0;
+    if (col > 0 && _old_board.at(row, col - 1))
+        res++;
+    if (row > 0 && _old_board.at(row - 1, col))
+        res++;
+    if (col < _ncols - 1 && _old_board.at(row, col + 1))
+        res++;
+    if (row < _nrows - 1 && _old_board.at(row + 1, col))
+        res++;
+    if (row > 0 && col > 0 && _old_board.at(row - 1, col - 1))
+        res++;
+    if (col > 0 && row < _nrows - 1 && _old_board.at(row + 1, col - 1))
+        res++;
+    if (row > 0 && col < _ncols - 1 && _old_board.at(row - 1, col + 1))
+        res++;
+    if (col < _ncols - 1 && row < _nrows - 1 && _old_board.at(row + 1, col + 1))
+        res++;
 
     return res;
 }
@@ -169,13 +160,70 @@ void GameOfLife::over() const
 
 void GameOfLife::random_initialize(int norganisms)
 {
-    std::uniform_int_distribution row(0, _nrows - 1);
-    std::uniform_int_distribution col(0, _ncols - 1);
+    std::uniform_int_distribution ind(0, _nrows * _ncols - 1);
     for (int i = 0; i < norganisms; i++)
     {
-        int irow = row(ran);
-        int icol = col(ran);
-        _old_board[irow * _ncols + icol] = true;
-        _new_board[irow * _ncols + icol] = true;
+        int at = ind(ran);
+        _new_board.set_at(at, true);
     }
+    _old_board = _new_board;
+}
+
+Board::Board(int nrows, int ncols) : _nrows(nrows), _ncols(ncols), _board(nrows * ncols, false)
+{
+}
+
+void Board::operator=(const Board& other)
+{
+    if (_nrows != other._nrows || _ncols != other._ncols)
+    {
+        throw std::out_of_range("different dimensions");
+    }
+    _board = other._board;
+}
+
+bool Board::operator==(const Board& other) const
+{
+    return _nrows == other._nrows && _ncols == other._ncols && _board == other._board;
+}
+
+void Board::add_data(std::vector<bool>&& in)
+{
+    if (_board.size() != in.size())
+    {
+        throw std::out_of_range("different dimensions");
+    }
+    _board = in;
+}
+
+bool Board::at(int irow, int icol) const
+{
+    if (irow >= _nrows || irow < 0 || icol >= _ncols || icol < 0)
+    {
+        throw std::runtime_error("out of range");
+    }
+    return _board[irow * _ncols + icol];
+}
+
+void Board::set_at(int irow, int icol, bool val)
+{
+    if (irow >= _nrows || irow < 0 || icol >= _ncols || icol < 0)
+    {
+        throw std::runtime_error("out of range");
+    }
+    _board[irow * _ncols + icol] = val;
+}
+
+void Board::set_at(int ind, bool val)
+{
+    if (ind >= _nrows * _ncols || ind < 0)
+    {
+        throw std::runtime_error("out of range");
+    }
+    _board[ind] = val;
+}
+
+bool Board::is_alldead() const
+{
+    return std::any_of(_board.begin(), _board.end(), [](bool value) { return !value; });
 }
