@@ -9,10 +9,12 @@ set(CMAKE_CXX_STANDARD 17)
 set(SRC 
     main.cpp
 	game.cpp
+	board.cpp
 	#display.cpp
 )
 set(HEADERS
 	game.hpp
+	board.hpp
 	#display.hpp
 )
 

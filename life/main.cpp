@@ -13,12 +13,12 @@ int main(int argc, char* argv[])
         int width = std::stoi(argv[1]);
         int height = std::stoi(argv[2]);
         int norganisms = std::stoi(argv[3]);
-        width = 15;
-        height = 17;
-        norganisms = 40;
+        width = 3;
+        height = 5;
+        norganisms = 7;
         GameOfLife game(height, width);
-        // game.initialize({1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0});
-        game.random_initialize(norganisms);
+        game.initialize({1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0});
+        // game.random_initialize(norganisms);
 
         game.display();
         while (game.step())
