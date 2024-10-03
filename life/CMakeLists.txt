@@ -9,10 +9,12 @@ find_package(SFML COMPONENTS graphics window system REQUIRED)
 set(SRC 
     main.cpp
 	game.cpp
+	board.cpp
 	display.cpp
 )
 set(HEADERS
 	game.hpp
+	board.hpp
 	display.hpp
 )
 

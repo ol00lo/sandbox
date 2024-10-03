@@ -204,7 +204,7 @@ void Screen::drawGameOver(bool what)
     }
     else
     {
-        gameOverText.setString("INPUT-huinia");
+        gameOverText.setString("INPUT-ploh");
     }
     gameOverText.setCharacterSize(90);
     gameOverText.setFillColor(sf::Color::White);
