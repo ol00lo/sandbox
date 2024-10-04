@@ -1,3 +1,6 @@
+#ifndef BOARD_HPP
+#define BOARD_HPP
+
 #include <algorithm>
 #include <iostream>
 #include <vector>
@@ -18,3 +21,5 @@ private:
     const int _nrows, _ncols;
     std::vector<bool> _board;
 };
+
+#endif // BOARD_HPP

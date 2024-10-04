@@ -1,3 +1,6 @@
+#ifndef DISPLAY_HPP
+#define DISPLAY_HPP
+
 #include "game.hpp"
 #include <SFML/Graphics.hpp>
 
@@ -37,3 +40,5 @@ private:
     const int _ncols, _nrows, _norganisms;
     int cellsize = (_width / _ncols > _height / _nrows) ? _height / _nrows : _width / _ncols;
 };
+
+#endif // !DISPLAY_HPP

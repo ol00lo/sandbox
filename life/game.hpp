@@ -1,7 +1,10 @@
+#ifndef GAME_HPP
+#define GAME_HPP
+
+#include "board.hpp"
 #include <chrono>
 #include <iomanip>
 #include <random>
-#include "board.hpp"
 
 class GameOfLife
 {
@@ -21,3 +24,5 @@ private:
     int count_of_neighbors(int row, int col) const;
     bool is_over() const;
 };
+
+#endif // !GAME_HPP
