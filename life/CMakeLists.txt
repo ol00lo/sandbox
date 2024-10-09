@@ -2,13 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 project(simlife)
 set(CMAKE_CXX_STANDARD 17)
 
-include(FindPython3)
-if (NOT PYTHON3_FOUND)
-    message(FATAL_ERROR "NO Python found!")
-else()
-    message(STATUS "PYTHON FOUND")
-endif()
-
+find_package(Python3 REQUIRED)
 set(SRC 
     main.cpp
 	game.cpp
