@@ -1,20 +1,22 @@
 import time
 import os
+import sys
 
-directory = os.path.dirname(os.path.abspath(__file__))
+source_dirs = sys.argv[1:]
 
-for root, dirs, files in os.walk(directory):
-    if 'build' in dirs:
-        dirs.remove('build')
-    for file in files:
-        if file.endswith('.cpp') or file.endswith('.hpp') or file.endswith('.h'):
-            command = f'clang-format {file}'
-            modfile = os.popen(command).read()
-            with open(file) as f:
-                curfile = f.read()
-            if curfile!= modfile:
-                os.system(f"clang-format -i {file}")
-                print(f"File  {file}  has changed") 
+for directory in source_dirs:
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            if file.endswith('.cpp') or file.endswith('.hpp') or file.endswith('.h'):
+                filepath = os.path.join(root, file)
+                command = f'clang-format {filepath}'    
+                modfile = os.popen(command).read()    
+                with open(filepath) as f:
+                    curfile = f.read()
+                if curfile != modfile:
+                    with open(filepath, 'w') as f:
+                        f.write(modfile)
+                    print(f"File {filepath} has been changed")
 
 print("DONE")
 time.sleep(2)
