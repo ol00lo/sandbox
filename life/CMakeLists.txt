@@ -3,21 +3,17 @@ project(simlife)
 
 set(CMAKE_CXX_STANDARD 17)
 
-#set(SFML_DIR "c:/Users/mymri/bin/SFML-2.6.1/lib/cmake/SFML")
-#find_package(SFML COMPONENTS graphics window system REQUIRED)
-
 set(SRC 
     main.cpp
 	game.cpp
 	board.cpp
-	#display.cpp
+	simlife.cpp
 )
 set(HEADERS
 	game.hpp
 	board.hpp
-	#display.hpp
+	cxxopts.hpp
+	simlife.hpp
 )
 
 add_executable(simlife ${SRC} ${HEADERS})
-
-#target_link_libraries(simlife sfml-graphics sfml-window sfml-system)

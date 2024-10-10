@@ -1,6 +1,4 @@
 ﻿#include "game.hpp"
-std::random_device rd;
-std::mt19937 ran(rd());
 
 GameOfLife::GameOfLife(int height, int width)
     : _nrows(height), _ncols(width), _old_board(_nrows, _ncols), _new_board(_nrows, _ncols)
@@ -156,15 +154,4 @@ void GameOfLife::over() const
         std::cout << "-";
     }
     std::cout << "\n";
-}
-
-void GameOfLife::random_initialize(int norganisms)
-{
-    std::uniform_int_distribution ind(0, _nrows * _ncols - 1);
-    for (int i = 0; i < norganisms; i++)
-    {
-        int at = ind(ran);
-        _new_board.set_at(at, true);
-    }
-    _old_board = _new_board;
 }
