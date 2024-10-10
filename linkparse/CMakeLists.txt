@@ -4,12 +4,6 @@
    set(BOOST_ROOT ${CMAKE_SOURCE_DIR}/../../boost_1_86_0)
    find_package(Boost REQUIRED COMPONENTS system thread)
 
-   if(Boost_FOUND)
-       message(STATUS "Boost found")
-   else()
-       message(FATAL "Boost not found")
-   endif()
-
    set(SOURCE_FILE a.cpp)
 
    add_executable(a ${SOURCE_FILE})

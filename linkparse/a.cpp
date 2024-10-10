@@ -3,20 +3,29 @@
 #include <regex>
 #include <string>
 
-std::vector<std::string> get_links(const std::string& html) {
-	std::vector<std::string> links; 
-	std::regex link_regex("<a href=\"/url\\?q=(https://[^\"]+)");
-	auto begin = std::sregex_iterator(html.begin(), html.end(), link_regex);
-	auto end = std::sregex_iterator();
-	for (auto i = begin; i != end && links.size() < 3; ++i) {
-		links.push_back((*i)[1].str());
-	}
-	return links;
-}
+std::vector<std::string> get_links(const std::string& html)
+{
+    std::vector<std::string> links;
 
-int main() {
+    std::regex remove_class_bneawe("<span class=\"BNeawe\"><a href=\"/url\\?q=(https://[^\"]+)");
+    std::string modified_html = std::regex_replace(html, remove_class_bneawe, "");
+
+    std::regex link_regex("<a href=\"/url\\?q=(https://[^\"]+)");
+        auto begin = std::sregex_iterator(modified_html.begin(), modified_html.end(), link_regex);
+    auto end = std::sregex_iterator();
+
+    for (auto i = begin; i != end && links.size() < 3; ++i)
+    {
+        links.push_back((*i)[1].str());
+    }
+
+    return links;
+}
+int main(int argc, char* argv[])
+{
 	std::string site = "www.google.com";
-	std::string req = "/search?q=Dachshund";
+    std::string q = argv[1];
+    std::string req = "/search?q=" + q;
 	boost::asio::io_service io_service;
 
 	boost::asio::ip::tcp::resolver resolver(io_service);
@@ -38,7 +47,7 @@ int main() {
 	boost::system::error_code e;
 	boost::asio::read(socket, response, boost::asio::transfer_all(), e);
 	std::string s((std::istreambuf_iterator<char>(&response)), std::istreambuf_iterator<char>());
-	auto links = get_links(s);
+    auto links = get_links(s);
 	for (const auto& link : links) {
 		std::cout << link << std::endl<<std::endl;
 	}
