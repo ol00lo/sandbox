@@ -1,14 +1,15 @@
+#ifndef GAME_HPP
+#define GAME_HPP
+#include "board.hpp"
 #include <chrono>
 #include <iomanip>
 #include <random>
-#include "board.hpp"
 
 class GameOfLife
 {
 public:
     GameOfLife(int height, int width);
     void initialize(std::vector<bool>&& in);
-    void random_initialize(int norganisms);
     bool step(); // return "false" if game is over or "true" if step is successful
     void display() const;
     void over() const;
@@ -21,3 +22,4 @@ private:
     bool is_alive(int row, int col) const;
     bool is_over() const;
 };
+#endif // !GAME_HPP
