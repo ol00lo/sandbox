@@ -12,7 +12,7 @@ set(HEADERS
 	src/game.hpp
 	src/board.hpp
 )
-set(FORMAT_SOURCE_DIRS  sources headers)
+set(FORMAT_SOURCE_DIRS  src)
 
 add_executable(simlife ${SRC} ${HEADERS})
 
