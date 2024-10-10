@@ -1,7 +1,7 @@
+#include "board.hpp"
 #include <chrono>
 #include <iomanip>
 #include <random>
-#include "board.hpp"
 
 class GameOfLife
 {
