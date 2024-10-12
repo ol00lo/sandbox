@@ -1,23 +1,22 @@
 cmake_minimum_required(VERSION 3.10)
 project(simlife)
-
 set(CMAKE_CXX_STANDARD 17)
 
-#set(SFML_DIR "c:/Users/mymri/bin/SFML-2.6.1/lib/cmake/SFML")
-#find_package(SFML COMPONENTS graphics window system REQUIRED)
-
+find_package(Python3 REQUIRED)
 set(SRC 
-    main.cpp
-	game.cpp
-	board.cpp
-	#display.cpp
+    src/main.cpp
+	src/game.cpp
+	src/board.cpp
 )
 set(HEADERS
-	game.hpp
-	board.hpp
-	#display.hpp
+	src/game.hpp
+	src/board.hpp
 )
+set(FORMAT_SOURCE_DIRS  src)
 
 add_executable(simlife ${SRC} ${HEADERS})
 
-#target_link_libraries(simlife sfml-graphics sfml-window sfml-system)
+add_custom_target(clangformat
+    COMMAND ${PYTHON3_EXECUTABLE} clangformat.py ${FORMAT_SOURCE_DIRS}
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+)
