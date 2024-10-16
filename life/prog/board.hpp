@@ -1,8 +1,8 @@
 #ifndef BOARD_HPP
 #define BOARD_HPP
+#include <algorithm>
 #include <iostream>
 #include <vector>
-#include <algorithm>
 
 class Board
 {

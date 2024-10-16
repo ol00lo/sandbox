@@ -3,10 +3,17 @@
 GameOfLife::GameOfLife(int height, int width)
     : _nrows(height), _ncols(width), _old_board(_nrows, _ncols), _new_board(_nrows, _ncols)
 {
-    if (height < 1 || width < 1)
+    if (_nrows < 1 || _ncols < 1)
     {
         throw std::runtime_error("incorrect input");
     }
+}
+
+GameOfLife::GameOfLife(Arguments arg)
+    : _nrows(arg.height), _ncols(arg.width), _old_board(_nrows, _ncols), _new_board(_nrows, _ncols)
+{
+    arg.validate();
+    initialize(std::move(arg.input));
 }
 
 bool GameOfLife::step()

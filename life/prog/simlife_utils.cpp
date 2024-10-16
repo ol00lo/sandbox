@@ -1,6 +1,10 @@
-#include "simlife.hpp"
+#include "simlife_utils.hpp"
+namespace
+{
 std::random_device rd;
 std::mt19937 ran(rd());
+} // namespace
+
 std::vector<bool> random_input(int height, int width, int norganisms)
 {
     std::vector<bool> res(width * height, false);
@@ -16,6 +20,10 @@ std::vector<bool> input_fromfile(std::string filename)
 {
     std::vector<bool> res;
     std::ifstream file(filename);
+    if (!file.is_open())
+    {
+        throw std::runtime_error("unable to open file");
+    }
     std::string line;
     while (std::getline(file, line))
     {
@@ -34,6 +42,10 @@ std::pair<int, int> dim_fromfile(std::string filename)
     int width = 0;
     int height = 0;
     std::ifstream file(filename);
+    if (!file.is_open())
+    {
+        throw std::runtime_error("unable to open file");
+    }
     std::string line;
 
     if (std::getline(file, line))
@@ -50,6 +62,20 @@ std::pair<int, int> dim_fromfile(std::string filename)
     {
         height++;
     }
-
+    if (width < 1 || height < 1)
+    {
+        throw std::runtime_error("incorrect input");
+    }
+    return {height, width};
+}
+std::pair<int, int> dim_fromline(std::string dimensions)
+{
+    size_t xPos = dimensions.find('x');
+    int width = std::stoi(dimensions.substr(0, xPos));
+    int height = std::stoi(dimensions.substr(xPos + 1));
+    if (width < 1 || height < 1)
+    {
+        throw std::runtime_error("incorrect input");
+    }
     return {height, width};
 }
