@@ -1,7 +1,7 @@
 ﻿#include "game.hpp"
 
-GameOfLife::GameOfLife(int height, int width)
-    : _nrows(height), _ncols(width), _old_board(_nrows, _ncols), _new_board(_nrows, _ncols)
+GameOfLife::GameOfLife(int height, int width, char typeboard)
+    : _nrows(height), _ncols(width), _old_board(_nrows, _ncols, typeboard), _new_board(_nrows, _ncols, typeboard)
 {
     if (_nrows < 1 || _ncols < 1)
     {
@@ -10,7 +10,8 @@ GameOfLife::GameOfLife(int height, int width)
 }
 
 GameOfLife::GameOfLife(Arguments arg)
-    : _nrows(arg.height), _ncols(arg.width), _old_board(_nrows, _ncols), _new_board(_nrows, _ncols)
+    : _nrows(arg.height), _ncols(arg.width), _old_board(_nrows, _ncols, arg.type_of_board),
+      _new_board(_nrows, _ncols, arg.type_of_board)
 {
     arg.validate();
     initialize(std::move(arg.input));
@@ -74,21 +75,21 @@ bool GameOfLife::is_alive(int row, int col) const
 int GameOfLife::count_of_neighbors(int row, int col) const
 {
     int res = 0;
-    if (col > 0 && _old_board.at(row, col - 1))
+    if (_old_board.at(row, col - 1))
         res++;
-    if (row > 0 && _old_board.at(row - 1, col))
+    if (_old_board.at(row - 1, col))
         res++;
-    if (col < _ncols - 1 && _old_board.at(row, col + 1))
+    if (_old_board.at(row, col + 1))
         res++;
-    if (row < _nrows - 1 && _old_board.at(row + 1, col))
+    if (_old_board.at(row + 1, col))
         res++;
-    if (row > 0 && col > 0 && _old_board.at(row - 1, col - 1))
+    if (_old_board.at(row - 1, col - 1))
         res++;
-    if (col > 0 && row < _nrows - 1 && _old_board.at(row + 1, col - 1))
+    if (_old_board.at(row + 1, col - 1))
         res++;
-    if (row > 0 && col < _ncols - 1 && _old_board.at(row - 1, col + 1))
+    if (_old_board.at(row - 1, col + 1))
         res++;
-    if (col < _ncols - 1 && row < _nrows - 1 && _old_board.at(row + 1, col + 1))
+    if (_old_board.at(row + 1, col + 1))
         res++;
 
     return res;

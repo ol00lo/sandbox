@@ -18,7 +18,9 @@ int main(int argc, char* argv[])
             ("initfile", "Initial from file", cxxopts::value<std::string>())                            //
             ("random", "Random init with norganisms alive", cxxopts::value<int>()->default_value("20")) //
             ("delay", "Delay (milliseconds)", cxxopts::value<int>()->default_value("1000"))             //
-            ("h,help", "Print help");                                                                   //
+            ("h,help", "Print help")                                                                    //
+            ("bc", "Type of board: default-wall, p-periodic, m-mirror",                                 //
+             cxxopts::value<char>()->default_value("l"));                                               //
         auto result = options.parse(argc, argv);
 
         Arguments argum(options, result);

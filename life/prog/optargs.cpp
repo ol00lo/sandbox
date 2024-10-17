@@ -11,6 +11,7 @@ Arguments::Arguments(cxxopts::Options options, cxxopts::ParseResult result)
     std::tie(height, width) = dim_fromline(result["dim"].as<std::string>());
     norganisms = result["random"].as<int>();
     delay = result["delay"].as<int>();
+    type_of_board = result["bc"].as<char>();
 
     if (result.count("initfile"))
     {

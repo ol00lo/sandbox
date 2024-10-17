@@ -12,6 +12,7 @@ struct Arguments
     int delay;
     std::vector<bool> input;
     void validate();
+    char type_of_board;
 };
 
 #endif // !OPTSARGS_HPP

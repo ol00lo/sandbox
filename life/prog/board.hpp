@@ -7,7 +7,7 @@
 class Board
 {
 public:
-    Board(int ncols, int nrows);
+    Board(int ncols, int nrows, char boardtype);
     void operator=(const Board& other);
     bool operator==(const Board& other) const;
     void add_data(std::vector<bool>&& in);
@@ -19,5 +19,6 @@ public:
 private:
     const int _nrows, _ncols;
     std::vector<bool> _board;
+    char type_of_board;
 };
 #endif // !BOARD_HPP
