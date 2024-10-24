@@ -23,13 +23,13 @@ set(SRC
 	prog/game.cpp
 	prog/board.cpp
 	prog/simlife_utils.cpp
-	prog/optargs.cpp
+	prog/arguments.cpp
 )
 set(HEADERS
 	prog/game.hpp
 	prog/board.hpp
 	prog/simlife_utils.hpp
-	prog/optargs.hpp
+	prog/arguments.hpp
 )
 
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/bin)
@@ -40,7 +40,7 @@ add_executable(simlife ${SRC} ${HEADERS})
 
 add_custom_command(TARGET simlife POST_BUILD 
 	COMMAND ${CMAKE_COMMAND} -E copy
-		${CMAKE_SOURCE_DIR}/test_data/file.txt ${CMAKE_BINARY_DIR}/bin)
+		${CMAKE_SOURCE_DIR}/test_data/file.txt ${CMAKE_BINARY_DIR})
 
 add_custom_target(clangformat
     COMMAND ${PYTHON3_EXECUTABLE} clangformat.py ${FORMAT_SOURCE_DIRS}

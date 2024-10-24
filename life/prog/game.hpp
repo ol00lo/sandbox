@@ -1,7 +1,7 @@
 #ifndef GAME_HPP
 #define GAME_HPP
 #include "board.hpp"
-#include "optargs.hpp"
+#include "arguments.hpp"
 #include <chrono>
 #include <iomanip>
 #include <random>
