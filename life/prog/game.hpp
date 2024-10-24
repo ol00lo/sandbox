@@ -9,7 +9,7 @@
 class GameOfLife
 {
 public:
-    GameOfLife(int height, int width);
+    GameOfLife(int height, int width, char typeboard);
     GameOfLife(Arguments arg);
     void initialize(std::vector<bool>&& in);
     bool step(); // return "false" if game is over or "true" if step is successful

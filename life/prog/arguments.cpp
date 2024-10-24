@@ -4,11 +4,12 @@
 Arguments::Arguments(int argc, char* argv[])
 {
     cxxopts::Options options("SimLife", "Simulation of life game");
-    options.add_options()("dim", "dimention (int HEIGHTxint WIDTH)", cxxopts::value<std::string>()) //
-        ("initfile", "Initial from file", cxxopts::value<std::string>())                            //
-        ("random", "Random init with norganisms alive", cxxopts::value<int>(norganisms))            //
-        ("delay", "Delay (milliseconds)", cxxopts::value<int>(delay))                               //
-        ("h,help", "Print help");                                                                   //
+    options.add_options()("dim", "dimention (int HEIGHTxint WIDTH)", cxxopts::value<std::string>())   //
+        ("initfile", "Initial from file", cxxopts::value<std::string>())                              //
+        ("random", "Random init with norganisms alive", cxxopts::value<int>(norganisms))              //
+        ("delay", "Delay (milliseconds)", cxxopts::value<int>(delay))                                 //
+        ("bc", "Type of board: default-wall, p-periodic, m-mirror", cxxopts::value<char>(type_board)) //
+        ("h,help", "Print help");                                                                     //
 
     auto result = options.parse(argc, argv);
     if (result.count("help"))

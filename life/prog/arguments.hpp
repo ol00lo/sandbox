@@ -13,6 +13,7 @@ struct Arguments
     int delay = 1000;
     std::vector<bool> input;
     void validate();
+    char type_board = 'w';
 };
 
 #endif // !OPTSARGS_HPP
