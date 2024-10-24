@@ -58,6 +58,8 @@ bool Board::at(int irow, int icol) const
         if (icol == _ncols)
             icol = _ncols - 1;
         break;
+    default:
+        throw std::runtime_error("unreachable");
     }
     return _board[irow * _ncols + icol];
 }
