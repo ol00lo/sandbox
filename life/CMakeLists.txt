@@ -18,7 +18,7 @@ endif()
 include_directories(${cxxopts_SOURCE_DIR}/include)
 
 set(SRC 
-    prog/main.cpp
+  prog/main.cpp
 	prog/game.cpp
 	prog/board.cpp
 	prog/simlife_utils.cpp
