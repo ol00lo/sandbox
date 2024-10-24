@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
 project(simlife)
-
 set(CMAKE_CXX_STANDARD 17)
 
 find_package(Python3 REQUIRED)
@@ -19,7 +18,7 @@ endif()
 include_directories(${cxxopts_SOURCE_DIR}/include)
 
 set(SRC 
-    prog/main.cpp
+  prog/main.cpp
 	prog/game.cpp
 	prog/board.cpp
 	prog/simlife_utils.cpp
@@ -30,7 +29,7 @@ set(HEADERS
 	prog/board.hpp
 	prog/simlife_utils.hpp
 	prog/arguments.hpp
-)
+
 
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/bin)
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/bin)

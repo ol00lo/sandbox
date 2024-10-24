@@ -19,4 +19,5 @@ for directory in source_dirs:
                     print(f"File {filepath} has been changed")
 
 print("DONE")
+
 time.sleep(5)
