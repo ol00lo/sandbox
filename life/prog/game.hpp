@@ -1,7 +1,7 @@
 #ifndef GAME_HPP
 #define GAME_HPP
 #include "board.hpp"
-#include "optargs.hpp"
+#include "arguments.hpp"
 #include <chrono>
 #include <iomanip>
 #include <random>
@@ -9,7 +9,7 @@
 class GameOfLife
 {
 public:
-    GameOfLife(int height, int width, char typeboard ='l');
+    GameOfLife(int height, int width, char typeboard);
     GameOfLife(Arguments arg);
     void initialize(std::vector<bool>&& in);
     bool step(); // return "false" if game is over or "true" if step is successful

@@ -1,6 +1,6 @@
 #include "board.hpp"
 
-Board::Board(int nrows, int ncols,char boardtype)
+Board::Board(int nrows, int ncols, char boardtype)
     : _nrows(nrows), _ncols(ncols), _board(nrows * ncols, false), type_of_board(boardtype)
 {
 }
@@ -31,8 +31,8 @@ void Board::add_data(std::vector<bool>&& in)
 bool Board::at(int irow, int icol) const
 {
     switch (type_of_board)
-    {
-    case 'l':
+    {   
+    case 'w':
         if (irow >= _nrows || irow < 0 || icol >= _ncols || icol < 0)
         {
             return false;

@@ -3,16 +3,17 @@
 
 #include "cxxopts.hpp"
 #include <iostream>
+
 struct Arguments
 {
-    Arguments(cxxopts::Options options, cxxopts::ParseResult result);
-    int width;
-    int height;
-    int norganisms;
-    int delay;
+    Arguments(int argc, char* argv[]);
+    int width = 10;
+    int height = 10;
+    int norganisms = 20;
+    int delay = 1000;
     std::vector<bool> input;
     void validate();
-    char type_of_board;
+    char type_board = 'w';
 };
 
 #endif // !OPTSARGS_HPP

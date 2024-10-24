@@ -9,9 +9,7 @@ GameOfLife::GameOfLife(int height, int width, char typeboard)
     }
 }
 
-GameOfLife::GameOfLife(Arguments arg)
-    : _nrows(arg.height), _ncols(arg.width), _old_board(_nrows, _ncols, arg.type_of_board),
-      _new_board(_nrows, _ncols, arg.type_of_board)
+GameOfLife::GameOfLife(Arguments arg) : GameOfLife(arg.height, arg.width, arg.type_board)
 {
     arg.validate();
     initialize(std::move(arg.input));
