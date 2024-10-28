@@ -1,25 +1,43 @@
-﻿#include <iostream>
-#include <boost/asio.hpp>
+﻿#include <boost/asio.hpp>
+#include <iostream>
 #include <regex>
 #include <unordered_map>
 
-void decodeHTML(std::string& html)
+static const std::unordered_map<std::string, std::string> entities = {{"&lt;", "<"},                      //
+                                                                      {"&gt;", ">"},   {"&amp;", "&"},    //
+                                                                      {"&quot", "\""}, {"&apos;", "'"},   //
+                                                                      {"&nbsp;", " "}, {"&tilde;", "~"}}; //
+
+std::string decodeHTML(const std::string& html)
 {
-    std::unordered_map<std::string, std::string> entities = {{"&lt;", "<"},   {"&gt;", ">"},   {"&amp;", "&"},
-                                                             {"&quot", "\""}, {"&apos;", "'"}, {"&nbsp;", " "},
-                                                             {"&tilde;", "~"}};
-    for (const auto& entity : entities)
+    std::string ret;
+    ret.reserve(html.size());
+
+    int pos = 0;
+    while (pos < html.size())
     {
-        size_t pos = 0;
-        while ((pos = html.find(entity.first, pos)) != std::string::npos)
-        {
-            html.replace(pos, entity.first.length(), entity.second);
-            pos += entity.second.length();
+        if (html[pos] == '&')
+        { 
+            int end = html.find(';', pos); 
+            if (end != std::string::npos)
+            { 
+                std::string entity = html.substr(pos, end - pos + 1);
+                auto it = entities.find(entity);
+                ret += (it != entities.end()) ? it->second : entity;
+                pos = end + 1;
+            }
         }
+        else
+        {
+            ret+=html[pos];
+            pos++;
+        }                   
     }
+
+    return ret;
 }
 
-std::string decodeurl(const std::string& link)
+std::string decodeURL(const std::string& link)
 {
     std::string ret;
     ret.reserve(link.length());
@@ -71,45 +89,55 @@ std::vector<std::string> get_links(const std::string& html)
 
 int main(int argc, char* argv[])
 {
-    std::string site = "www.google.com";
-    if (argc < 1)
+    try
     {
-        throw std::runtime_error("missing input");
+        std::string site = "www.google.com";
+        if (argc < 2)
+        {
+            throw std::runtime_error("missing input");
+        }
+        std::string q = argv[1];
+        std::string req = "/search?q=" + q;
+
+        for (int i = 2; i < argc; i++)
+        {
+            req += "+";
+            req += argv[i];
+        }
+
+        boost::asio::io_service io_service;
+
+        boost::asio::ip::tcp::resolver resolver(io_service);
+        boost::asio::ip::tcp::resolver::query query(site, "80");
+        boost::asio::ip::tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
+        boost::asio::ip::tcp::socket socket(io_service);
+        boost::asio::connect(socket, endpoint_iterator);
+
+        boost::asio::streambuf request;
+        std::ostream request_stream(&request);
+        request_stream << "GET " << req << " HTTP/1.0\r\n";
+        request_stream << "Host: " << site << "\r\n";
+        request_stream << "Accept: */*\r\n";
+        request_stream << "Connection: close\r\n";
+        request_stream << "\r\n";
+        boost::asio::write(socket, request);
+
+        boost::asio::streambuf response;
+        boost::system::error_code e;
+        boost::asio::read(socket, response, boost::asio::transfer_all(), e);
+        std::string s((std::istreambuf_iterator<char>(&response)), std::istreambuf_iterator<char>());
+        auto links = get_links(decodeHTML(s));
+        for (const auto& link : links)
+        {
+#ifdef _MSC_VER
+            std::cout << decodeURL(link) << std::endl << std::endl;
+#else
+            std::cout << decodeURL(decodeURL(link)) << std::endl << std::endl;
+#endif
+        }
     }
-    std::string q = argv[1];
-    std::string req = "/search?q=" + q;
-
-    for (int i = 2; i < argc; i++)
+    catch (const std::exception& e)
     {
-        req += "+";
-        req += argv[i];
-    }
-
-    boost::asio::io_service io_service;
-
-    boost::asio::ip::tcp::resolver resolver(io_service);
-    boost::asio::ip::tcp::resolver::query query(site, "80");
-    boost::asio::ip::tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
-    boost::asio::ip::tcp::socket socket(io_service);
-    boost::asio::connect(socket, endpoint_iterator);
-
-    boost::asio::streambuf request;
-    std::ostream request_stream(&request);
-    request_stream << "GET " << req << " HTTP/1.0\r\n";
-    request_stream << "Host: " << site << "\r\n";
-    request_stream << "Accept: */*\r\n";
-    request_stream << "Connection: close\r\n";
-    request_stream << "\r\n";
-    boost::asio::write(socket, request);
-
-    boost::asio::streambuf response;
-    boost::system::error_code e;
-    boost::asio::read(socket, response, boost::asio::transfer_all(), e);
-    std::string s((std::istreambuf_iterator<char>(&response)), std::istreambuf_iterator<char>());
-    decodeHTML(s);
-    auto links = get_links(s);
-    for (const auto& link : links)
-    {
-        std::cout << decodeurl(link) << std::endl << std::endl;
+        std::cout << e.what() << std::endl;
     }
 }
