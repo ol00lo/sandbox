@@ -23,12 +23,14 @@ set(SRC
 	prog/board.cpp
 	prog/simlife_utils.cpp
 	prog/arguments.cpp
+	prog/igame.cpp
 )
 set(HEADERS
 	prog/game.hpp
 	prog/board.hpp
 	prog/simlife_utils.hpp
 	prog/arguments.hpp
+	prog/igame.h
 )
 
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/bin)
