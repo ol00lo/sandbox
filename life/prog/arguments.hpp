@@ -14,6 +14,8 @@ struct Arguments
     std::vector<bool> input;
     void validate();
     char type_board = 'w';
+    char viewer_type = 'c';
+    char engine_type = 'c';
 };
 
 #endif // !OPTSARGS_HPP

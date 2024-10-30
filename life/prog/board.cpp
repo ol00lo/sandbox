@@ -31,7 +31,7 @@ void Board::add_data(std::vector<bool>&& in)
 bool Board::at(int irow, int icol) const
 {
     switch (type_of_board)
-    {   
+    {
     case 'w':
         if (irow >= _nrows || irow < 0 || icol >= _ncols || icol < 0)
         {
@@ -85,4 +85,17 @@ void Board::set_at(int ind, bool val)
 bool Board::is_alldead() const
 {
     return std::any_of(_board.begin(), _board.end(), [](bool value) { return !value; });
+}
+
+int Board::nrows() const
+{
+    return _nrows;
+}
+int Board::ncols() const
+{
+    return _ncols;
+}
+std::vector<bool> Board::get_board() const
+{
+    return _board;
 }

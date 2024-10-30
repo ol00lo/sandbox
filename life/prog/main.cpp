@@ -6,21 +6,19 @@
 #include <random>
 #include <sstream>
 #include <string>
-#include <thread>
+
+void run_new(int argc, char* argv[])
+{
+    Arguments argum(argc, argv);
+    Driver d(argum);
+    d.start();
+}
 
 int main(int argc, char* argv[])
 {
     try
     {
-        Arguments argum(argc, argv);
-        GameOfLife game(argum);
-        game.display();
-        while (game.step())
-        {
-            game.display();
-            std::this_thread::sleep_for(std::chrono::milliseconds(argum.delay));
-        }
-        game.over();
+        run_new(argc, argv);
     }
     catch (std::exception& e)
     {
