@@ -10,7 +10,5 @@
        message(FATAL "Boost not found")
    endif()
 
-   set(SOURCE_FILE a.cpp)
-
-   add_executable(a ${SOURCE_FILE})
+   add_executable(a a.cpp http_response.cpp http_response.hpp)
    target_link_libraries(a Boost::system Boost::thread)
