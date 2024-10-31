@@ -18,15 +18,15 @@ endif()
 include_directories(${cxxopts_SOURCE_DIR}/include)
 
 set(SRC 
-  prog/main.cpp
+	prog/main.cpp
 	prog/game.cpp
 	prog/board.cpp
 	prog/simlife_utils.cpp
 	prog/arguments.cpp
 )
 set(HEADERS
-	prog/game.hpp
-	prog/board.hpp
+	prog/game.h
+	prog/board.h
 	prog/simlife_utils.hpp
 	prog/arguments.hpp
 )
