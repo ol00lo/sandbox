@@ -2,8 +2,13 @@
 #ifndef GAME_H
 #define GAME_H
 
+#include "arguments.hpp"
 #include "board.h"
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -26,27 +31,26 @@ extern "C"
 
     struct Engine
     {
-        EngineInterface* interface;
+        EngineInterface* inter;
     };
 
     struct Viewer
     {
-        ViewerInterface* interface;
+        ViewerInterface* inter;
         int _ncols;
         int _nrows;
     };
 
     struct Driver
     {
-        char* arg;
+        int delay;
         Board* board;
         Engine* engine;
         Viewer* viewer;
     };
 
-    void initialize_game(Driver* driver);
-    void cleanup_game(Driver* driver);
-    bool is_over(Driver* driver, Board* new_board);
+    void initialize_game(Driver* driver, Arguments& arg);
+    void run_game(Driver driver);
 
 #ifdef __cplusplus
 }

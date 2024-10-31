@@ -1,10 +1,25 @@
 #include "game.h"
-#include <stdio.h>  
-#include <stdlib.h> 
-#include <string.h> 
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <unistd.h>
+#endif
+
+void sleep_ms(int milliseconds)
+{
+#ifdef _WIN32
+    Sleep(milliseconds);
+#else
+    usleep(milliseconds * 1000);
+#endif
+}
 
 void reg_engine_step(const Engine* engine, const Board* board, Board* new_board);
 int count_of_neighbors(const Board* board, int row, int col);
+bool board_compare(const Board* board1, const Board* board2);
+bool is_over(Driver* driver, Board* new_board);
+bool board_compare(const Board* board1, const Board* board2);
+void cleanup_game(Driver* driver);
 
 void reg_engine_step(const Engine* engine, const Board* board, Board* new_board)
 {
@@ -111,59 +126,39 @@ void cmd_viewer_game_over(const Viewer* viewer)
     printf("\n");
 }
 
-void initialize_game(Driver* driver)
+void initialize_game(Driver* driver, Arguments& arg)
 {
-    driver->board = create_board(5, 3, 'w'); 
-    bool* in = (bool*)malloc(15 * sizeof(bool));
-    if (in != NULL)
+    driver->board = create_board(arg.height, arg.width, arg.type_board);
+    bool* in = (bool*)malloc(arg.height * arg.width * sizeof(bool));
+    for (int i = 0; i < arg.height * arg.width; i++)
     {
-        in[0] = 1;
-        in[1] = 0;
-        in[2] = 1;
-        in[3] = 0;
-        in[4] = 1;
-        in[5] = 0;
-        in[6] = 1;
-        in[7] = 1;
-        in[8] = 0;
-        in[9] = 0;
-        in[10] = 0;
-        in[11] = 1;
-        in[12] = 1;
-        in[13] = 0;
-        in[14] = 1;
+        in[i] = arg.input[i];
     }
-    board_add_data(driver->board, in, 15);
+    driver->delay = arg.delay;
+    board_add_data(driver->board, in, arg.height * arg.width);
     driver->viewer = (Viewer*)malloc(sizeof(Viewer));
-    driver->engine = (Engine*)malloc(sizeof(Engine));
-
-    driver->viewer->interface = (ViewerInterface*)malloc(sizeof(ViewerInterface));
-    driver->engine->interface = (EngineInterface*)malloc(sizeof(EngineInterface));
-
-    driver->viewer->interface->display = cmd_viewer_display;
-    driver->viewer->interface->game_over = cmd_viewer_game_over;
-
+    driver->viewer->inter = (ViewerInterface*)malloc(sizeof(ViewerInterface));
+    driver->viewer->inter->display = cmd_viewer_display;
+    driver->viewer->inter->game_over = cmd_viewer_game_over;
     driver->viewer->_nrows = board_nrows(driver->board);
     driver->viewer->_ncols = board_ncols(driver->board);
 
-    driver->engine->interface->step = reg_engine_step;
+    driver->engine = (Engine*)malloc(sizeof(Engine));
+    driver->engine->inter = (EngineInterface*)malloc(sizeof(EngineInterface));
+    driver->engine->inter->step = reg_engine_step;
 }
 
 void cleanup_game(Driver* driver)
 {
-    destroy_board(driver->board);   
-    free(driver->viewer->interface);
-    free(driver->viewer);           
-    free(driver->engine->interface);
-    free(driver->engine);           
+    destroy_board(driver->board);
+    free(driver->viewer->inter);
+    free(driver->viewer);
+    free(driver->engine->inter);
+    free(driver->engine);
 }
 
 bool board_compare(const Board* board1, const Board* board2)
 {
-    if (board_nrows(board1) != board_nrows(board2) || board_ncols(board1) != board_ncols(board2))
-    {
-        return false;
-    }
     for (int i = 0; i < board_nrows(board1); i++)
     {
         for (int j = 0; j < board_ncols(board1); j++)
@@ -181,6 +176,30 @@ bool is_over(Driver* driver, Board* new_board)
 {
     bool diff = board_compare(driver->board, new_board);
     bool life = board_is_alldead(new_board);
-
     return diff || life;
+}
+
+void run_game(Driver driver)
+{
+    // Board* new_board = create_board(board_nrows(driver.board), board_ncols(driver.board), 'w');
+    // board_add_data_from_other(new_board, driver.board);
+
+    driver.viewer->inter->display(driver.viewer, driver.board);
+    while (1)
+    {
+        Board* new_board = create_board(board_nrows(driver.board), board_ncols(driver.board), 'w');
+        board_add_data_from_other(new_board, driver.board);
+        driver.engine->inter->step(driver.engine, driver.board, new_board);
+
+        if (is_over(&driver, new_board))
+        {
+            driver.viewer->inter->game_over(driver.viewer);
+            break;
+        }
+
+        driver.viewer->inter->display(driver.viewer, driver.board);
+        driver.board->board = new_board->board;
+        sleep_ms(driver.delay);
+    }
+    cleanup_game(&driver);
 }
