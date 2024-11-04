@@ -76,6 +76,10 @@ void run(int argc, char* argv[])
     {
         try
         {
+            if (i_pic >= links.size() - 1)
+            {
+                throw std::runtime_error("no more pictures");
+            }
             std::string filename = "pic" + std::to_string(i_pic);
             downloadImage(links[i_pic], filename);
             std::cout << "Image saved to file: " << filename << std::endl;

@@ -1,4 +1,5 @@
 #include "http_response.hpp"
+#include <boost/asio.hpp>
 
 HttpResponse send_get_request(const std::string& host, const std::string& path)
 {
@@ -41,19 +42,19 @@ HttpResponse::HttpResponse(const std::string& http_response)
     make_header_map(header);
 }
 
-std::map<std::string, std::string> HttpResponse::get_header()
+const std::map<std::string, std::string>& HttpResponse::get_header() const
 {
     return _header_map;
 }
 
-std::string HttpResponse::get_contents()
+std::string HttpResponse::get_contents() const
 {
     return _content;
 }
 
-std::string HttpResponse::image_extension()
+std::string HttpResponse::image_extension() const
 {
-    std::string content_type = get_header()["Content-Type"];
+    std::string content_type = get_header().at("Content-Type");
 
     if (content_type.find("image/") == 0)
     {
@@ -66,13 +67,13 @@ std::string HttpResponse::image_extension()
     }
 }
 
-size_t HttpResponse::content_length()
+size_t HttpResponse::content_length() const
 {
-    std::string content_length_str = get_header()["Content-Length"];
+    std::string content_length_str = get_header().at("Content-Length");
     return std::stoul(content_length_str);
 }
 
-void HttpResponse::make_header_map(std::string header)
+void HttpResponse::make_header_map(const std::string& header)
 {
     size_t start = 0;
     while (true)
