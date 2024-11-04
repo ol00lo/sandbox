@@ -1,6 +1,7 @@
 #include "cmd_viewer.hpp"
+#include <iomanip>
 
-void cmd_viewer::display(const Board& board)
+void CmdViewer::display(const Board& board)
 {
     _ncols = board.ncols();
     _nrows = board.nrows();
@@ -38,7 +39,7 @@ void cmd_viewer::display(const Board& board)
     std::cout << "\n";
 }
 
-void cmd_viewer::game_over()
+void CmdViewer::game_over()
 {
     std::cout << "\033[H";
     std::cout << " ";
@@ -71,7 +72,7 @@ void cmd_viewer::game_over()
     std::cout << "\n";
 }
 
-bool cmd_viewer::is_alive(const Board& board, int row, int col) const
+bool CmdViewer::is_alive(const Board& board, int row, int col) const
 {
     if (row >= board.nrows() || row < 0 || col >= board.ncols() || col < 0)
     {

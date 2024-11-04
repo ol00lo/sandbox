@@ -1,57 +1,58 @@
 #include "driver.hpp"
 #include "cmd_viewer.hpp"
-#include "reg_engine.hpp"
+#include "life_engine.hpp"
+#include <thread>
 
-Driver::Driver(const Arguments& a) : arg(a), board(arg.height, arg.width, arg.type_board)
+Driver::Driver(const Arguments& a) : _arg(a), _board(_arg.height, _arg.width, _arg.type_board)
 {
-    if (arg.viewer_type == 'c')
+    if (_arg.viewer_type == 'c')
     {
-        viewer = std::make_unique<cmd_viewer>();
+        _viewer = std::make_unique<CmdViewer>();
     }
     else
     {
-        throw std::runtime_error("This type of viewer doesn't support");
+        throw std::runtime_error("This type of viewer is not supported");
     }
-    if (arg.engine_type == 'c')
+    if (_arg.engine_type == 'c')
     {
-        engine = std::make_unique<reg_engine>();
+        _engine = std::make_unique<LifeEngine>();
     }
     else
     {
-        throw std::runtime_error("This type of engine doesn't support");
+        throw std::runtime_error("This type of engine is not supported");
     }
-    arg.validate();
-    board.add_data(std::move(arg.input));
+    _arg.validate();
+    _board.add_data(std::move(_arg.input));
 }
 
 void Driver::start()
 {
-    viewer->display(board);
+    _viewer->display(_board);
     while (next())
     {
-        viewer->display(board);
-        std::this_thread::sleep_for(std::chrono::milliseconds(arg.delay));
+        _viewer->display(_board);
+        std::this_thread::sleep_for(std::chrono::milliseconds(_arg.delay));
     }
-    viewer->game_over();
+    _viewer->game_over();
 }
 
 bool Driver::next()
 {
-    Board new_board = engine->step(board);
+    Board new_board = _engine->step(_board);
     if (is_over(new_board))
     {
         return false;
     }
     else
     {
-        board = new_board;
+        std::swap(_board, new_board);
         return true;
     }
 }
 
 bool Driver::is_over(const Board& new_board) const
 {
-    bool diff = (new_board == board);
+    bool diff = (new_board == _board);
     bool life = new_board.is_alldead();
 
     if (diff || !life)

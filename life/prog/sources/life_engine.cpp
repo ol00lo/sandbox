@@ -1,6 +1,6 @@
-#include "reg_engine.hpp"
+#include "life_engine.hpp"
 
-Board reg_engine::step(const Board& board) const
+Board LifeEngine::step(const Board& board) const
 {
     Board new_board(board);
     for (int i = 0; i < board.nrows(); i++)
@@ -21,7 +21,7 @@ Board reg_engine::step(const Board& board) const
     return new_board;
 }
 
-int reg_engine::count_of_neighbors(const Board& board, int row, int col) const
+int LifeEngine::count_of_neighbors(const Board& board, int row, int col) const
 {
     int res = 0;
     if (board.at(row, col - 1))

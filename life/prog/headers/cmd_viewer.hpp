@@ -1,8 +1,7 @@
 #ifndef CMD_VIEWER_HPP
 #define CMD_VIEWER_HPP
-#include "viewer.hpp"
-#include <iomanip>
-class cmd_viewer : public IViewer
+#include "i_viewer.hpp"
+class CmdViewer : public IViewer
 {
 public:
     void display(const Board& board) override;

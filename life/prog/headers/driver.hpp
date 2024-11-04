@@ -1,9 +1,8 @@
 #ifndef DRIVER_HPP
 #define DRIVER_HPP
 #include "arguments.hpp"
-#include "engine.hpp"
-#include "viewer.hpp"
-#include <thread>
+#include "i_engine.hpp"
+#include "i_viewer.hpp"
 
 class Driver
 {
@@ -14,10 +13,10 @@ public:
     bool next();
 
 private:
-    Arguments arg;
-    Board board;
-    std::unique_ptr<IEngine> engine;
-    std::unique_ptr<IViewer> viewer;
+    Arguments _arg;
+    Board _board;
+    std::unique_ptr<IEngine> _engine;
+    std::unique_ptr<IViewer> _viewer;
 };
 
 #endif

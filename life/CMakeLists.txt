@@ -23,7 +23,7 @@ set(SRC
 	prog/sources/simlife_utils.cpp
 	prog/sources/arguments.cpp
 	prog/sources/cmd_viewer.cpp
-	prog/sources/reg_engine.cpp
+	prog/sources/life_engine.cpp
 	prog/sources/driver.cpp
 )
 set(HEADERS
@@ -31,9 +31,9 @@ set(HEADERS
 	prog/headers/simlife_utils.hpp
 	prog/headers/arguments.hpp
 	prog/headers/cmd_viewer.hpp
-	prog/headers/reg_engine.hpp
-	prog/headers/engine.hpp
-	prog/headers/viewer.hpp
+	prog/headers/life_engine.hpp
+	prog/headers/i_engine.hpp
+	prog/headers/i_viewer.hpp
 	prog/headers/driver.hpp
 )
 include_directories(prog/headers)
