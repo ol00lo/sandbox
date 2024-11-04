@@ -1,6 +1,5 @@
 #include "cxxopts.hpp"
-#include "game.hpp"
-#include "igame.h"
+#include "driver.hpp"
 #include "simlife_utils.hpp"
 #include <chrono>
 #include <iostream>
@@ -14,21 +13,12 @@ void run_new(int argc, char* argv[])
     Driver d(argum);
     d.start();
 }
-void run_new_new(int argc, char* argv[])
-{
-    Arguments argum(argc, argv);
 
-    Driver* driver = driver_create(&argum);
-
-    driver_start(driver);
-
-    driver_destroy(driver);
-}
 int main(int argc, char* argv[])
 {
     try
     {
-        run_new_new(argc, argv);
+        run_new(argc, argv);
     }
     catch (std::exception& e)
     {
