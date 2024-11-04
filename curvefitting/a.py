@@ -45,7 +45,7 @@ class F:
 
 def generatedata(npoints, A, B, C, D, E, eps = 0.0):
     x = np.random.uniform(-2 *  np.pi, 2  * np.pi, npoints)
-    y = (A * np.sin(2 * np.pi * B * x + C) + D * x + E + eps * np.random.uniform(-1, 1))
+    y = A * np.sin(2 * np.pi * B * x + C) + D * x + E + eps * np.random.uniform(-10, 10, npoints)
     return x, y
 
 def calc(f, x, y, epochs):
@@ -63,7 +63,6 @@ def calc(f, x, y, epochs):
         plt.legend()
         plt.grid()
         plt.pause(0.01)
-
 
 
 
