@@ -47,7 +47,7 @@ const std::map<std::string, std::string>& HttpResponse::get_header() const
     return _header_map;
 }
 
-std::string HttpResponse::get_contents() const
+const std::string& HttpResponse::get_contents() const
 {
     return _content;
 }

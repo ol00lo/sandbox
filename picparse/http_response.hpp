@@ -8,7 +8,7 @@ class HttpResponse
 public:
     HttpResponse(const std::string& http_response);
     const std::map<std::string, std::string>& get_header() const;
-    std::string get_contents() const;
+    const std::string& get_contents() const;
     std::string image_extension() const;
     size_t content_length() const;
 
