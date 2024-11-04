@@ -1,6 +1,6 @@
 #include "http_response.hpp"
 
-Http_response::Http_response(const std::string& host, const std::string& path)
+HttpResponse send_get_request(const std::string& host, const std::string& path)
 {
     boost::asio::io_service io_service;
     boost::asio::ip::tcp::resolver resolver(io_service);
@@ -20,42 +20,40 @@ Http_response::Http_response(const std::string& host, const std::string& path)
     boost::asio::streambuf response;
     boost::system::error_code e;
     boost::asio::read(socket, response, boost::asio::transfer_all(), e);
+    std::string http_response =
+        std::string((std::istreambuf_iterator<char>(&response)), std::istreambuf_iterator<char>());
+    return HttpResponse(http_response);
+}
 
-    std::string http_response = std::string((std::istreambuf_iterator<char>(&response)), std::istreambuf_iterator<char>());
+HttpResponse::HttpResponse(const std::string& http_response)
+{
     size_t pos = http_response.find("\r\n\r\n");
-    _header = http_response.substr(0, pos);
+    std::string header = http_response.substr(0, pos);
     _content = http_response.substr(pos + 4);
 
-    size_t space1 = _header.find(' ') + 1;
-    size_t space2 = _header.find(' ', space1);
-    int status_code = std::stoi(_header.substr(space1, space2 - space1));
+    size_t space1 = header.find(' ') + 1;
+    size_t space2 = header.find(' ', space1);
+    int status_code = std::stoi(header.substr(space1, space2 - space1));
     if (status_code != 200)
     {
         throw std::runtime_error("Failed with status: " + std::to_string(status_code));
     }
+    make_header_map(header);
 }
 
-std::string Http_response::get_header()
+std::map<std::string, std::string> HttpResponse::get_header()
 {
-    return _header;
+    return _header_map;
 }
-std::string Http_response::get_contents()
+
+std::string HttpResponse::get_contents()
 {
     return _content;
 }
 
-std::string Http_response::image_extension()
+std::string HttpResponse::image_extension()
 {
-    std::string content_type_header = "Content-Type: ";
-    size_t pos = _header.find(content_type_header);
-    if (pos == std::string::npos)
-    {
-        throw std::runtime_error("Content-type not found");
-    }
-    pos += content_type_header.length();
-
-    size_t end_pos = _header.find_first_of("\r\n", pos);
-    std::string content_type = _header.substr(pos, end_pos - pos);
+    std::string content_type = get_header()["Content-Type"];
 
     if (content_type.find("image/") == 0)
     {
@@ -68,15 +66,31 @@ std::string Http_response::image_extension()
     }
 }
 
-size_t Http_response::content_length()
+size_t HttpResponse::content_length()
 {
-    const std::string content_length_header = "Content-Length: ";
-    size_t header_start = _header.find(content_length_header);
-
-    header_start += content_length_header.length();
-
-    size_t header_end = _header.find("\r\n", header_start);
-    std::string content_length_str = _header.substr(header_start, header_end - header_start);
-
+    std::string content_length_str = get_header()["Content-Length"];
     return std::stoul(content_length_str);
+}
+
+void HttpResponse::make_header_map(std::string header)
+{
+    size_t start = 0;
+    while (true)
+    {
+        size_t end = header.find('\n', start);
+        if (end == std::string::npos)
+        {
+            break;
+        }
+        std::string line = header.substr(start, end - start);
+        size_t colonpos = line.find(':');
+        if (colonpos != std::string::npos)
+        {
+            std::string key = line.substr(0, colonpos);
+            std::string value = line.substr(colonpos + 2);
+            value.erase(value.size() - 1);
+            _header_map[key] = value;
+        }
+        start = end + 1;
+    }
 }

@@ -1,5 +1,4 @@
 #include "http_response.hpp"
-#include <boost/asio.hpp>
 #include <fstream>
 #include <iostream>
 #include <regex>
@@ -33,7 +32,8 @@ void downloadImage(const std::string& imageUrl, std::string& filename)
     }
     std::string host = imageUrl.substr(0, pos);
     std::string path = imageUrl.substr(pos);
-    Http_response res(host, path);
+
+    HttpResponse res = send_get_request(host, path);
 
     filename += "." + res.image_extension();
     std::ofstream file(filename, std::ios::binary);
@@ -67,11 +67,12 @@ void run(int argc, char* argv[])
 {
     std::string site = "www.google.com";
     std::string req = build_request(argc, argv);
-    Http_response res(site, req);
+    HttpResponse res = send_get_request(site, req);
     auto links = get_links(res.get_contents());
 
     int i_pic = 0;
-    while (i_pic < 3)
+    int n_pic = 3;
+    while (i_pic < n_pic)
     {
         try
         {
@@ -83,6 +84,8 @@ void run(int argc, char* argv[])
         catch (const std::exception& e)
         {
             std::cout << "Error downloading from " << links[i_pic] << " : " << e.what() << std::endl;
+            i_pic++;
+            n_pic++;
         }
     }
 }
