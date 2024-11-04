@@ -18,18 +18,25 @@ endif()
 include_directories(${cxxopts_SOURCE_DIR}/include)
 
 set(SRC 
-  prog/main.cpp
-	prog/game.cpp
-	prog/board.cpp
-	prog/simlife_utils.cpp
-	prog/arguments.cpp
+	prog/sources/main.cpp
+	prog/sources/board.cpp
+	prog/sources/simlife_utils.cpp
+	prog/sources/arguments.cpp
+	prog/sources/cmd_viewer.cpp
+	prog/sources/life_engine.cpp
+	prog/sources/driver.cpp
 )
 set(HEADERS
-	prog/game.hpp
-	prog/board.hpp
-	prog/simlife_utils.hpp
-	prog/arguments.hpp
+	prog/headers/board.hpp
+	prog/headers/simlife_utils.hpp
+	prog/headers/arguments.hpp
+	prog/headers/cmd_viewer.hpp
+	prog/headers/life_engine.hpp
+	prog/headers/i_engine.hpp
+	prog/headers/i_viewer.hpp
+	prog/headers/driver.hpp
 )
+include_directories(prog/headers)
 
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/bin)
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/bin)

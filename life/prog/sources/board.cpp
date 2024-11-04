@@ -1,6 +1,7 @@
 #include "board.hpp"
 
-Board::Board(int nrows, int ncols) : _nrows(nrows), _ncols(ncols), _board(nrows * ncols, false)
+Board::Board(int nrows, int ncols, char boardtype)
+    : _nrows(nrows), _ncols(ncols), _board(nrows * ncols, false), type_of_board(boardtype)
 {
 }
 
@@ -29,9 +30,36 @@ void Board::add_data(std::vector<bool>&& in)
 
 bool Board::at(int irow, int icol) const
 {
-    if (irow >= _nrows || irow < 0 || icol >= _ncols || icol < 0)
+    switch (type_of_board)
     {
-        throw std::runtime_error("out of range");
+    case 'w':
+        if (irow >= _nrows || irow < 0 || icol >= _ncols || icol < 0)
+        {
+            return false;
+        }
+        break;
+    case 'p':
+        if (irow == -1)
+            irow = _nrows - 1;
+        if (icol == -1)
+            icol = _ncols - 1;
+        if (irow == _nrows)
+            irow = 0;
+        if (icol == _ncols)
+            icol = 0;
+        break;
+    case 'm':
+        if (irow == -1)
+            irow = 0;
+        if (icol == -1)
+            icol = 0;
+        if (irow == _nrows)
+            irow = _nrows - 1;
+        if (icol == _ncols)
+            icol = _ncols - 1;
+        break;
+    default:
+        throw std::runtime_error("unreachable");
     }
     return _board[irow * _ncols + icol];
 }
@@ -57,4 +85,17 @@ void Board::set_at(int ind, bool val)
 bool Board::is_alldead() const
 {
     return std::any_of(_board.begin(), _board.end(), [](bool value) { return !value; });
+}
+
+int Board::nrows() const
+{
+    return _nrows;
+}
+int Board::ncols() const
+{
+    return _ncols;
+}
+std::vector<bool> Board::get_board() const
+{
+    return _board;
 }
