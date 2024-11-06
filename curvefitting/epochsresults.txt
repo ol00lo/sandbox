@@ -1,0 +1,15 @@
+to achieve accuracy = 0.05 you need epochs
+Batch size: 1, nepochs= 6
+Batch size: 2, nepochs= 6
+Batch size: 3, nepochs= 6
+Batch size: 4, nepochs= 7
+Batch size: 5, nepochs= 7
+Batch size: 6, nepochs= 10
+Batch size: 7, nepochs= 8
+Batch size: 8, nepochs= 7
+Batch size: 9, nepochs= 6
+Batch size: 10, nepochs= 14
+Batch size: 11, nepochs= 8
+Batch size: 12, nepochs= 7
+Batch size: 13, nepochs= 9
+Batch size: 14, nepochs= 21
