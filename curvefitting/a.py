@@ -24,39 +24,38 @@ class F:
         f_x = self.func(x)
         m = self.dvapi * self.B * x + self.C
         k = -2 * (y - f_x)
-        gA = k * np.sin(m)
-        gB = k * (self.dvapi * x * self.A * np.cos(m))
-        gC = k * (self.A * np.cos(m))
-        gD = k * x
-        gE = k
+        nb = len(x)
+        gA = np.sum(k * np.sin(m)) / nb
+        gB = np.sum(k * (self.dvapi * x * self.A * np.cos(m))) / nb
+        gC = np.sum(k * (self.A * np.cos(m))) / nb
+        gD = np.sum(k * x) / nb
+        gE = np.sum(k) / nb
         return gA, gB, gC, gD, gE
     
-    def train(self, xdata, ydata):
-        for i in range(len(xdata)):
-            grads = self.grad(xdata[i], ydata[i])
+    def train (self, xdata, ydata, batchsize = 1):
+        nbatches = len(xdata) // batchsize
+        for i in range(nbatches):
+            start = i * batchsize
+            end = (i + 1) * batchsize
+            grads = self.grad(xdata[start:end], ydata[start:end])
+            
             self.A -= self.lr * grads[0]
             self.B -= self.lr * grads[1]
             self.C -= self.lr * grads[2]
             self.D -= self.lr * grads[3]
             self.E -= self.lr * grads[4]
-            if i % 100 == 0:  
-                print(f"MSE = {self.mse(xdata, ydata)}")
 
+            if(i%10==0):
+                mse = self.mse(xdata, ydata)
+                #print(f"MSE = {mse}")
+        self.plotresults(xdata[0:end], ydata[0:end])
+        return mse
 
-def generatedata(npoints, A, B, C, D, E, eps = 0.0):
-    x = np.random.uniform(-2 *  np.pi, 2  * np.pi, npoints)
-    y = A * np.sin(2 * np.pi * B * x + C) + D * x + E + eps * np.random.uniform(-10, 10, npoints)
-    return x, y
-
-def calc(f, x, y, epochs):
-    plt.figure(figsize=(10, 6))
-    pointx = np.linspace(-2 * np.pi, 2 * np.pi, 400)
-    for epoch in range(epochs):
-        f.train(x, y)
-        pointy = f.func(pointx)
-        
+    def plotresults(self, xdata, ydata):
+        pointx = np.linspace(-self.dvapi, self.dvapi, 400)
+        pointy = self.func(pointx)
         plt.clf()
-        plt.scatter(x, y, color='blue', label='Input Data', s=30)
+        plt.scatter(xdata, ydata, color='blue', label='Input Data', s=30)
         plt.plot(pointx, pointy, color='red', label='Fitted Function')
         plt.xlabel('x')
         plt.ylabel('y')
@@ -64,10 +63,62 @@ def calc(f, x, y, epochs):
         plt.grid()
         plt.pause(0.01)
 
+def generatedata(npoints, A, B, C, D, E, eps = 0.0):
+    x = np.random.uniform(-2 *  np.pi, 2  * np.pi, npoints)
+    y = A * np.sin(2 * np.pi * B * x + C) + D * x + E + eps * np.random.uniform(-10, 10, npoints)
+    return x, y
+
+
+def calc_mse(f, x, y, epochs, batchsize):
+    for epoch in range(epochs):
+        lastmse = f.train(x, y, batchsize)
+    plt.show()
+    return lastmse
+
+def func(xdata, ydata, epochs=200, batchsize = 20):
+    f = F()
+    lastmse = calc_mse(f, xdata, ydata, epochs, batchsize)
+    print(f"\n\nTrue A = {Atrue}, A = {f.A}")
+    print(f"True B = {Btrue}, B = {f.B}")
+    print(f"True C = {Ctrue}, C = {f.C}")
+    print(f"True D = {Dtrue}, D = {f.D}")
+    print(f"True E = {Etrue}, E = {f.E}")
+
+
+def func2(xdata, ydata):
+    with open(f"mseresults.txt", "w") as file:
+        file.write(f"Input data size = {len(xdata)} ")
+        for nepochs in range(5, 31, 5):
+            file.write(f"\nResults for nepochs = {nepochs}:\n\n")
+            for batchsize in range(1, 15, 1):
+                f = F()
+                lastmse = calc_mse(f, xdata, ydata, nepochs, batchsize)
+                file.write(f"Batch size: {batchsize}. Last MSE: {lastmse}\n")
+    print("Results have been saved to mse_results.txt.")
+
+def calc_epoch(f, x, y, batchsize, acc):
+    lastmse = f.mse(x, y)
+    epoch = 0
+    while lastmse > acc:
+         epoch+=1
+         lastmse = f.train(x, y, batchsize)
+
+    return epoch
+
+def func3(xdata, ydata):
+    acc = 5e-2
+    i = 0
+    with open(f"epochsresults.txt", "w") as file:
+        file.write(f"to achieve accuracy = {acc} you need epochs\n")
+        for batchsize in range(1, 15, 1):
+            f = F()
+            nepochs = calc_epoch(f, xdata, ydata, batchsize, acc)
+            file.write(f"Batch size: {batchsize}, nepochs= {nepochs}\n")
+            print(f"{batchsize}")
+    print("Results have been saved to mse_results.txt.")
 
 
 
-f = F()
 Atrue = 0.9
 Btrue = 0.4
 Ctrue = 0.3
@@ -75,12 +126,7 @@ Dtrue = 0.4
 Etrue = 1.0
 npoints = 200
 xdata, ydata = generatedata(npoints, Atrue, Btrue, Ctrue, Dtrue, Etrue, 0.01)
-epochs = 25
-calc(f, xdata, ydata, epochs)
 
-print(f"\n\nTrue A = {Atrue}, A = {f.A}")
-print(f"True B = {Btrue}, B = {f.B}")
-print(f"True C = {Ctrue}, C = {f.C}")
-print(f"True D = {Dtrue}, D = {f.D}")
-print(f"True E = {Etrue}, E = {f.E}")
-#plt.show()
+#func2(xdata, ydata)
+#func3(xdata, ydata)
+func(xdata, ydata)
