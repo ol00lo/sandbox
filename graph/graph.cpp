@@ -34,6 +34,5 @@ double InputNode::get_value()
 void InputNode::set_value(double val)
 {
     _value = val;
-    std::cout << "Cache cleared: InputNode\n";
     clear_forward_cache();
 }

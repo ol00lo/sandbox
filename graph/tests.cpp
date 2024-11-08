@@ -27,5 +27,5 @@ TEST_CASE("test1", "[1]")
     a2->get_value();
     std::cout << f->get_value() << std::endl;
     A->set_value(1.3);
-    std::cout << f->get_value();
+    std::cout << f->get_value() << std::endl;
 }

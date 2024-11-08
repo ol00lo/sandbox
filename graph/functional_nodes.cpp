@@ -10,9 +10,9 @@ double IFunctionalNode::get_value()
 {
     if (!_has_value)
     {
-        std::cout << "Computing value: IFunctionalNode\n";
         before_value_compute();
         _value = compute_value();
+        std::cout << "Computing value = " << _value << std::endl;
         _has_value = true;
     }
     return _value;
@@ -21,8 +21,8 @@ double IFunctionalNode::get_value()
 void IFunctionalNode::clear_cache()
 {
     _has_value = false;
+    std::cout << "Cache cleared : " << _value << std::endl;
     _value = 0;
-    std::cout << "Cache cleared: IFunctionalNode\n";
 }
 
 void IFunctionalNode::before_value_compute()
