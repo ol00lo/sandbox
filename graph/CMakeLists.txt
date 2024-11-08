@@ -2,9 +2,18 @@ cmake_minimum_required(VERSION 3.10)
 project(graph_pr)
 set(CMAKE_CXX_STANDARD 17)
 
-include_directories("${CMAKE_SOURCE_DIR}/extern/catch2")
+include(FetchContent)
+FetchContent_Declare(
+  catch
+  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+  GIT_TAG        v2.13.10
+)
+FetchContent_GetProperties(catch)
+if(NOT catch_POPULATED)
+  FetchContent_Populate(catch)
+  add_subdirectory(${catch_SOURCE_DIR} ${catch_BINARY_DIR})
+endif()
+set(CATCH2_FRAMEWORK "Catch2::Catch2")
 
-add_library(graph STATIC graph.cpp functional_nodes.cpp op.cpp)
-target_include_directories(graph PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-add_executable(main main.cpp tests.cpp)
-target_link_libraries(main PRIVATE graph)
+add_subdirectory(lib)
+add_subdirectory(tests)

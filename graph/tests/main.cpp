@@ -1,9 +1,10 @@
 #define CATCH_CONFIG_RUNNER
-#include "catch.hpp"
+#include <catch2/catch.hpp>
+#include "graph.hpp"
 
-TEST_CASE("bflow ping", "[ping]")
+TEST_CASE("graph ping", "[ping]")
 {
-    CHECK(1 == 1);
+    CHECK(graph_ping() == 19);
 }
 
 int main(int argc, char* argv[])
