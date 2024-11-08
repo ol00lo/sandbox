@@ -48,7 +48,7 @@ class F:
             if(i%10==0):
                 mse = self.mse(xdata, ydata)
                 #print(f"MSE = {mse}")
-                #self.plotresults(xdata[0:end], ydata[0:end])
+        self.plotresults(xdata[0:end], ydata[0:end])
         return mse
 
     def plotresults(self, xdata, ydata):
@@ -72,19 +72,18 @@ def generatedata(npoints, A, B, C, D, E, eps = 0.0):
 def calc_mse(f, x, y, epochs, batchsize):
     for epoch in range(epochs):
         lastmse = f.train(x, y, batchsize)
+    plt.show()
     return lastmse
 
-def func_old(f, xdata, ydata):
+def func(xdata, ydata, epochs=200, batchsize = 20):
     f = F()
-    epochs = 1
-    batchsize = 10
     lastmse = calc_mse(f, xdata, ydata, epochs, batchsize)
     print(f"\n\nTrue A = {Atrue}, A = {f.A}")
     print(f"True B = {Btrue}, B = {f.B}")
     print(f"True C = {Ctrue}, C = {f.C}")
     print(f"True D = {Dtrue}, D = {f.D}")
     print(f"True E = {Etrue}, E = {f.E}")
-    plt.show()
+
 
 def func2(xdata, ydata):
     with open(f"mseresults.txt", "w") as file:
@@ -128,4 +127,6 @@ Etrue = 1.0
 npoints = 200
 xdata, ydata = generatedata(npoints, Atrue, Btrue, Ctrue, Dtrue, Etrue, 0.01)
 
-func2(xdata, ydata)
+#func2(xdata, ydata)
+#func3(xdata, ydata)
+func(xdata, ydata)
