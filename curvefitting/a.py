@@ -24,11 +24,12 @@ class F:
         f_x = self.func(x)
         m = self.dvapi * self.B * x + self.C
         k = -2 * (y - f_x)
-        gA = k * np.sin(m)
-        gB = k * (self.dvapi * x * self.A * np.cos(m))
-        gC = k * (self.A * np.cos(m))
-        gD = k * x
-        gE = k
+        nb = len(x)
+        gA = np.sum(k * np.sin(m)) / nb
+        gB = np.sum(k * (self.dvapi * x * self.A * np.cos(m))) / nb
+        gC = np.sum(k * (self.A * np.cos(m))) / nb
+        gD = np.sum(k * x) / nb
+        gE = np.sum(k) / nb
         return gA, gB, gC, gD, gE
     
     def train (self, xdata, ydata, batchsize = 1):
@@ -38,11 +39,11 @@ class F:
             end = (i + 1) * batchsize
             grads = self.grad(xdata[start:end], ydata[start:end])
             
-            self.A -= self.lr * np.sum(grads[0])
-            self.B -= self.lr * np.sum(grads[1])
-            self.C -= self.lr * np.sum(grads[2])
-            self.D -= self.lr * np.sum(grads[3])
-            self.E -= self.lr * np.sum(grads[4])
+            self.A -= self.lr * grads[0]
+            self.B -= self.lr * grads[1]
+            self.C -= self.lr * grads[2]
+            self.D -= self.lr * grads[3]
+            self.E -= self.lr * grads[4]
 
             if(i%10==0):
                 mse = self.mse(xdata, ydata)
