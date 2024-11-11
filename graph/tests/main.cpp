@@ -4,7 +4,7 @@
 
 TEST_CASE("graph ping", "[ping]")
 {
-    CHECK(graph_ping() == 19);
+    CHECK(g::graph_ping() == 19);
 }
 
 int main(int argc, char* argv[])

@@ -5,8 +5,6 @@ add_library(graph_lib STATIC
   i_functions_node.cpp
   arithmetic_nodes.cpp
   power_nodes.cpp
-  arithmetic_op.cpp
-  power_op.cpp
 )
 
 target_include_directories(graph_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

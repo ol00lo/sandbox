@@ -1,11 +1,9 @@
 #include <catch2/catch.hpp>
 
-#include "i_functions_node.hpp"
 #include "arithmetic_nodes.hpp"
-#include "arithmetic_op.hpp"
-#include "power_nodes.hpp"
+#include "i_functions_node.hpp"
 #include "input_node.hpp"
-#include "power_op.hpp"
+#include "power_nodes.hpp"
 #include <iostream>
 
 using namespace g;
@@ -44,31 +42,31 @@ TEST_CASE("test1", "[1]")
     x->set_value(2);
     B->set_value(-0.8);
     y->set_value(4);
-    f->get_value();
-    f->get_value();
+    CHECK(f->get_value() == Approx(5.76));
+    CHECK(f->get_value() == Approx(5.76));
     CHECK(a1_compute == 1);
     CHECK(a2_compute == 1);
     CHECK(a3_compute == 1);
     CHECK(f_compute == 1);
     y->set_value(5);
-    f->get_value();
+    CHECK(f->get_value() == Approx(11.56));
     CHECK(a1_compute == 1);
     CHECK(a2_compute == 1);
     CHECK(a3_compute == 2);
     CHECK(f_compute == 2);
     x->set_value(3);
-    a2->get_value();
+    CHECK(a2->get_value() == Approx(2.8));
     CHECK(a1_compute == 2);
     CHECK(a2_compute == 2);
     CHECK(a3_compute == 2);
     CHECK(f_compute == 2);
-    f->get_value();
+    CHECK(f->get_value() == Approx(4.84));
     CHECK(a1_compute == 2);
     CHECK(a2_compute == 2);
     CHECK(a3_compute == 3);
     CHECK(f_compute == 3);
     A->set_value(1.3);
-    f->get_value();
+    CHECK(f->get_value() == Approx(3.61));
     CHECK(a1_compute == 3);
     CHECK(a2_compute == 3);
     CHECK(a3_compute == 4);

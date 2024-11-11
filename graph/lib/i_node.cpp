@@ -26,9 +26,3 @@ void INode::clear_backward_cache()
         n->clear_backward_cache();
     }
 }
-
-INode::~INode()
-{
-    clear_forward_cache();
-    clear_backward_cache();
-}

@@ -12,10 +12,10 @@ class INode
 {
 public:
     virtual double get_value() = 0;
-    void add_prev(const std::shared_ptr<INode> a);
-    void add_next(const std::shared_ptr<INode> a);
+    void add_prev(std::shared_ptr<INode> a);
+    void add_next(std::shared_ptr<INode> a);
     virtual void set_value(double val){};
-    ~INode();
+    virtual INode::~INode(){};
 
 protected:
     std::vector<std::shared_ptr<INode>> _prev_nodes;
