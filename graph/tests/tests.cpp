@@ -10,10 +10,10 @@ using namespace g;
 
 TEST_CASE("test1", "[1]")
 {
-    std::shared_ptr<INode> x(new InputNode());
-    std::shared_ptr<INode> y(new InputNode());
-    std::shared_ptr<INode> A(new InputNode());
-    std::shared_ptr<INode> B(new InputNode());
+    std::shared_ptr<InputNode> x(new InputNode());
+    std::shared_ptr<InputNode> y(new InputNode());
+    std::shared_ptr<InputNode> A(new InputNode());
+    std::shared_ptr<InputNode> B(new InputNode());
 
     std::shared_ptr<IFunctionalNode> a1 = op::mult(A, x);
     std::shared_ptr<IFunctionalNode> a2 = op::plus(a1, B);

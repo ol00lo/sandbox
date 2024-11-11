@@ -8,7 +8,7 @@ class InputNode : public INode
 {
 public:
     double get_value() override;
-    void set_value(double val) override;
+    void set_value(double val);
 
 private:
     double _value = 0;

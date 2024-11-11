@@ -14,7 +14,6 @@ public:
     virtual double get_value() = 0;
     void add_prev(std::shared_ptr<INode> a);
     void add_next(std::shared_ptr<INode> a);
-    virtual void set_value(double val){};
     virtual INode::~INode(){};
 
 protected:
