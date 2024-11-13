@@ -1,10 +1,11 @@
 #ifndef BOARD_HPP
 #define BOARD_HPP
+#include "lifelib.hpp"
 #include <algorithm>
 #include <iostream>
 #include <vector>
 
-class Board
+class LIFELIB_API Board
 {
 public:
     Board(int ncols, int nrows, char boardtype = 'w');

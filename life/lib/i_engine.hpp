@@ -2,7 +2,7 @@
 #define ENGINE_HPP
 #include "board.hpp"
 
-class IEngine
+class LIFELIB_API IEngine
 {
 public:
     virtual ~IEngine() = default;

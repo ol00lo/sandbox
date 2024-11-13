@@ -31,6 +31,7 @@ Arguments::Arguments(int argc, char* argv[])
     {
         input = random_input(height, width, norganisms);
     }
+    validate();
 }
 
 void Arguments::validate()

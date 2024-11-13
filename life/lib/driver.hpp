@@ -3,12 +3,13 @@
 #include "arguments.hpp"
 #include "i_engine.hpp"
 #include "i_viewer.hpp"
+#include "lifelib.hpp"
 
-class Driver
+class LIFELIB_API Driver
 {
 public:
     Driver(const Arguments& arg);
-    void start();
+    int start();
     bool is_over(const Board& new_board) const;
     bool next();
 

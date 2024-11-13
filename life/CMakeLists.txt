@@ -2,8 +2,10 @@ cmake_minimum_required(VERSION 3.10)
 project(simlife)
 set(CMAKE_CXX_STANDARD 17)
 
+#for clangformat
 find_package(Python3 REQUIRED)
 
+#cxxopts
 include(FetchContent)
 FetchContent_Declare(
   cxxopts
@@ -17,38 +19,50 @@ if(NOT cxxopts_POPULATED)
 endif()
 include_directories(${cxxopts_SOURCE_DIR}/include)
 
-set(SRC 
-	prog/sources/main.cpp
-	prog/sources/board.cpp
-	prog/sources/simlife_utils.cpp
-	prog/sources/arguments.cpp
-	prog/sources/cmd_viewer.cpp
-	prog/sources/life_engine.cpp
-	prog/sources/driver.cpp
+#catch2
+FetchContent_Declare(
+  catch
+  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+  GIT_TAG        v2.13.10
 )
-set(HEADERS
-	prog/headers/board.hpp
-	prog/headers/simlife_utils.hpp
-	prog/headers/arguments.hpp
-	prog/headers/cmd_viewer.hpp
-	prog/headers/life_engine.hpp
-	prog/headers/i_engine.hpp
-	prog/headers/i_viewer.hpp
-	prog/headers/driver.hpp
+FetchContent_GetProperties(catch)
+if(NOT catch_POPULATED)
+  FetchContent_Populate(catch)
+  add_subdirectory(${catch_SOURCE_DIR} ${catch_BINARY_DIR})
+endif()
+set(CATCH2_FRAMEWORK "Catch2::Catch2")
+
+
+#library
+add_library(simlife_lib SHARED
+	lib/board.cpp
+	lib/simlife_utils.cpp
+	lib/cmd_viewer.cpp
+	lib/life_engine.cpp
+	lib/driver.cpp
 )
-include_directories(prog/headers)
+target_compile_definitions(simlife_lib PRIVATE LIFELIB_EXP)
+target_include_directories(simlife_lib PRIVATE prog)
 
-set (CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/bin)
-set (CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/bin)
+#exe
+SET (SRC
+	prog/main.cpp
+	prog/arguments.cpp
+	prog/tests/tests.cpp
+)
+add_executable(simlife ${SRC})
+target_link_libraries(simlife PRIVATE Catch2::Catch2 simlife_lib)
 
+#custom
 set(FORMAT_SOURCE_DIRS  prog)
-add_executable(simlife ${SRC} ${HEADERS})
-
 add_custom_command(TARGET simlife POST_BUILD 
 	COMMAND ${CMAKE_COMMAND} -E copy
 		${CMAKE_SOURCE_DIR}/test_data/file.txt ${CMAKE_BINARY_DIR})
-
 add_custom_target(clangformat
     COMMAND ${PYTHON3_EXECUTABLE} clangformat.py ${FORMAT_SOURCE_DIRS}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
+target_include_directories(simlife PRIVATE prog)
+target_include_directories(simlife PRIVATE lib)
+set (CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/bin)
+set (CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/bin)

@@ -2,7 +2,7 @@
 #define VIEWER_HPP
 #include "board.hpp"
 
-class IViewer
+class LIFELIB_API IViewer
 {
 public:
     virtual ~IViewer() = default;

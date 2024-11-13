@@ -21,19 +21,21 @@ Driver::Driver(const Arguments& a) : _arg(a), _board(_arg.height, _arg.width, _a
     {
         throw std::runtime_error("This type of engine is not supported");
     }
-    _arg.validate();
     _board.add_data(std::move(_arg.input));
 }
 
-void Driver::start()
+int Driver::start()
 {
+    int steps = 0;
     _viewer->display(_board);
     while (next())
     {
+        steps++;
         _viewer->display(_board);
         std::this_thread::sleep_for(std::chrono::milliseconds(_arg.delay));
     }
     _viewer->game_over();
+    return steps;
 }
 
 bool Driver::next()
