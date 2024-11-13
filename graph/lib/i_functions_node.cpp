@@ -32,3 +32,13 @@ void IFunctionalNode::before_value_compute()
         c(this);
     }
 }
+
+void g::add_dependencies(std::shared_ptr<IFunctionalNode> node,
+                                       std::initializer_list<std::shared_ptr<INode>> prevs)
+{
+    for (auto p : prevs)
+    {
+        node->add_prev(p);
+        p->add_next(node);
+    }
+}

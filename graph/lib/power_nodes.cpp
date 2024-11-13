@@ -16,6 +16,6 @@ double SqrNode::compute_value()
 std::shared_ptr<IFunctionalNode> op::sqr(std::shared_ptr<INode> a)
 {
     std::shared_ptr<IFunctionalNode> b(new SqrNode());
-    add_dependencies(a, b);
+    add_dependencies(b, {a});
     return b;
 }
