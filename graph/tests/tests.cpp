@@ -22,25 +22,25 @@ TEST_CASE("test1", "[1]")
 
     int a1_compute = 0, a2_compute = 0, a3_compute = 0, f_compute = 0;
     a1->add_value_callback([&a1_compute](IFunctionalNode*) {
-        std::cout << "a1 node recomputed" << std::endl;
         a1_compute++;
     });
     a2->add_value_callback([&a2_compute](IFunctionalNode*) {
-        std::cout << "a2 node recomputed" << std::endl;
         a2_compute++;
     });
     a3->add_value_callback([&a3_compute](IFunctionalNode*) {
-        std::cout << "a3 node recomputed" << std::endl;
         a3_compute++;
     });
     f->add_value_callback([&f_compute](IFunctionalNode*) {
-        std::cout << "f node recomputed" << std::endl;
         f_compute++;
     });
 
+    log()->info("change A: ");
     A->set_value(1.2);
+    log()->info("change x: ");
     x->set_value(2);
+    log()->info("change B: ");
     B->set_value(-0.8);
+    log()->info("change y: ");
     y->set_value(4);
     CHECK(f->get_value() == Approx(5.76));
     CHECK(f->get_value() == Approx(5.76));
@@ -48,12 +48,16 @@ TEST_CASE("test1", "[1]")
     CHECK(a2_compute == 1);
     CHECK(a3_compute == 1);
     CHECK(f_compute == 1);
+
+    log()->info("change y: ");
     y->set_value(5);
     CHECK(f->get_value() == Approx(11.56));
     CHECK(a1_compute == 1);
     CHECK(a2_compute == 1);
     CHECK(a3_compute == 2);
     CHECK(f_compute == 2);
+
+    log()->info("change x: ");
     x->set_value(3);
     CHECK(a2->get_value() == Approx(2.8));
     CHECK(a1_compute == 2);
@@ -65,6 +69,8 @@ TEST_CASE("test1", "[1]")
     CHECK(a2_compute == 2);
     CHECK(a3_compute == 3);
     CHECK(f_compute == 3);
+
+    log()->info("change A: ");
     A->set_value(1.3);
     CHECK(f->get_value() == Approx(3.61));
     CHECK(a1_compute == 3);

@@ -8,12 +8,15 @@ FetchContent_Declare(
   GIT_REPOSITORY https://github.com/catchorg/Catch2.git
   GIT_TAG        v2.13.10
 )
-FetchContent_GetProperties(catch)
-if(NOT catch_POPULATED)
-  FetchContent_Populate(catch)
-  add_subdirectory(${catch_SOURCE_DIR} ${catch_BINARY_DIR})
-endif()
+FetchContent_MakeAvailable(catch)
 set(CATCH2_FRAMEWORK "Catch2::Catch2")
+
+FetchContent_Declare(
+    spdlog
+    GIT_REPOSITORY https://github.com/gabime/spdlog.git
+    GIT_TAG v1.12.0
+)
+FetchContent_MakeAvailable(spdlog)
 
 add_subdirectory(lib)
 add_subdirectory(tests)
