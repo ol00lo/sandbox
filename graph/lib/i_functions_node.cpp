@@ -21,6 +21,7 @@ double IFunctionalNode::get_value()
 
 void IFunctionalNode::clear_cache()
 {
+    log_cache();
     _has_value = false;
     _value = 0;
 }

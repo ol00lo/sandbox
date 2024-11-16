@@ -1,5 +1,4 @@
 #include <catch2/catch.hpp>
-
 #include "arithmetic_nodes.hpp"
 #include "i_functions_node.hpp"
 #include "input_node.hpp"
@@ -34,13 +33,9 @@ TEST_CASE("test1", "[1]")
         f_compute++;
     });
 
-    log()->info("change A: ");
     A->set_value(1.2);
-    log()->info("change x: ");
     x->set_value(2);
-    log()->info("change B: ");
     B->set_value(-0.8);
-    log()->info("change y: ");
     y->set_value(4);
     CHECK(f->get_value() == Approx(5.76));
     CHECK(f->get_value() == Approx(5.76));
@@ -49,7 +44,6 @@ TEST_CASE("test1", "[1]")
     CHECK(a3_compute == 1);
     CHECK(f_compute == 1);
 
-    log()->info("change y: ");
     y->set_value(5);
     CHECK(f->get_value() == Approx(11.56));
     CHECK(a1_compute == 1);
@@ -57,7 +51,6 @@ TEST_CASE("test1", "[1]")
     CHECK(a3_compute == 2);
     CHECK(f_compute == 2);
 
-    log()->info("change x: ");
     x->set_value(3);
     CHECK(a2->get_value() == Approx(2.8));
     CHECK(a1_compute == 2);
@@ -70,7 +63,6 @@ TEST_CASE("test1", "[1]")
     CHECK(a3_compute == 3);
     CHECK(f_compute == 3);
 
-    log()->info("change A: ");
     A->set_value(1.3);
     CHECK(f->get_value() == Approx(3.61));
     CHECK(a1_compute == 3);

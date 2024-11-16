@@ -1,16 +1,24 @@
 #include "graph.hpp"
 #include "spdlog/sinks/stdout_color_sinks.h"
 
-static std::shared_ptr<spdlog::logger> logger;
-g::GraphInitializer::GraphInitializer()
+namespace
 {
-    logger = spdlog::stdout_color_mt("graph-logger");
-}
-std::shared_ptr<spdlog::logger>& g::log()
+std::shared_ptr<spdlog::logger> logger; 
+struct GraphInitializer
 {
-    return logger;
+    GraphInitializer()
+    {
+        logger = spdlog::stdout_color_mt("graph-logger");
+        logger->set_level(spdlog::level::debug);
+    }
+};
+GraphInitializer graph_init;
+} // namespace
+
+spdlog::logger& log()
+{
+    return *logger;
 }
-static g::GraphInitializer graph_init;
 
 int g::graph_ping()
 {

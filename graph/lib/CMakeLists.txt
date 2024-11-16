@@ -6,5 +6,5 @@ add_library(graph_lib STATIC
   arithmetic_nodes.cpp
   power_nodes.cpp
 )
-target_link_libraries(graph_lib PRIVATE spdlog::spdlog)
+target_link_libraries(graph_lib PUBLIC spdlog::spdlog)
 target_include_directories(graph_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

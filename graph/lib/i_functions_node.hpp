@@ -22,7 +22,7 @@ private:
     bool _has_value = false;
     double _value = 0;
     std::vector<callback_t> _value_callbacks;
-
+    virtual void log_cache() = 0;
     void before_value_compute();
     virtual double compute_value() = 0;
 };

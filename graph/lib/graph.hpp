@@ -7,14 +7,7 @@
 namespace g
 {
 int graph_ping();
-
-std::shared_ptr<spdlog::logger>& log();
-
-class GraphInitializer
-{
-public:
-    GraphInitializer();
-};
 }
+spdlog::logger& log();
 
 #endif

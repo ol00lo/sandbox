@@ -10,10 +10,14 @@ void add_dependencies(std::shared_ptr<INode> a, std::shared_ptr<IFunctionalNode>
 double SqrNode::compute_value()
 {
     double value = _prev_nodes[0]->get_value();
-    log()->info("{:.2f}^2 = {:.2f}", value, value * value);
-    return value * value;
+    double res = value * value;
+    log().debug("SqrNode compute: {:.2f}^2 = {:.2f}", value, res);
+    return res;
 }
-
+void SqrNode::log_cache()
+{
+    log().debug("SqrNode cleaned");
+}
 std::shared_ptr<IFunctionalNode> op::sqr(std::shared_ptr<INode> a)
 {
     std::shared_ptr<IFunctionalNode> b(new SqrNode());
