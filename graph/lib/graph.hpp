@@ -7,7 +7,7 @@
 namespace g
 {
 int graph_ping();
-}
 spdlog::logger& log();
+}
 
 #endif

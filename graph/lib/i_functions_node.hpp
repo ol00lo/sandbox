@@ -13,7 +13,7 @@ public:
     void add_value_callback(callback_t cb);
 
     double get_value() override;
-    virtual IFunctionalNode::~IFunctionalNode(){};
+    virtual ~IFunctionalNode(){};
     
 protected:
     void clear_cache() override;

@@ -1,3 +1,10 @@
+FetchContent_Declare(
+    spdlog
+    GIT_REPOSITORY https://github.com/gabime/spdlog.git
+    GIT_TAG v1.12.0
+)
+FetchContent_MakeAvailable(spdlog)
+
 add_library(graph_lib STATIC
   graph.cpp
   i_node.cpp
