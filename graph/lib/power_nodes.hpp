@@ -7,6 +7,7 @@ namespace g
 class SqrNode : public IFunctionalNode
 {
 protected:
+    void log_cache() override;
     double compute_value() override;
 };
 

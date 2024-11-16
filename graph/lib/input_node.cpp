@@ -9,6 +9,7 @@ double InputNode::get_value()
 
 void InputNode::set_value(double val)
 {
+    log().info("Input node value changed: from {} to {}", _value, val);
     _value = val;
     clear_forward_cache();
 }

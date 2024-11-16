@@ -3,17 +3,41 @@ using namespace g;
 
 double MultNode::compute_value()
 {
-    return _prev_nodes[0]->get_value() * _prev_nodes[1]->get_value();
+    auto res = _prev_nodes[0]->get_value() * _prev_nodes[1]->get_value();
+    log().debug("MultNode compute: {:.2f} * {:.2f} = {:.2f}", _prev_nodes[0]->get_value(), _prev_nodes[1]->get_value(),
+                res);
+    return res;
 }
 
 double PlusNode::compute_value()
 {
-    return _prev_nodes[0]->get_value() + _prev_nodes[1]->get_value();
+    auto res = _prev_nodes[0]->get_value() + _prev_nodes[1]->get_value();
+    log().debug("PlusNode compute: {:.2f} + {:.2f} = {:.2f}", _prev_nodes[0]->get_value(), _prev_nodes[1]->get_value(),
+                res);
+    return res;
 }
 
 double MinusNode::compute_value()
 {
-    return _prev_nodes[0]->get_value() - _prev_nodes[1]->get_value();
+    auto res = _prev_nodes[0]->get_value() - _prev_nodes[1]->get_value();
+    log().debug("MinusNode compute: {:.2f} - {:.2f} = {:.2f}", _prev_nodes[0]->get_value(), _prev_nodes[1]->get_value(),
+                res);
+    return res;
+}
+
+void MultNode::log_cache()
+{
+    log().debug("MultNode cleaned");
+}
+
+void MinusNode::log_cache()
+{
+    log().debug("MinusNode cleaned");
+}
+
+void PlusNode::log_cache()
+{
+    log().debug("PlusNode cleaned");
 }
 
 std::shared_ptr<IFunctionalNode> op::mult(std::shared_ptr<INode> a1, std::shared_ptr<INode> a2)

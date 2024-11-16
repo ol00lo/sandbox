@@ -8,18 +8,21 @@ class MultNode : public IFunctionalNode
 {
 protected:
     double compute_value() override;
+    void log_cache() override;
 };
 
 class PlusNode : public IFunctionalNode
 {
 protected:
     double compute_value() override;
+    void log_cache() override;
 };
 
 class MinusNode : public IFunctionalNode
 {
 protected:
     double compute_value() override;
+    void log_cache() override;
 };
 
 namespace op
