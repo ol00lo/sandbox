@@ -15,7 +15,7 @@ struct GraphInitializer
 GraphInitializer graph_init;
 } // namespace
 
-spdlog::logger& log()
+spdlog::logger& g::log()
 {
     return *logger;
 }
