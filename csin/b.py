@@ -67,7 +67,7 @@ def create_model():
     return model
 
 with open(f"mseresults.txt", "w") as file:
-    for n in range(5):
+    for n in range(1):
         model = create_model()
         lr = 7e-3
         bs = 16
@@ -84,3 +84,4 @@ with open(f"mseresults.txt", "w") as file:
             validation_data=(x_valid, y_valid),
             callbacks=cb)
         file.write(f"learning_rate: {lr}, batch_size: {bs}, epochs_to_convergence: {len(res.history['loss'])}\n")
+        model.save("model.h5")
