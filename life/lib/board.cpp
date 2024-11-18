@@ -1,7 +1,6 @@
 #include "board.hpp"
 
-Board::Board(int nrows, int ncols, char boardtype)
-    : _nrows(nrows), _ncols(ncols), _board(nrows * ncols, false), type_of_board(boardtype)
+Board::Board(int nrows, int ncols) : _nrows(nrows), _ncols(ncols), _board(nrows * ncols, false)
 {
 }
 
@@ -19,18 +18,18 @@ bool Board::operator==(const Board& other) const
     return _nrows == other._nrows && _ncols == other._ncols && _board == other._board;
 }
 
-void Board::add_data(std::vector<bool>&& in)
+void Board::add_data(const std::vector<bool>& in)
 {
     if (_board.size() != in.size())
     {
         throw std::out_of_range("different dimensions");
     }
-    _board = std::move(in);
+    _board = in;
 }
 
 bool Board::at(int irow, int icol) const
 {
-    switch (type_of_board)
+    switch (_type_of_board)
     {
     case 'w':
         if (irow >= _nrows || irow < 0 || icol >= _ncols || icol < 0)
@@ -98,4 +97,8 @@ int Board::ncols() const
 std::vector<bool> Board::get_board() const
 {
     return _board;
+}
+void Board::set_type(char type)
+{
+    _type_of_board = type;
 }

@@ -3,9 +3,10 @@
 #include "life_engine.hpp"
 #include <thread>
 
-Driver::Driver(const Arguments& a) : _arg(a), _board(_arg.height, _arg.width, _arg.type_board)
+Driver::Driver(char type_of_engine, char type_of_viewer, int height, int width) : _board(height, width)
 {
-    if (_arg.viewer_type == 'c')
+
+    if (type_of_viewer == 'c')
     {
         _viewer = std::make_unique<CmdViewer>();
     }
@@ -13,7 +14,7 @@ Driver::Driver(const Arguments& a) : _arg(a), _board(_arg.height, _arg.width, _a
     {
         throw std::runtime_error("This type of viewer is not supported");
     }
-    if (_arg.engine_type == 'c')
+    if (type_of_engine == 'c')
     {
         _engine = std::make_unique<LifeEngine>();
     }
@@ -21,18 +22,28 @@ Driver::Driver(const Arguments& a) : _arg(a), _board(_arg.height, _arg.width, _a
     {
         throw std::runtime_error("This type of engine is not supported");
     }
-    _board.add_data(std::move(_arg.input));
+}
+
+void Driver::set_delay(int delay)
+{
+    _delay = delay;
+}
+
+void Driver::set_init_conditions(std::vector<bool>& input)
+{
+    _input = std::move(input);
 }
 
 int Driver::start()
 {
     int steps = 0;
+    _board.add_data(_input);
     _viewer->display(_board);
     while (next())
     {
         steps++;
         _viewer->display(_board);
-        std::this_thread::sleep_for(std::chrono::milliseconds(_arg.delay));
+        std::this_thread::sleep_for(std::chrono::milliseconds(_delay));
     }
     _viewer->game_over();
     return steps;
@@ -61,4 +72,9 @@ bool Driver::is_over(const Board& new_board) const
         return true;
     else
         return false;
+}
+
+void Driver::set_board_type(char type)
+{
+    _board.set_type(type);
 }

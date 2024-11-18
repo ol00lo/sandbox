@@ -1,6 +1,6 @@
 #ifndef SIMLIFE_HPP
 #define SIMLIFE_HPP
-#include "lifelib.hpp"
+#include "simlife_lib.hpp"
 #include <fstream>
 #include <iostream>
 #include <random>

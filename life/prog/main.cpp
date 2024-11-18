@@ -1,15 +1,24 @@
-#define CATCH_CONFIG_RUNNER
-#include "global.hpp"
-#include <catch2/catch.hpp>
+#include "arguments.hpp"]
+#include "driver.hpp"
+#include <iostream>
 
-int global_argc;
-char** global_argv;
+void run_new(int argc, char* argv[])
+{
+    Arguments argum(argc, argv);
+    Driver d(argum.engine_type, argum.viewer_type, argum.width, argum.height);
+    d.set_delay(argum.delay);
+    d.set_init_conditions(argum.input);
+    d.start();
+}
 
 int main(int argc, char* argv[])
 {
-    global_argc = argc;
-    global_argv = argv;
-    int result = Catch::Session().run();
-    std::cout << "DONE" << std::endl;
-    return result;
+    try
+    {
+        run_new(argc, argv);
+    }
+    catch (std::exception& e)
+    {
+        std::cout << e.what() << std::endl;
+    }
 }
