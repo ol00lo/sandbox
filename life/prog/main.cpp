@@ -1,4 +1,4 @@
-#include "arguments.hpp"]
+#include "arguments.hpp"
 #include "driver.hpp"
 #include <iostream>
 
