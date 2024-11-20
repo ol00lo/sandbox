@@ -1,6 +1,7 @@
 #ifndef CMD_VIEWER_HPP
 #define CMD_VIEWER_HPP
 #include "i_viewer.hpp"
+
 class CmdViewer : public IViewer
 {
 public:

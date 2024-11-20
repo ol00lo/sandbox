@@ -1,16 +1,13 @@
-#include "cxxopts.hpp"
+#include "arguments.hpp"
 #include "driver.hpp"
-#include "simlife_utils.hpp"
-#include <chrono>
 #include <iostream>
-#include <random>
-#include <sstream>
-#include <string>
 
 void run_new(int argc, char* argv[])
 {
     Arguments argum(argc, argv);
-    Driver d(argum);
+    Driver d(argum.engine_type, argum.viewer_type, argum.width, argum.height);
+    d.set_delay(argum.delay);
+    d.set_init_conditions(argum.input);
     d.start();
 }
 

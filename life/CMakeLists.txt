@@ -1,53 +1,22 @@
 cmake_minimum_required(VERSION 3.10)
-project(simlife)
+project(life)
 set(CMAKE_CXX_STANDARD 17)
 
+#for clangformat
 find_package(Python3 REQUIRED)
-
 include(FetchContent)
-FetchContent_Declare(
-  cxxopts
-  GIT_REPOSITORY https://github.com/jarro2783/cxxopts
-  GIT_TAG        v3.2.0
-)
-FetchContent_MakeAvailable(cxxopts)
-FetchContent_GetProperties(cxxopts)
-if(NOT cxxopts_POPULATED)
-	FetchContent_Populate(cxxopts)
-endif()
-include_directories(${cxxopts_SOURCE_DIR}/include)
 
-set(SRC 
-	prog/sources/main.cpp
-	prog/sources/board.cpp
-	prog/sources/simlife_utils.cpp
-	prog/sources/arguments.cpp
-	prog/sources/cmd_viewer.cpp
-	prog/sources/life_engine.cpp
-	prog/sources/driver.cpp
-)
-set(HEADERS
-	prog/headers/board.hpp
-	prog/headers/simlife_utils.hpp
-	prog/headers/arguments.hpp
-	prog/headers/cmd_viewer.hpp
-	prog/headers/life_engine.hpp
-	prog/headers/i_engine.hpp
-	prog/headers/i_viewer.hpp
-	prog/headers/driver.hpp
-)
-include_directories(prog/headers)
+# build all binaries to build/bin
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-set (CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/bin)
-set (CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/bin)
+add_subdirectory(lib)
+add_subdirectory(prog)
+add_subdirectory(tests)
 
-set(FORMAT_SOURCE_DIRS  prog)
-add_executable(simlife ${SRC} ${HEADERS})
-
-add_custom_command(TARGET simlife POST_BUILD 
-	COMMAND ${CMAKE_COMMAND} -E copy
-		${CMAKE_SOURCE_DIR}/test_data/file.txt ${CMAKE_BINARY_DIR})
-
+#custom
+set(FORMAT_SOURCE_DIRS  prog test)
 add_custom_target(clangformat
     COMMAND ${PYTHON3_EXECUTABLE} clangformat.py ${FORMAT_SOURCE_DIRS}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}

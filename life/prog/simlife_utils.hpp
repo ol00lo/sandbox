@@ -1,5 +1,5 @@
-#ifndef SIMLIFE_HPP
-#define SIMLIFE_HPP
+#ifndef SIMLIFE_UTILS_HPP
+#define SIMLIFE_UTILS_HPP
 #include <fstream>
 #include <iostream>
 #include <random>
@@ -9,4 +9,4 @@ std::vector<bool> random_input(int height, int width, int norganisms);
 std::vector<bool> input_fromfile(std::string filename);
 std::pair<int, int> dim_fromfile(std::string filename);
 std::pair<int, int> dim_fromline(std::string dimensions);
-#endif // !SIMLIFE_HPP
+#endif // !SIMLIFE_UTILS_HPP
