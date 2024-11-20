@@ -3,6 +3,7 @@
 #include "i_engine.hpp"
 #include "i_viewer.hpp"
 #include "simlife_lib.hpp"
+#include<memory>
 
 class LIFELIB_API Driver
 {
