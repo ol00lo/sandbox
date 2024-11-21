@@ -9,6 +9,7 @@ class SqrNode : public IFunctionalNode
 protected:
     void log_cache() override;
     double compute_value() override;
+    std::vector<double> gradient() override;
 };
 
 namespace op

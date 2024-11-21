@@ -8,6 +8,7 @@ namespace g
 {
 int graph_ping();
 spdlog::logger& log();
+void set_log_debug();
 }
 
 #endif

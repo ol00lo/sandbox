@@ -15,6 +15,7 @@ public:
     void add_prev(std::shared_ptr<INode> a);
     void add_next(std::shared_ptr<INode> a);
     virtual ~INode(){};
+    double derivative(const INode* argument);
 
 protected:
     std::vector<std::shared_ptr<INode>> _prev_nodes;
@@ -23,6 +24,9 @@ protected:
     virtual void clear_cache(){};
     void clear_forward_cache();
     void clear_backward_cache();
+
+private:
+    virtual double notself_derivative(const INode* arg) = 0;
 };
 } // namespace g
 #endif

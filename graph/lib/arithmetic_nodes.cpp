@@ -40,6 +40,23 @@ void PlusNode::log_cache()
     log().debug("PlusNode cleaned");
 }
 
+std::vector<double> MultNode::gradient()
+{
+    double val1 = _prev_nodes[0]->get_value();
+    double val2 = _prev_nodes[1]->get_value();
+    return {val2, val1};
+}
+
+std::vector<double> PlusNode::gradient()
+{
+    return {1.0, 1.0};
+}
+
+std::vector<double> MinusNode::gradient()
+{
+    return {1.0, -1.0};
+}
+
 std::shared_ptr<IFunctionalNode> op::mult(std::shared_ptr<INode> a1, std::shared_ptr<INode> a2)
 {
     std::shared_ptr<IFunctionalNode> a(new MultNode);

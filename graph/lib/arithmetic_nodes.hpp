@@ -9,6 +9,7 @@ class MultNode : public IFunctionalNode
 protected:
     double compute_value() override;
     void log_cache() override;
+    std::vector<double> gradient() override;
 };
 
 class PlusNode : public IFunctionalNode
@@ -16,6 +17,7 @@ class PlusNode : public IFunctionalNode
 protected:
     double compute_value() override;
     void log_cache() override;
+    std::vector<double> gradient() override;
 };
 
 class MinusNode : public IFunctionalNode
@@ -23,6 +25,7 @@ class MinusNode : public IFunctionalNode
 protected:
     double compute_value() override;
     void log_cache() override;
+    std::vector<double> gradient() override;
 };
 
 namespace op
