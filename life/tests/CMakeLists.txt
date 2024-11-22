@@ -9,6 +9,7 @@ set(CATCH2_FRAMEWORK "Catch2::Catch2")
 
 add_executable(simlife_tests
 	tests.cpp
+	c_api_tests.cpp
 	main.cpp)
 
 target_include_directories(simlife_tests PRIVATE ${CMAKE_SOURCE_DIR}/lib)

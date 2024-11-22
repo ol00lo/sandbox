@@ -31,6 +31,10 @@ void Driver::set_delay(int delay)
 
 void Driver::set_init_conditions(std::vector<bool>& input)
 {
+    if (input.size() != _board.ncols() * _board.nrows())
+    {
+        throw std::runtime_error("Incorrect input");
+    }
     _input = std::move(input);
 }
 
