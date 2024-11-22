@@ -15,7 +15,8 @@ public:
     void add_prev(std::shared_ptr<INode> a);
     void add_next(std::shared_ptr<INode> a);
     virtual ~INode(){};
-    double derivative(const INode* argument);
+    double get_derivative(const INode* argument);
+    double get_derivative(std::shared_ptr<INode>);
 
 protected:
     std::vector<std::shared_ptr<INode>> _prev_nodes;

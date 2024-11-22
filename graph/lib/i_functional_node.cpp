@@ -1,4 +1,4 @@
-#include "i_functions_node.hpp"
+#include "i_functional_node.hpp"
 #include <iostream>
 
 using namespace g;
@@ -6,6 +6,10 @@ using namespace g;
 void IFunctionalNode::add_value_callback(callback_t cb)
 {
     _value_callbacks.push_back(cb);
+}
+void IFunctionalNode::add_gradient_callback(callback_t cb)
+{
+    _gradient_callbacks.push_back(cb);
 }
 
 double IFunctionalNode::get_value()
@@ -22,6 +26,7 @@ double IFunctionalNode::get_value()
 void IFunctionalNode::clear_cache()
 {
     log_cache();
+    _has_gradient = false;
     _derivative_cache.clear();
     log().debug("derivative cache cleaned");
     _has_value = false;
@@ -35,11 +40,18 @@ void IFunctionalNode::before_value_compute()
         c(this);
     }
 }
+void IFunctionalNode::before_gradient_compute()
+{
+    for (auto& c : _gradient_callbacks)
+    {
+        c(this);
+    }
+}
 
 double IFunctionalNode::notself_derivative(const INode* arg)
 {
     auto x = _derivative_cache.find(arg);
-    if (x == _derivative_cache.end() || _has_value == false)
+    if (x == _derivative_cache.end())
     {
         double res = compute_notself_derivative(arg);
         _derivative_cache.insert({arg, res});
@@ -54,15 +66,20 @@ double IFunctionalNode::notself_derivative(const INode* arg)
 double IFunctionalNode::compute_notself_derivative(const INode* arg)
 {
     double res = 0;
+    if (!_has_gradient)
+    {
+        before_gradient_compute();
+        _gradient = get_gradient();
+        _has_gradient = true;
+    }
     for (int i = 0; i < _prev_nodes.size(); i++)
     {
-        res += gradient()[i] * _prev_nodes[i]->derivative(arg);
+        res += _gradient[i] * _prev_nodes[i]->get_derivative(arg);
     }
     return res;
 }
 
-void g::add_dependencies(std::shared_ptr<IFunctionalNode> node,
-                                       std::initializer_list<std::shared_ptr<INode>> prevs)
+void g::add_dependencies(std::shared_ptr<IFunctionalNode> node, std::initializer_list<std::shared_ptr<INode>> prevs)
 {
     for (auto p : prevs)
     {

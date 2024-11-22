@@ -16,5 +16,6 @@ void InputNode::set_value(double val)
 
 double InputNode::notself_derivative(const INode* arg)
 {
+    log().debug("Gradient in InputNode compute");
     return 0.0;
 }

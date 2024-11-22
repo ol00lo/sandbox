@@ -25,36 +25,41 @@ double MinusNode::compute_value()
     return res;
 }
 
-void MultNode::log_cache()
+std::string MultNode::classname() const
 {
-    log().debug("MultNode cleaned");
+    return "MultNode";
 }
 
-void MinusNode::log_cache()
+std::string PlusNode::classname() const
 {
-    log().debug("MinusNode cleaned");
+    return "PlusNode";
 }
 
-void PlusNode::log_cache()
+std::string MinusNode::classname() const
 {
-    log().debug("PlusNode cleaned");
+    return "MinusNode";
 }
-
-std::vector<double> MultNode::gradient()
+std::vector<double> MultNode::get_gradient()
 {
+    log().debug("Gradient in MultNode compute");
     double val1 = _prev_nodes[0]->get_value();
     double val2 = _prev_nodes[1]->get_value();
-    return {val2, val1};
+    std::vector<double> res = {val2, val1};
+    return res;
 }
 
-std::vector<double> PlusNode::gradient()
+std::vector<double> PlusNode::get_gradient()
 {
-    return {1.0, 1.0};
+    log().debug("Gradient in PlusNode compute");
+    std::vector<double> res = {1.0, 1.0};
+    return res;
 }
 
-std::vector<double> MinusNode::gradient()
+std::vector<double> MinusNode::get_gradient()
 {
-    return {1.0, -1.0};
+    log().debug("Gradient in MinusNode compute");
+    std::vector<double> res = {1.0, -1.0};
+    return res;
 }
 
 std::shared_ptr<IFunctionalNode> op::mult(std::shared_ptr<INode> a1, std::shared_ptr<INode> a2)
