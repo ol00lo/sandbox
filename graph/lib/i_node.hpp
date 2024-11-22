@@ -26,8 +26,10 @@ protected:
     void clear_forward_cache();
     void clear_backward_cache();
 
+    virtual std::string classname() const = 0;
 private:
     virtual double notself_derivative(const INode* arg) = 0;
+
 };
 } // namespace g
 #endif

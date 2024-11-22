@@ -38,8 +38,6 @@ private:
     double notself_derivative(const INode* arg) override;
     double compute_notself_derivative(const INode* arg);
     virtual std::vector<double> get_gradient() = 0;
-
-    virtual std::string classname() const = 0;
 };
 void add_dependencies(std::shared_ptr<IFunctionalNode> node, std::initializer_list<std::shared_ptr<INode>> prevs);
 

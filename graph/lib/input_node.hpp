@@ -13,6 +13,8 @@ public:
 
 private:
     double _value = 0;
+
+    std::string classname() const override;
 };
 } // namespace g
 #endif
