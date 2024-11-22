@@ -5,11 +5,11 @@ from keras import datasets as data
 import os
 
 checkpoint = tf.keras.callbacks.ModelCheckpoint(
-    'model_epoch{epoch:02d}_loss_{loss:.5f}.keras', 
-    monitor='val_loss',  
-    save_best_only=True,  
-    mode='min',  
-    verbose=1  
+    'model_epoch{epoch:02d}_accuracy_{val_accuracy:.5f}.keras',
+    monitor='val_accuracy',
+    save_best_only=True,
+    mode='max',
+    verbose=1
 )
 
 to_dir = "cifar10"
