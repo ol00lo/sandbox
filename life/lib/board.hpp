@@ -1,6 +1,6 @@
 #ifndef BOARD_HPP
 #define BOARD_HPP
-#include "simlife_lib.hpp"
+#include "simlife_lib.h"
 #include <algorithm>
 #include <iostream>
 #include <vector>
