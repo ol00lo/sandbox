@@ -2,7 +2,7 @@
 #define DRIVER_HPP
 #include "i_engine.hpp"
 #include "i_viewer.hpp"
-#include "simlife_lib.hpp"
+#include "simlife_lib.h"
 #include<memory>
 
 class LIFELIB_API Driver
