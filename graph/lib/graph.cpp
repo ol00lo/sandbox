@@ -9,11 +9,15 @@ struct GraphInitializer
     GraphInitializer()
     {
         logger = spdlog::stdout_color_mt("graph-logger");
-        logger->set_level(spdlog::level::debug);
     }
 };
 GraphInitializer graph_init;
 } // namespace
+
+void g::set_log_debug()
+{
+    logger->set_level(spdlog::level::debug);
+}
 
 spdlog::logger& g::log()
 {

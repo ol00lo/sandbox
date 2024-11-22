@@ -1,14 +1,15 @@
 #ifndef POWER_NODES_HPP
 #define POWER_NODES_HPP
-#include "i_functions_node.hpp"
+#include "i_functional_node.hpp"
 
 namespace g
 {
 class SqrNode : public IFunctionalNode
 {
 protected:
-    void log_cache() override;
     double compute_value() override;
+    std::string classname() const override;
+    std::vector<double> get_gradient() override;
 };
 
 namespace op

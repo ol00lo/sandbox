@@ -9,9 +9,12 @@ class InputNode : public INode
 public:
     double get_value() override;
     void set_value(double val);
+    double notself_derivative(const INode* arg) override;
 
 private:
     double _value = 0;
+
+    std::string classname() const override;
 };
 } // namespace g
 #endif

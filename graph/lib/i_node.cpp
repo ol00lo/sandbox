@@ -26,3 +26,16 @@ void INode::clear_backward_cache()
         n->clear_backward_cache();
     }
 }
+
+double INode::get_derivative(const INode* argument)
+{
+    if (argument == this)
+        return 1;
+    else
+        return notself_derivative(argument);
+}
+
+double INode::get_derivative(std::shared_ptr<INode> argument)
+{
+    return get_derivative(argument.get());
+}

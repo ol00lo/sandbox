@@ -1,6 +1,6 @@
 #ifndef ARITHMETIC_NODES_HPP
 #define ARITHMETIC_NODES_HPP
-#include "i_functions_node.hpp"
+#include "i_functional_node.hpp"
 
 namespace g
 {
@@ -8,21 +8,24 @@ class MultNode : public IFunctionalNode
 {
 protected:
     double compute_value() override;
-    void log_cache() override;
+    std::string classname() const override;
+    std::vector<double> get_gradient() override;
 };
 
 class PlusNode : public IFunctionalNode
 {
 protected:
     double compute_value() override;
-    void log_cache() override;
+    std::string classname() const override;
+    std::vector<double> get_gradient() override;
 };
 
 class MinusNode : public IFunctionalNode
 {
 protected:
     double compute_value() override;
-    void log_cache() override;
+    std::string classname() const override;
+    std::vector<double> get_gradient() override;
 };
 
 namespace op

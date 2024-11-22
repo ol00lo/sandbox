@@ -13,3 +13,14 @@ void InputNode::set_value(double val)
     _value = val;
     clear_forward_cache();
 }
+
+double InputNode::notself_derivative(const INode* arg)
+{
+    log().debug("Gradient in InputNode compute");
+    return 0.0;
+}
+
+std::string InputNode::classname() const
+{
+    return "InputNode"; 
+}

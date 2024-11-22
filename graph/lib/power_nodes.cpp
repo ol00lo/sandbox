@@ -14,10 +14,20 @@ double SqrNode::compute_value()
     log().debug("SqrNode compute: {:.2f}^2 = {:.2f}", value, res);
     return res;
 }
-void SqrNode::log_cache()
+
+std::string SqrNode::classname() const
 {
-    log().debug("SqrNode cleaned");
+    return "SqrNode";
 }
+
+std::vector<double> SqrNode::get_gradient()
+{
+    double val = _prev_nodes[0]->get_value();
+    log().debug("Gradient in SqrNode compute");
+    std::vector<double> res = {2 * val};
+    return res;
+}
+
 std::shared_ptr<IFunctionalNode> op::sqr(std::shared_ptr<INode> a)
 {
     std::shared_ptr<IFunctionalNode> b(new SqrNode());
