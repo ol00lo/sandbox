@@ -39,3 +39,8 @@ double INode::get_derivative(std::shared_ptr<INode> argument)
 {
     return get_derivative(argument.get());
 }
+
+std::vector<std::shared_ptr<INode>> INode::get_prev()
+{
+    return _prev_nodes;
+}

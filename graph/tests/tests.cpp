@@ -1,6 +1,7 @@
 #include "arithmetic_nodes.hpp"
 #include "i_functional_node.hpp"
 #include "input_node.hpp"
+#include "model.hpp"
 #include "power_nodes.hpp"
 #include <catch2/catch.hpp>
 #include <iostream>
@@ -106,4 +107,44 @@ TEST_CASE("derivative", "[2]")
     CHECK(a2_gradient == 2);
     CHECK(a3_gradient == 3);
     CHECK(f_gradient == 3);
+}
+
+TEST_CASE("serialization", "[3]")
+{
+    std::shared_ptr<InputNode> x(new InputNode());
+    std::shared_ptr<InputNode> y(new InputNode());
+    std::shared_ptr<InputNode> A(new InputNode());
+    std::shared_ptr<InputNode> B(new InputNode());
+
+    std::shared_ptr<IFunctionalNode> a1 = op::mult(A, x);
+    std::shared_ptr<IFunctionalNode> a2 = op::plus(a1, B);
+    std::shared_ptr<IFunctionalNode> a3 = op::minus(y, a2);
+    std::shared_ptr<IFunctionalNode> f = op::sqr(a3);
+
+    Model model({x, y, A, B}, {f});
+    std::vector<double> v1 = model.compute({2, 3, 1.2, 0.8});
+    model.save("a.cm");
+    Model model2 = Model::load("a.cm");
+    std::vector<double> v2 = model2.compute({2, 3, 1.2, 0.8});
+    CHECK(v1 == v2);
+}
+
+TEST_CASE("serialization2", "[4]")
+{
+    std::shared_ptr<InputNode> x(new InputNode());
+    std::shared_ptr<InputNode> y(new InputNode());
+    std::shared_ptr<InputNode> A(new InputNode());
+
+    std::shared_ptr<IFunctionalNode> a1 = op::mult(A, x);
+    std::shared_ptr<IFunctionalNode> a2 = op::plus(a1, x);
+    std::shared_ptr<IFunctionalNode> f = op::sqr(a2);
+    std::shared_ptr<IFunctionalNode> g = op::mult(a2, a2);
+
+    Model model({x, A}, {f, g});
+    std::vector<double> v1 = model.compute({2, 3});
+    model.save("a.cm");
+    Model model2 = Model::load("a.cm");
+    std::vector<double> v2 = model2.compute({2, 3});
+    CHECK(v1[0] == v2[1]);
+    CHECK(v1 == v2);
 }

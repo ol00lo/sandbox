@@ -24,3 +24,8 @@ std::string InputNode::classname() const
 {
     return "InputNode"; 
 }
+
+std::string InputNode::serialize() const 
+{
+    return classname() + " " + std::to_string(_value) + "\t";
+}

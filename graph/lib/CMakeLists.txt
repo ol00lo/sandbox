@@ -12,6 +12,7 @@ add_library(graph_lib STATIC
   i_functional_node.cpp
   arithmetic_nodes.cpp
   power_nodes.cpp
+  model.cpp
 )
 target_link_libraries(graph_lib PUBLIC spdlog::spdlog)
 target_include_directories(graph_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

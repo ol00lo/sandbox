@@ -17,6 +17,8 @@ public:
     virtual ~INode(){};
     double get_derivative(const INode* argument);
     double get_derivative(std::shared_ptr<INode>);
+    virtual std::string classname() const = 0;
+    std::vector<std::shared_ptr<INode>> get_prev();
 
 protected:
     std::vector<std::shared_ptr<INode>> _prev_nodes;
@@ -26,7 +28,6 @@ protected:
     void clear_forward_cache();
     void clear_backward_cache();
 
-    virtual std::string classname() const = 0;
 private:
     virtual double notself_derivative(const INode* arg) = 0;
 

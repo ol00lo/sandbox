@@ -11,10 +11,11 @@ public:
     void set_value(double val);
     double notself_derivative(const INode* arg) override;
 
+    std::string serialize() const;
+    std::string classname() const override;
+
 private:
     double _value = 0;
-
-    std::string classname() const override;
 };
 } // namespace g
 #endif
