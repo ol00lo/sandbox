@@ -11,9 +11,8 @@ np.bool = bool
 
 def get_augmenter(level):
     if level == 0:
-        return iaa.Sequential([
-            iaa.Sometimes(0.95,  
-            iaa.SomeOf((1, None), [
+        return iaa.Sometimes(0.95,  
+                iaa.SomeOf((1, None), [
                 iaa.Fliplr(0.5),
                 iaa.Affine(rotate=(-20, 20), mode='reflect'),  
                 iaa.Multiply((0.6, 1.2)),
@@ -22,12 +21,10 @@ def get_augmenter(level):
                     iaa.AverageBlur(k=(2, 5)),
                 ]),
                 iaa.AddToHue((-50, 50)),
-            ], random_order=True)), 
-        ])
+            ], random_order=True))
         
     elif level == 1:
-        return iaa.Sequential([
-            iaa.Sometimes(0.95, 
+        return iaa.Sometimes(0.95, 
             iaa.SomeOf((2, 5), [
                 iaa.Fliplr(0.5),
                 iaa.Affine(rotate=(-20, 20), mode='reflect'), 
@@ -36,12 +33,10 @@ def get_augmenter(level):
                 iaa.AdditiveGaussianNoise(scale=(0, 0.1200)),
                 iaa.MotionBlur(k=(3, 5)),  
                 iaa.JpegCompression(compression=(80, 99)),  
-                iaa.Rain(speed=(0.1, 0.3))
-            ], random_order=True)), 
-        ])
+                iaa.Rain(speed=(0.1, 0.3))], 
+            random_order=True))
     elif level == 2:
-        return iaa.Sequential([
-            iaa.Sometimes(0.95,  
+        return iaa.Sometimes(0.95,  
             iaa.SomeOf((3, 7), [
                 iaa.Fliplr(0.5),
                 iaa.Affine(rotate=(-20, 20), mode='reflect'),
@@ -54,9 +49,8 @@ def get_augmenter(level):
                 iaa.CropAndPad(percent=(-0.15, 0.15), pad_mode=ia.ALL),
                 iaa.CoarseDropout((0.1, 0.2), size_percent=(0.02, 0.06), per_channel=0.5),
                 iaa.GammaContrast(gamma=(0.5, 2.0)),
-                iaa.imgcorruptlike.Snow(severity=2)
-            ], random_order=True)),
-        ])
+                iaa.imgcorruptlike.Snow(severity=2)], 
+            random_order=True))
     else:
         raise ValueError(":((")
 
