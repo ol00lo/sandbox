@@ -17,7 +17,9 @@ if not cap.isOpened():
 
 try:
     while True:
-        ret, frame = cap.read()     
+        # pass buffering
+        for _ in range(10):
+            ret, frame = cap.read()     
         timestamp = time.strftime("%Y%m%d-%H%M%S")
         filename = os.path.join(output_dir, f"photo_{timestamp}.jpg")  
 
