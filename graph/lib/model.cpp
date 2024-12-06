@@ -6,14 +6,26 @@
 #include <stdexcept>
 
 using namespace g;
+namespace
+{
+std::shared_ptr<INode> find_node_by_name(std::unordered_map<std::string, std::shared_ptr<INode>> all_nodes,
+                                         const std::string& name)
+{
+    auto it = all_nodes.find(name);
+    if (it != all_nodes.end())
+    {
+        return it->second;
+    }
+    return nullptr;
+}
+}
 
-Model::Model(std::vector<std::shared_ptr<InputNode>> inputs, std::vector<std::shared_ptr<INode>> outputs)
+Model::Model(std::vector<std::shared_ptr<INode>> inputs, std::vector<std::shared_ptr<INode>> outputs)
     : _input_nodes(std::move(inputs)), _output_nodes(std::move(outputs))
 {
     for (const auto& output : _output_nodes)
     {
         add_into_inter(output);
-        _output_nodes_names.push_back("InterNode[" + std::to_string(_inter_nodes_names.size() - 1) + "]");
     }
 }
 
@@ -42,63 +54,41 @@ void Model::add_into_inter(std::shared_ptr<INode> node)
     {
         return;
     }
-
-    std::string dependencies;
+    if (std::find(_inter_nodes.begin(), _inter_nodes.end(), node) == _inter_nodes.end())
+    {
+        _inter_nodes.push_back(node);
+    }
     for (const auto& prev : node->get_prev())
     {
         add_into_inter(prev);
     }
-    for (const auto& prev : node->get_prev())
-    {
-        if (prev->classname() == "InputNode")
-        {
-            auto it = std::find(_input_nodes.begin(), _input_nodes.end(), prev);
-            if (it != _input_nodes.end())
-            {
-                size_t idx = std::distance(_input_nodes.begin(), it);
-                dependencies += "InputNode[" + std::to_string(idx) + "] ";
-            }
-        }
-        else
-        {
-            dependencies += "InterNode[" + std::to_string(_inter_nodes_names.size() - 1) + "] ";
-        }
-    }
-    _inter_nodes_names.push_back(node->classname() + "\t" + dependencies);
 }
 
 void Model::save(const std::string& filename)
 {
+    nlohmann::json j;
+
+    for (const auto& input : _input_nodes)
+    {
+        j["input_nodes"].push_back(input->serialize());
+    }
+
+    for (const auto& inter : _inter_nodes)
+    {
+        j["node"].push_back(inter->serialize());
+    }
+
+    for (const auto& output : _output_nodes)
+    {
+        j["output_nodes"].push_back(output->serialize());
+    }
+
     std::ofstream file(filename);
     if (!file.is_open())
     {
         throw std::runtime_error("Cannot open file for writing.");
     }
-    for (const auto& input : _input_nodes)
-    {
-        file << input->serialize() << std::endl;
-    }
-    for (size_t i = 0; i < _inter_nodes_names.size(); ++i)
-    {
-        file << "InterNode " << _inter_nodes_names[i] << std::endl;
-    }
-    for (const auto& name : _output_nodes_names)
-    {
-        file << "OutputNode " << name << std::endl;
-    }
-    file.close();
-}
-
-int extractIndex(const std::string& token)
-{
-    auto start_pos = token.find('[');
-    auto end_pos = token.find(']');
-
-    if (start_pos != std::string::npos && end_pos != std::string::npos && start_pos < end_pos)
-    {
-        return std::stoi(token.substr(start_pos + 1, end_pos - start_pos - 1));
-    }
-    throw std::runtime_error("Invalid token format: " + token);
+    file << j.dump(4);
 }
 
 Model Model::load(const std::string& filename)
@@ -108,82 +98,58 @@ Model Model::load(const std::string& filename)
     {
         throw std::runtime_error("Cannot open file for reading.");
     }
-    std::vector<std::shared_ptr<InputNode>> input_nodes;
-    std::vector<std::shared_ptr<INode>> nodes;
+    std::unordered_map<std::string, std::shared_ptr<INode>> all_nodes;
+    nlohmann::json j;
+    file >> j;
+
+    std::vector<std::shared_ptr<INode>> input_nodes;
     std::vector<std::shared_ptr<INode>> output_nodes;
+    std::unordered_map<std::shared_ptr<INode>, std::vector<std::string>> inter_nodes;
 
-    std::string line;
-    while (std::getline(file, line))
+    for (const auto& node_json : j["input_nodes"])
     {
-        std::istringstream iss(line);
-        std::string nodeType;
-        iss >> nodeType;
-
-        if (nodeType == "InputNode")
+        auto input_node = INode::factory(node_json.at("classname").get<std::string>(), {});
+        all_nodes.insert({node_json.at("nodename").get<std::string>(), input_node});
+        input_nodes.push_back(input_node);
+    }
+    for (const auto& node_json : j["node"])
+    {
+        auto inter_node = INode::factory(node_json.at("classname").get<std::string>(), {});
+        all_nodes.insert({node_json.at("nodename").get<std::string>(), inter_node});
+        if (node_json.contains("prev_nodes"))
         {
-            double value;
-            iss >> value;
-            auto input_node = std::make_shared<InputNode>();
-            input_node->set_value(value);
-            input_nodes.push_back(input_node);
-        }
-        else if (nodeType == "InterNode")
-        {
-            std::string operation;
-            iss >> operation;
-
-            std::vector<std::shared_ptr<INode>> prev;
-            std::string token;
-            while (iss >> token)
+            for (const auto& prev_node_name : node_json.at("prev_nodes"))
             {
-                if (token.find("InputNode[") != std::string::npos)
-                {
-                    prev.push_back(input_nodes[extractIndex(token)]);
-                }
-                else if (token.find("InterNode[") != std::string::npos)
-                {
-                    prev.push_back(nodes[extractIndex(token)]);
-                }
-                else
-                {
-                    throw std::runtime_error("Invalid token format: " + token);
-                }
-            }
-
-            std::shared_ptr<IFunctionalNode> inter_node;
-            if (operation == "PlusNode")
-            {
-                inter_node = op::plus(prev[0], prev[1]);
-            }
-            else if (operation == "MinusNode")
-            {
-                inter_node = op::minus(prev[0], prev[1]);
-            }
-            else if (operation == "MultNode")
-            {
-                inter_node = op::mult(prev[0], prev[1]);
-            }
-            else if (operation == "SqrNode")
-            {
-                inter_node = op::sqr(prev[0]);
-            }
-            else
-            {
-                throw std::runtime_error("Unknown operation: " + operation);
-            }
-            nodes.push_back(inter_node);
-        }
-        else if (nodeType == "OutputNode")
-        {
-            std::string token;
-            while (iss >> token)
-            {
-                int idx = extractIndex(token);
-                output_nodes.push_back(nodes[idx]);
+                inter_nodes[inter_node].push_back(prev_node_name.get<std::string>());
             }
         }
     }
+    for (const auto& node:inter_nodes)
+    {
+        for (int i = 0; i < node.second.size(); i++)
+        {
+            auto prev_node = find_node_by_name(all_nodes, node.second[i]);
+            node.first->add_prev(prev_node);
+            prev_node->add_next(node.first);
+        }
+    }
 
-    file.close();
+    for (const auto& node_json : j["output_nodes"])
+    {
+        auto output_node = INode::factory(node_json.at("classname").get<std::string>(), {});
+        if (node_json.contains("prev_nodes"))
+        {
+            for (const auto& prev_node_name : node_json.at("prev_nodes"))
+            {
+                auto prev_node = find_node_by_name(all_nodes, prev_node_name.get<std::string>());
+                if (prev_node)
+                {
+                    output_node->add_prev(prev_node);
+                }
+            }
+        }
+        output_nodes.push_back(output_node);
+    }
+
     return Model(input_nodes, output_nodes);
 }

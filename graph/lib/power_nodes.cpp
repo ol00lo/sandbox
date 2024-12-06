@@ -1,10 +1,12 @@
 #include "power_nodes.hpp"
 using namespace g;
 
-void add_dependencies(std::shared_ptr<INode> a, std::shared_ptr<IFunctionalNode> b)
+SqrNode::SqrNode(std::initializer_list<std::shared_ptr<INode>> args)
 {
-    b->add_prev(a);
-    a->add_next(b);
+    for (auto& a : args)
+    {
+        _prev_nodes.push_back(a);
+    }
 }
 
 double SqrNode::compute_value()
@@ -26,11 +28,4 @@ std::vector<double> SqrNode::get_gradient()
     log().debug("Gradient in SqrNode compute");
     std::vector<double> res = {2 * val};
     return res;
-}
-
-std::shared_ptr<IFunctionalNode> op::sqr(std::shared_ptr<INode> a)
-{
-    std::shared_ptr<IFunctionalNode> b(new SqrNode());
-    add_dependencies(b, {a});
-    return b;
 }

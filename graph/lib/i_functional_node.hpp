@@ -39,7 +39,6 @@ private:
     double compute_notself_derivative(const INode* arg);
     virtual std::vector<double> get_gradient() = 0;
 };
-void add_dependencies(std::shared_ptr<IFunctionalNode> node, std::initializer_list<std::shared_ptr<INode>> prevs);
 
 } // namespace g
 #endif // !FUNCTIONAL_NODES_HPP
