@@ -6,15 +6,18 @@ namespace g
 {
 class SqrNode : public IFunctionalNode
 {
+public:
+    SqrNode(std::string nodename = "") : IFunctionalNode(nodename) {};
+    void set_prev_nodes(std::initializer_list<std::shared_ptr<INode>> args) override;
+
 protected:
     double compute_value() override;
     std::string classname() const override;
+    static std::string classname_static();
     std::vector<double> get_gradient() override;
-};
 
-namespace op
-{
-std::shared_ptr<IFunctionalNode> sqr(std::shared_ptr<INode> a);
-} // namespace op
+private:
+    REGISTER_INODE_CHILD(SqrNode);
+};
 } // namespace g
 #endif

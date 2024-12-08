@@ -1,6 +1,26 @@
 #include "arithmetic_nodes.hpp"
 using namespace g;
 
+void MultNode::set_prev_nodes(std::initializer_list<std::shared_ptr<INode>> args)
+{
+    for (auto& a : args)
+    {
+        _prev_nodes.push_back(a);
+    }
+}
+void PlusNode::set_prev_nodes(std::initializer_list<std::shared_ptr<INode>> args)
+{
+    for (auto& a : args)
+    {
+        _prev_nodes.push_back(a);
+    }
+}void MinusNode::set_prev_nodes(std::initializer_list<std::shared_ptr<INode>> args)
+{
+    for (auto& a : args)
+    {
+        _prev_nodes.push_back(a);
+    }
+}
 double MultNode::compute_value()
 {
     auto res = _prev_nodes[0]->get_value() * _prev_nodes[1]->get_value();
@@ -27,17 +47,29 @@ double MinusNode::compute_value()
 
 std::string MultNode::classname() const
 {
+    return classname_static();
+}
+std::string MultNode::classname_static()
+{
     return "MultNode";
 }
 
 std::string PlusNode::classname() const
 {
-    return "PlusNode";
+    return classname_static();
+}
+std::string PlusNode::classname_static()
+{
+	return "PlusNode";
 }
 
 std::string MinusNode::classname() const
 {
-    return "MinusNode";
+    return classname_static();
+}
+std::string MinusNode::classname_static()
+{
+	return "MinusNode";
 }
 std::vector<double> MultNode::get_gradient()
 {
@@ -60,25 +92,4 @@ std::vector<double> MinusNode::get_gradient()
     log().debug("Gradient in MinusNode compute");
     std::vector<double> res = {1.0, -1.0};
     return res;
-}
-
-std::shared_ptr<IFunctionalNode> op::mult(std::shared_ptr<INode> a1, std::shared_ptr<INode> a2)
-{
-    std::shared_ptr<IFunctionalNode> a(new MultNode);
-    add_dependencies(a, {a1, a2});
-    return a;
-}
-
-std::shared_ptr<IFunctionalNode> op::plus(std::shared_ptr<INode> a1, std::shared_ptr<INode> a2)
-{
-    std::shared_ptr<IFunctionalNode> a(new PlusNode);
-    add_dependencies(a, {a1, a2});
-    return a;
-}
-
-std::shared_ptr<IFunctionalNode> op::minus(std::shared_ptr<INode> a1, std::shared_ptr<INode> a2)
-{
-    std::shared_ptr<IFunctionalNode> a(new MinusNode);
-    add_dependencies(a, {a1, a2});
-    return a;
 }

@@ -9,6 +9,9 @@ namespace g
 class IFunctionalNode : public INode
 {
 public:
+    IFunctionalNode(std::string nodename = "") : INode(nodename)
+    {
+    }
     using callback_t = std::function<void(IFunctionalNode*)>;
 
     void add_value_callback(callback_t cb);
@@ -39,7 +42,6 @@ private:
     double compute_notself_derivative(const INode* arg);
     virtual std::vector<double> get_gradient() = 0;
 };
-void add_dependencies(std::shared_ptr<IFunctionalNode> node, std::initializer_list<std::shared_ptr<INode>> prevs);
 
 } // namespace g
 #endif // !FUNCTIONAL_NODES_HPP
