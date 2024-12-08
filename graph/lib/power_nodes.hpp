@@ -7,11 +7,13 @@ namespace g
 class SqrNode : public IFunctionalNode
 {
 public:
-    SqrNode(std::initializer_list<std::shared_ptr<INode>> args);
+    SqrNode(std::string nodename = "") : IFunctionalNode(nodename) {};
+    void set_prev_nodes(std::initializer_list<std::shared_ptr<INode>> args) override;
 
 protected:
     double compute_value() override;
     std::string classname() const override;
+    static std::string classname_static();
     std::vector<double> get_gradient() override;
 
 private:

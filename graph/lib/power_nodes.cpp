@@ -1,7 +1,7 @@
 #include "power_nodes.hpp"
 using namespace g;
 
-SqrNode::SqrNode(std::initializer_list<std::shared_ptr<INode>> args)
+void SqrNode::set_prev_nodes(std::initializer_list<std::shared_ptr<INode>> args)
 {
     for (auto& a : args)
     {
@@ -19,7 +19,11 @@ double SqrNode::compute_value()
 
 std::string SqrNode::classname() const
 {
-    return "SqrNode";
+    return classname_static();
+}
+std::string SqrNode::classname_static()
+{
+	return "SqrNode";
 }
 
 std::vector<double> SqrNode::get_gradient()

@@ -13,9 +13,10 @@ void InputNode::set_value(double val)
     _value = val;
     clear_forward_cache();
 }
-nlohmann::json InputNode::serialize() const
+
+void InputNode::serialize_spec(nlohmann::json& js) const
 {
-    return {{"classname", "InputNode"}, {"nodename", _layer_name}, {"value", _value}};
+    js["value"] = _value;
 }
 double InputNode::notself_derivative(const INode* arg)
 {
@@ -25,5 +26,9 @@ double InputNode::notself_derivative(const INode* arg)
 
 std::string InputNode::classname() const
 {
-    return "InputNode"; 
+    return classname_static();
+}
+std::string InputNode::classname_static()
+{
+	return "InputNode";
 }

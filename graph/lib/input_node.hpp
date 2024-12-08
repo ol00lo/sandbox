@@ -7,15 +7,13 @@ namespace g
 class InputNode : public INode
 {
 public:
-    InputNode() = default;
-    InputNode(std::initializer_list<std::shared_ptr<INode>> args)
-    {
-    }
-    nlohmann::json serialize() const override;
+    InputNode(std::string nodename) : INode(nodename) {};
+    void serialize_spec(nlohmann::json& js) const override;
     double get_value() override;
     void set_value(double val);
     double notself_derivative(const INode* arg) override;
     std::string classname() const override;
+    static std::string classname_static();
 
 private:
     double _value = 0;

@@ -50,7 +50,7 @@ std::vector<double> Model::compute(const std::vector<double>& input_values)
 
 void Model::add_into_inter(std::shared_ptr<INode> node)
 {
-    if (node->classname() == "InputNode")
+    if (node->classname()  == InputNode::classname_static())
     {
         return;
     }
@@ -75,7 +75,7 @@ void Model::save(const std::string& filename)
 
     for (const auto& inter : _inter_nodes)
     {
-        j["node"].push_back(inter->serialize());
+        j["inter_nodes"].push_back(inter->serialize());
     }
 
     for (const auto& output : _output_nodes)
@@ -89,6 +89,7 @@ void Model::save(const std::string& filename)
         throw std::runtime_error("Cannot open file for writing.");
     }
     file << j.dump(4);
+    log().debug("Model saved to {}", filename);
 }
 
 Model Model::load(const std::string& filename)
@@ -112,7 +113,7 @@ Model Model::load(const std::string& filename)
         all_nodes.insert({node_json.at("nodename").get<std::string>(), input_node});
         input_nodes.push_back(input_node);
     }
-    for (const auto& node_json : j["node"])
+    for (const auto& node_json : j["inter_nodes"])
     {
         auto inter_node = INode::factory(node_json.at("classname").get<std::string>(), {});
         all_nodes.insert({node_json.at("nodename").get<std::string>(), inter_node});

@@ -7,11 +7,12 @@ namespace g
 class MultNode : public IFunctionalNode
 {
 public:
-    MultNode(std::initializer_list<std::shared_ptr<INode>> args);
-
+    MultNode(std::string nodename = "") : IFunctionalNode(nodename) {};
+    void set_prev_nodes(std::initializer_list<std::shared_ptr<INode>> args) override;
 protected:
     double compute_value() override;
     std::string classname() const override;
+    static std::string classname_static();
     std::vector<double> get_gradient() override;
 
 private:
@@ -21,11 +22,13 @@ private:
 class PlusNode : public IFunctionalNode
 {
 public:
-    PlusNode(std::initializer_list<std::shared_ptr<INode>> args);
+    PlusNode(std::string nodename = "") : IFunctionalNode(nodename) {};
+    void set_prev_nodes(std::initializer_list<std::shared_ptr<INode>> args) override;
 
 protected:
     double compute_value() override;
     std::string classname() const override;
+    static std::string classname_static();
     std::vector<double> get_gradient() override;
 
 private:
@@ -35,11 +38,13 @@ private:
 class MinusNode : public IFunctionalNode
 {
 public:
-    MinusNode(std::initializer_list<std::shared_ptr<INode>> args);
+    MinusNode(std::string nodename = "") : IFunctionalNode(nodename) {};
+    void set_prev_nodes(std::initializer_list<std::shared_ptr<INode>> args) override;
 
 protected:
     double compute_value() override;
     std::string classname() const override;
+    static std::string classname_static();
     std::vector<double> get_gradient() override;
 
 private:

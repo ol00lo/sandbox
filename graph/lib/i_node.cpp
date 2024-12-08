@@ -1,43 +1,53 @@
 #include "i_node.hpp"
+#include <random>
 using namespace g;
 
 namespace
 {
+std::mt19937 rnd;
 std::string build_random_string(int length)
 {
     std::string res;
     static const char alphanum[] = "0123456789"
                                    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                                    "abcdefghijklmnopqrstuvwxyz";
+
+    std::uniform_int_distribution<> dist(0, sizeof(alphanum) - 1); 
     for (int i = 0; i < length; ++i)
     {
-        res += alphanum[rand() % (sizeof(alphanum) - 1)];
+        res += alphanum[dist(rnd)];
     }
     return res;
 }
-} // namespace
-
-INode::INode(std::string nodename)
+std::string set_nodename(std::string nodename, std::unordered_set<std::string>& existing_names)
 {
+    if (!nodename.empty() && existing_names.find(nodename) != existing_names.end())
+    {
+        throw std::runtime_error("Node name must be unique: " + nodename);
+    }
     if (nodename.empty())
     {
         nodename = build_random_string(8);
     }
-    if (_existing_names.find(nodename) != _existing_names.end())
+    while (existing_names.find(nodename) != existing_names.end())
     {
-        throw std::runtime_error("Node name must be unique: " + nodename);
+        nodename = build_random_string(8);
     }
-    _layer_name = nodename;
-    _existing_names.insert(nodename);
+    return nodename;
 }
-INode::PNode INode::factory(std::string classname, std::initializer_list<PNode> args)
+} // namespace
+INode::INode(std::string nodename) : _nodename(set_nodename(nodename, _existing_names))
+{
+    _existing_names.insert(_nodename);
+}
+INode::PNode INode::factory(std::string classname, std::string nodename)
 {
     auto fnd = _registered_classes.find(classname);
     if (fnd == _registered_classes.end())
     {
         throw std::runtime_error("Invalid classname: " + classname);
     }
-    return fnd->second(args);
+    return fnd->second(nodename);
 }
 void INode::add_prev(const std::shared_ptr<INode> a)
 {
@@ -52,18 +62,20 @@ nlohmann::json INode::serialize() const
     std::vector<std::string> prev;
     for (auto& a : _prev_nodes)
     {
-        prev.push_back(a->get_layer_name());
+        prev.push_back(a->nodename());
     }
-    return {{"classname", classname()}, {"nodename", _layer_name}, {"prev_nodes", prev}};
+    nlohmann::json res = {{"classname", classname()}, {"nodename", _nodename}, {"prev_nodes", prev}};
+    serialize_spec(res);
+    log().debug("Node {} of the {} class is serialized.", _nodename, classname());
+    return res;
 }
-std::string INode::get_layer_name() const
+std::string INode::nodename() const
 {
-    return _layer_name;
+    return _nodename;
 }
 bool INode::register_class(std::string classname, NodeBuilder builder)
 {
     _registered_classes[classname] = builder;
-    std::cout << classname << " registered" << std::endl;
     return true;
 }
 void INode::clear_backward_cache()
