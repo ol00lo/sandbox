@@ -8,8 +8,10 @@ class Model
 public:
     Model(std::vector<std::shared_ptr<INode>> inputs, std::vector<std::shared_ptr<INode>> outputs);
     void save(const std::string& filename);
-    std::vector<double> compute(const std::vector<double>& input_values);
+    nlohmann::json serialize() const;
     static Model load(const std::string& filename);
+    static Model deserialize(nlohmann::json);
+    std::vector<double> compute(const std::vector<double>& input_values);
 
 private:
     std::vector<std::shared_ptr<INode>> _input_nodes;

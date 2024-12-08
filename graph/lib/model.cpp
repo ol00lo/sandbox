@@ -66,30 +66,34 @@ void Model::add_into_inter(std::shared_ptr<INode> node)
 
 void Model::save(const std::string& filename)
 {
-    nlohmann::json j;
-
-    for (const auto& input : _input_nodes)
-    {
-        j["input_nodes"].push_back(input->serialize());
-    }
-
-    for (const auto& inter : _inter_nodes)
-    {
-        j["inter_nodes"].push_back(inter->serialize());
-    }
-
-    for (const auto& output : _output_nodes)
-    {
-        j["output_nodes"].push_back(output->serialize());
-    }
 
     std::ofstream file(filename);
     if (!file.is_open())
     {
         throw std::runtime_error("Cannot open file for writing.");
     }
-    file << j.dump(4);
+    file << serialize().dump(4);
     log().debug("Model saved to {}", filename);
+}
+
+nlohmann::json Model::serialize() const
+{
+    nlohmann::json res;
+    for (const auto& input : _input_nodes)
+    {
+        res["input_nodes"].push_back(input->serialize());
+    }
+
+    for (const auto& inter : _inter_nodes)
+    {
+        res["inter_nodes"].push_back(inter->serialize());
+    }
+
+    for (const auto& output : _output_nodes)
+    {
+        res["output_nodes"].push_back(output->serialize());
+    }
+    return res;
 }
 
 Model Model::load(const std::string& filename)
@@ -102,7 +106,13 @@ Model Model::load(const std::string& filename)
     std::unordered_map<std::string, std::shared_ptr<INode>> all_nodes;
     nlohmann::json j;
     file >> j;
+    return deserialize(j);
+}
 
+
+Model Model::deserialize(nlohmann::json j)
+{
+    std::unordered_map<std::string, std::shared_ptr<INode>> all_nodes;
     std::vector<std::shared_ptr<INode>> input_nodes;
     std::vector<std::shared_ptr<INode>> output_nodes;
     std::unordered_map<std::shared_ptr<INode>, std::vector<std::string>> inter_nodes;
@@ -125,7 +135,7 @@ Model Model::load(const std::string& filename)
             }
         }
     }
-    for (const auto& node:inter_nodes)
+    for (const auto& node : inter_nodes)
     {
         for (int i = 0; i < node.second.size(); i++)
         {
