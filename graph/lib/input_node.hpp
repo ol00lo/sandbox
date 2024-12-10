@@ -13,7 +13,6 @@ public:
     void set_value(double val);
     double notself_derivative(const INode* arg) override;
     std::string classname() const override;
-    static std::string classname_static();
 
 private:
     double _value = 0;

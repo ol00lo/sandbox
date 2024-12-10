@@ -47,8 +47,8 @@ protected:
     const std::string _nodename;
     static inline std::map<std::string, NodeBuilder> _registered_classes;
     static bool register_class(std::string classname, NodeBuilder builder);
-    std::vector<std::shared_ptr<INode>> _prev_nodes;
-    std::vector<std::shared_ptr<INode>> _next_nodes;
+    std::vector<std::shared_ptr<INode>> _prev_nodes = {};
+    std::vector<std::shared_ptr<INode>> _next_nodes = {};
     virtual void clear_cache() {};
     void clear_backward_cache();
     void clear_forward_cache();

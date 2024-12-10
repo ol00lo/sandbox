@@ -13,7 +13,6 @@ public:
 protected:
     double compute_value() override;
     std::string classname() const override;
-    static std::string classname_static();
     std::vector<double> get_gradient() override;
 
 private:

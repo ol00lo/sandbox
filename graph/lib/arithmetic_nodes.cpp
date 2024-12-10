@@ -14,7 +14,8 @@ void PlusNode::set_prev_nodes(std::initializer_list<std::shared_ptr<INode>> args
     {
         _prev_nodes.push_back(a);
     }
-}void MinusNode::set_prev_nodes(std::initializer_list<std::shared_ptr<INode>> args)
+}
+void MinusNode::set_prev_nodes(std::initializer_list<std::shared_ptr<INode>> args)
 {
     for (auto& a : args)
     {
@@ -47,30 +48,19 @@ double MinusNode::compute_value()
 
 std::string MultNode::classname() const
 {
-    return classname_static();
-}
-std::string MultNode::classname_static()
-{
     return "MultNode";
 }
 
 std::string PlusNode::classname() const
 {
-    return classname_static();
-}
-std::string PlusNode::classname_static()
-{
-	return "PlusNode";
+    return "PlusNode";
 }
 
 std::string MinusNode::classname() const
 {
-    return classname_static();
+    return "MinusNode";
 }
-std::string MinusNode::classname_static()
-{
-	return "MinusNode";
-}
+
 std::vector<double> MultNode::get_gradient()
 {
     log().debug("Gradient in MultNode compute");

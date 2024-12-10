@@ -26,9 +26,5 @@ double InputNode::notself_derivative(const INode* arg)
 
 std::string InputNode::classname() const
 {
-    return classname_static();
-}
-std::string InputNode::classname_static()
-{
-	return "InputNode";
+    return "InputNode";
 }

@@ -29,8 +29,14 @@ std::string set_nodename(std::string nodename, std::unordered_set<std::string>& 
     {
         nodename = build_random_string(8);
     }
+    int trycount = 0;
     while (existing_names.find(nodename) != existing_names.end())
     {
+		trycount++;
+		if (trycount > 10)
+		{
+			throw std::runtime_error("Failed to generate unique name.");
+		}
         nodename = build_random_string(8);
     }
     return nodename;

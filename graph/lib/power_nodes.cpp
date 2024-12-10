@@ -19,11 +19,7 @@ double SqrNode::compute_value()
 
 std::string SqrNode::classname() const
 {
-    return classname_static();
-}
-std::string SqrNode::classname_static()
-{
-	return "SqrNode";
+    return "SqrNode";
 }
 
 std::vector<double> SqrNode::get_gradient()
