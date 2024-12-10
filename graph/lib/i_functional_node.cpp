@@ -78,12 +78,3 @@ double IFunctionalNode::compute_notself_derivative(const INode* arg)
     }
     return res;
 }
-
-void g::add_dependencies(std::shared_ptr<IFunctionalNode> node, std::initializer_list<std::shared_ptr<INode>> prevs)
-{
-    for (auto p : prevs)
-    {
-        node->add_prev(p);
-        p->add_next(node);
-    }
-}
