@@ -1,14 +1,6 @@
 #include "power_nodes.hpp"
 using namespace g;
 
-void SqrNode::set_prev_nodes(std::initializer_list<std::shared_ptr<INode>> args)
-{
-    for (auto& a : args)
-    {
-        _prev_nodes.push_back(a);
-    }
-}
-
 double SqrNode::compute_value()
 {
     double value = _prev_nodes[0]->get_value();

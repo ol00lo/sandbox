@@ -1,5 +1,5 @@
 #include "i_node.hpp"
-#include "input_node.hpp"
+#include "data_node.hpp"
 
 namespace g
 {

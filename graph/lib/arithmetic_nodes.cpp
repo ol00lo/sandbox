@@ -1,27 +1,6 @@
 #include "arithmetic_nodes.hpp"
 using namespace g;
 
-void MultNode::set_prev_nodes(std::initializer_list<std::shared_ptr<INode>> args)
-{
-    for (auto& a : args)
-    {
-        _prev_nodes.push_back(a);
-    }
-}
-void PlusNode::set_prev_nodes(std::initializer_list<std::shared_ptr<INode>> args)
-{
-    for (auto& a : args)
-    {
-        _prev_nodes.push_back(a);
-    }
-}
-void MinusNode::set_prev_nodes(std::initializer_list<std::shared_ptr<INode>> args)
-{
-    for (auto& a : args)
-    {
-        _prev_nodes.push_back(a);
-    }
-}
 double MultNode::compute_value()
 {
     auto res = _prev_nodes[0]->get_value() * _prev_nodes[1]->get_value();

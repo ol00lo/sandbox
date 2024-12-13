@@ -4,10 +4,10 @@
 
 namespace g
 {
-class InputNode : public INode
+class DataNode : public INode
 {
 public:
-    InputNode(std::string nodename) : INode(nodename) {};
+    DataNode(std::string nodename) : INode(nodename) {};
     void serialize_spec(nlohmann::json& js) const override;
     double get_value() override;
     void set_value(double val);
@@ -16,7 +16,7 @@ public:
 
 private:
     double _value = 0;
-    REGISTER_INODE_CHILD(InputNode);
+    REGISTER_INODE_CHILD(DataNode);
 };
 } // namespace g
 #endif

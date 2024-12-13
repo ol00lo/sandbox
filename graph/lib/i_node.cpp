@@ -12,13 +12,14 @@ std::string build_random_string(int length)
                                    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                                    "abcdefghijklmnopqrstuvwxyz";
 
-    std::uniform_int_distribution<> dist(0, sizeof(alphanum) - 1); 
+    std::uniform_int_distribution<> dist(0, sizeof(alphanum) - 1);
     for (int i = 0; i < length; ++i)
     {
         res += alphanum[dist(rnd)];
     }
     return res;
 }
+
 std::string set_nodename(std::string nodename, std::unordered_set<std::string>& existing_names)
 {
     if (!nodename.empty() && existing_names.find(nodename) != existing_names.end())
@@ -32,11 +33,11 @@ std::string set_nodename(std::string nodename, std::unordered_set<std::string>& 
     int trycount = 0;
     while (existing_names.find(nodename) != existing_names.end())
     {
-		trycount++;
-		if (trycount > 10)
-		{
-			throw std::runtime_error("Failed to generate unique name.");
-		}
+        trycount++;
+        if (trycount > 10)
+        {
+            throw std::runtime_error("Failed to generate unique name.");
+        }
         nodename = build_random_string(8);
     }
     return nodename;
@@ -96,9 +97,9 @@ void INode::clear_backward_cache()
 void INode::clear_forward_cache()
 {
     clear_cache();
-    for (auto& n : _prev_nodes)
+    for (auto& n : _next_nodes)
     {
-        n->clear_backward_cache();
+        n->clear_forward_cache();
     }
 }
 
@@ -118,4 +119,13 @@ double INode::get_derivative(std::shared_ptr<INode> argument)
 std::vector<std::shared_ptr<INode>> INode::get_prev()
 {
     return _prev_nodes;
+}
+
+void g::set_dep(std::shared_ptr<INode> node, std::initializer_list<std::shared_ptr<INode>> prevs)
+{
+    for (auto& prev_node : prevs)
+    {
+        node->add_prev(prev_node);
+        prev_node->add_next(node);
+    }
 }

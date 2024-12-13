@@ -8,7 +8,6 @@ class SqrNode : public IFunctionalNode
 {
 public:
     SqrNode(std::string nodename = "") : IFunctionalNode(nodename) {};
-    void set_prev_nodes(std::initializer_list<std::shared_ptr<INode>> args) override;
 
 protected:
     double compute_value() override;

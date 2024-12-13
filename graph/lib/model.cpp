@@ -31,11 +31,11 @@ Model::Model(std::vector<std::shared_ptr<INode>> inputs, std::vector<std::shared
 
 std::vector<double> Model::compute(const std::vector<double>& input_values)
 {
-    if (input_values.size() != _input_nodes.size())
+    if (input_values.size() > _input_nodes.size())
     {
         throw std::runtime_error("Size of input values does not match the number of input nodes.");
     }
-    for (size_t i = 0; i < _input_nodes.size(); ++i)
+    for (size_t i = 0; i < input_values.size(); ++i)
     {
         _input_nodes[i]->set_value(input_values[i]);
     }
@@ -50,7 +50,8 @@ std::vector<double> Model::compute(const std::vector<double>& input_values)
 
 void Model::add_into_inter(std::shared_ptr<INode> node)
 {
-    if (node->classname() == "InputNode")
+    auto fnd = std::find(_input_nodes.begin(), _input_nodes.end(), node);
+    if (fnd != _input_nodes.end())
     {
         return;
     }
@@ -79,13 +80,14 @@ void Model::save(const std::string& filename)
 nlohmann::json Model::serialize() const
 {
     nlohmann::json res;
+    nlohmann::json io;
     std::unordered_set<std::string> node_names;
 
     for (const auto& input : _input_nodes)
     {
         auto serialized = input->serialize();
         res["nodes"].push_back(serialized);
-        res["input_nodes"].push_back(serialized.at("nodename"));
+        io["input_nodes"].push_back(serialized.at("nodename"));
     }
 
     for (const auto& inter : _inter_nodes)
@@ -97,9 +99,10 @@ nlohmann::json Model::serialize() const
     {
         auto serialized = output->serialize();
         res["nodes"].push_back(serialized);
-        res["output_nodes"].push_back(serialized.at("nodename"));
+        io["output_nodes"].push_back(serialized.at("nodename"));
     }
-
+    res["io"] = io;
+    // res["io"].push_back(io);
     return res;
 }
 
@@ -140,21 +143,21 @@ Model Model::deserialize(nlohmann::json j)
                 prev_node->add_next(node);
             }
         }
+        if (node_json.contains("value"))
+        {
+            node->set_value(node_json["value"].get<double>());
+        }
     }
-
-
-
-    for (const auto& input_name : j["input_nodes"])
+    for (const auto& input_name : j["io"]["input_nodes"])
     {
         auto input_node = all_nodes[input_name.get<std::string>()];
         input_nodes.push_back(input_node);
     }
 
-    for (const auto& output_name : j["output_nodes"])
+    for (const auto& output_name : j["io"]["output_nodes"])
     {
         auto output_node = all_nodes[output_name.get<std::string>()];
         output_nodes.push_back(output_node);
     }
-
     return Model(input_nodes, output_nodes);
 }
