@@ -32,24 +32,23 @@ X_test = X_test.astype('float32') / 255.0
 y_train = tf.keras.utils.to_categorical(y_train, num_classes=10)
 y_test = tf.keras.utils.to_categorical(y_test, num_classes=10)
 
-model = tf.keras.models.Sequential([
-    tf.keras.layers.InputLayer(input_shape=(32, 32, 3)),
-    tf.keras.layers.Conv2D(16, (3, 3), activation='relu', padding='same'),
-    tf.keras.layers.MaxPool2D((2, 2)),
-    tf.keras.layers.Conv2D(32, (3, 3), activation='relu', padding='same'),  
-    tf.keras.layers.MaxPool2D((2, 2)),
-    tf.keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same'),
-    tf.keras.layers.MaxPool2D((2, 2)),
-    tf.keras.layers.Conv2D(16, (3, 3), activation='relu', padding='same'),  
-    tf.keras.layers.MaxPool2D((2, 2)),
-    #-----------------------------------
-    #tf.keras.layers.Conv2D(32, (3, 3), activation='relu', padding='same'), 
-    #tf.keras.layers.MaxPool2D((2, 2)),
-    #-----------------------------------
-    tf.keras.layers.Conv2D(128, (3, 3), activation='relu', padding='same'),  
-    tf.keras.layers.Flatten(),
-    tf.keras.layers.Dense(10, activation='softmax')
-])
+inputs = tf.keras.Input(shape=(32, 32, 3))
+x = tf.keras.layers.Conv2D(16, (3, 3), activation='relu', padding='same')(inputs)
+x = tf.keras.layers.MaxPool2D((2, 2))(x)
+x = tf.keras.layers.Conv2D(32, (3, 3), activation='relu', padding='same')(x)
+x = tf.keras.layers.MaxPool2D((2, 2))(x)
+x = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same')(x)
+x = tf.keras.layers.MaxPool2D((2, 2))(x)
+x = tf.keras.layers.Conv2D(16, (3, 3), activation='relu', padding='same')(x)
+x = tf.keras.layers.MaxPool2D((2, 2))(x)
+#-----------------------------------
+# x = tf.keras.layers.Conv2D(32, (3, 3), activation='relu', padding='same')(x)
+# x = tf.keras.layers.MaxPool2D((2, 2))(x)
+#-----------------------------------
+x = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', padding='same')(x)
+x = tf.keras.layers.Flatten()(x)
+outputs = tf.keras.layers.Dense(10, activation='softmax')(x)
+model = tf.keras.Model(inputs=inputs, outputs=outputs)
 
 model.summary()
 model.compile(optimizer='adam',
