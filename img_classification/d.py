@@ -4,7 +4,7 @@ from tensorflow.keras.models import Model, load_model
 import numpy as np
 import cv2
 
-old_model_path = "model_epoch14_accuracy_0.71740.keras"
+old_model_path = "best_model1.keras"
 confidence = 0.7
 test_img_path = "cat.jpeg"
 
@@ -18,23 +18,29 @@ def get_class_index_with_confidence_threshold(inputs):
 def preprocess_layer(x):
     x = tf.image.resize(x, (32, 32), method=tf.image.ResizeMethod.BILINEAR)
     x = tf.cast(x, tf.float32)
-    x = x[..., ::-1]/255.0
+    x = x[..., ::-1]
     return x
 
 loaded_model = load_model(old_model_path)
 
 confidence_threshold = Input(shape=(1,))
-inp = Input(shape=(240, 320, 3))
+inp = Input(shape=(240, 320, 3), dtype=tf.uint8)
+
 x = Lambda(preprocess_layer)(inp)
 
-for layer in loaded_model.layers[1:]:
+for layer in loaded_model.layers[0:]:
     if isinstance(layer, tf.keras.layers.Layer): 
         x = layer(x)
 
 class_index_output = Lambda(get_class_index_with_confidence_threshold)([x, confidence_threshold])
 
 modified_model = Model(inputs=[inp, confidence_threshold], outputs=[class_index_output])
+
 modified_model.set_weights(loaded_model.get_weights())
+
+first_layer_weights = [weight / 255.0 for weight in modified_model.layers[3].get_weights()]
+modified_model.layers[3].set_weights(first_layer_weights)
+modified_model.save("modified_model.keras")
 
 def new_preprocess(image_path):
     img = cv2.imread(image_path)
