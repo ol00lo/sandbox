@@ -1,23 +1,30 @@
 import os
 import numpy as np
 import cv2
-import time
 import random
+import math
+import shutil
 import tensorflow as tf
 from tensorflow.keras.applications import MobileNet
 from tensorflow.keras import layers, models, callbacks
 import augmenter
+import custom_loss
+
+seed_value = 0
+random.seed(seed_value)
+np.random.seed(seed_value)
 
 IMG_HEIGHT, IMG_WIDTH = 224, 224
 BATCH_SIZE = 32
-EPOCHS = 10  
+EPOCHS = 1000  
 DATA_DIR = 'c:\\Users\\mymri\\repos\\clock_sett\\'
+AUG_LEVEL = 0
 
-def make_set(DATA_DIR):
+def make_set(data_dir):
     import pandas as pd
     all_data = []
-    for clock_dir in os.listdir(DATA_DIR):
-        clock_path = os.path.join(DATA_DIR, clock_dir)
+    for clock_dir in os.listdir(data_dir):
+        clock_path = os.path.join(data_dir, clock_dir)
 
         if os.path.isdir(clock_path):
             csv_file = os.path.join(clock_path, 'dataset_info.csv')
@@ -29,6 +36,8 @@ def make_set(DATA_DIR):
                     minutes = row['minutes']
                     image_path = os.path.join(clock_path, image_name)
                     all_data.append((image_path, minutes))
+
+    all_data.sort(key=lambda x: x[0])
     np.random.shuffle(all_data)
 
     train_size = int(0.9 * len(all_data))
@@ -40,62 +49,47 @@ def make_set(DATA_DIR):
     return train_data, valid_data   
 
 def data_generator(data, batch_size, aug_sequence=None, need_shuffle=True):
-
     data_copy = data.copy()
     if need_shuffle:
-        random.shuffle(data_copy)
-
+        random.shuffle(data_copy) 
+    
     while True:
         batch_data = []
         batch_labels = []
-        
         for _ in range(batch_size):
             if len(data_copy) == 0: 
-                if need_shuffle:
-                    random.shuffle(data)  
                 data_copy = data.copy() 
-                continue 
+                if need_shuffle:
+                    random.shuffle(data_copy)  
+                break 
 
             filename, label = data_copy.pop(0)  
-
             image = cv2.imread(filename)
             if image is None:
                 print(f"Warning: Could not read image: {filename}")
                 continue  
+
             image = cv2.resize(image, (224,224))
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB) 
             batch_data.append(image)  
             batch_labels.append(label)  
-
         if batch_data:  
-            batch_data = np.array(batch_data, dtype=np.uint8) 
+            batch_data = np.array(batch_data) 
             batch_labels = np.array(batch_labels) 
-
             if aug_sequence is not None:
-                batch_data = aug_sequence(images=batch_data)  
-                augmenter.display_images(batch_data[:4], batch_labels[:4], 224, 224)
-            
+                batch_data = aug_sequence(images=batch_data)
+                # augmenter.display_images(batch_data[:4], batch_labels[:4], 224, 224)
+
+            # normalize from [0,255] to [-1,1]
+            batch_data = tf.keras.applications.mobilenet.preprocess_input(batch_data)
             yield batch_data, batch_labels  
-
-def custom_loss(y_true, y_pred):
-    y_true_deg = tf.convert_to_tensor(y_true * 6, dtype=tf.float32)
-    y_pred_deg = tf.convert_to_tensor(y_pred * 6, dtype=tf.float32)
-
-    y_true_deg = tf.math.floormod(y_true_deg, 4320)
-    y_pred_deg = tf.math.floormod(y_pred_deg, 4320)
-
-    delta_deg = y_pred_deg - y_true_deg
-
-    delta_deg = (delta_deg + 2160) % 4320 - 2160
-
-    return tf.reduce_mean(tf.square(delta_deg))
 
 train_data, valid_data = make_set(DATA_DIR)
 
-aug_sequence = lambda x: augmenter.get_augmenter(x)
+aug_sequence = augmenter.get_augmenter(AUG_LEVEL)
 
-train_generator = data_generator(train_data, BATCH_SIZE, aug_sequence(0), True)
-valid_generator = data_generator(valid_data, BATCH_SIZE, lambda x: x, False)
+train_generator = data_generator(train_data, BATCH_SIZE, aug_sequence, True)
+valid_generator = data_generator(valid_data, BATCH_SIZE)
 
 base_model = MobileNet(weights='imagenet', include_top=False, input_shape=(IMG_HEIGHT, IMG_WIDTH, 3))
 base_model.trainable = False
@@ -108,29 +102,30 @@ model = models.Sequential([
     layers.Dense(1, activation='linear')  
 ])
 
-true = np.array([0.0, 720.0])
-pred = np.array([720.0, 0.0])
-print(f"0 = {custom_loss(true, pred)}")
-true = np.array([1.0])
-pred = np.array([719.0])
-print(f"144.0 = {custom_loss(true, pred)}")
-true = np.array([710])
-pred = np.array([350.0])
-print(f"a lot = {custom_loss(true, pred)}")
-true = np.array([1.0])
-pred = np.array([2.0])
-print(f"36.0 = {custom_loss(true, pred):.4f}")
+model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4),
+              loss=custom_loss.custom_loss) 
 
-model.compile(optimizer='adam', loss=custom_loss)
-log_dir = os.path.join("logs", "fit", f"model_run_{int(time.time())}")
+log_dir = os.path.join("logs", "fit", "model_run")
+if os.path.exists(log_dir):
+    shutil.rmtree(log_dir)  
+os.makedirs(log_dir) 
 tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
-model_checkpoint = callbacks.ModelCheckpoint(filepath='best_model.keras', save_best_only=True, monitor='val_loss')
+
+model_checkpoint = callbacks.ModelCheckpoint(
+    filepath='model_epoch{epoch:02d}_val_loss_{val_loss:.5f}.keras',
+    save_best_only=True,
+    monitor='val_loss',
+    mode='min',
+    verbose=1
+)
 
 model.fit(
     train_generator,
-    steps_per_epoch=len(train_data) // BATCH_SIZE,
-    validation_data=valid_generator ,
-    validation_steps=len(valid_data) // BATCH_SIZE,
+    steps_per_epoch=math.ceil(len(train_data) / BATCH_SIZE),
+    validation_data=valid_generator,
+    validation_steps=math.ceil(len(valid_data) / BATCH_SIZE),
     epochs=EPOCHS,
     callbacks=[tensorboard_callback, model_checkpoint]
 )
+
+model.save("final_model.keras")

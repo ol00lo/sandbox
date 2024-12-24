@@ -1,8 +1,3 @@
-import argparse
-import os
-import glob
-import random
-import time
 import cv2
 import numpy as np
 import imgaug as ia
@@ -30,8 +25,7 @@ def get_augmenter(level):
                 iaa.AddToHue((-50, 50)),
                 iaa.AdditiveGaussianNoise(scale=(0, 0.1200)),
                 iaa.MotionBlur(k=(3, 5)),  
-                iaa.JpegCompression(compression=(80, 99)),  
-                iaa.Rain(speed=(0.1, 0.3))], 
+                iaa.JpegCompression(compression=(80, 99))], 
             random_order=True))
     else:
         raise ValueError(":((")
