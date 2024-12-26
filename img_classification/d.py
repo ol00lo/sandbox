@@ -71,7 +71,7 @@ input_value = np.array([[confidence]])
 predicted_class_index = modified_model.predict([input_image, input_value])
 print(f"For new model predicted class index: {predicted_class_index}")
 
-loaded_model = load_model("model_epoch17_accuracy_0.70460.keras")
+loaded_model = load_model(old_model_path)
 input_image = old_preprocess(test_img_path)
 predict = loaded_model.predict(input_image)
 predicted_class_index = np.argmax(predict, axis=-1)
