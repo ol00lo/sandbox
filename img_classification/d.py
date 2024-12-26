@@ -38,8 +38,15 @@ modified_model = Model(inputs=[inp, confidence_threshold], outputs=[class_index_
 
 modified_model.set_weights(loaded_model.get_weights())
 
-first_layer_weights = [weight / 255.0 for weight in modified_model.layers[3].get_weights()]
-modified_model.layers[3].set_weights(first_layer_weights)
+    
+for i in range(len(modified_model.layers)):
+    if modified_model.layers[i].name == "conv2d":
+        weights, bias = modified_model.layers[i].get_weights()
+        weights = weights / 255.0
+        modified_model.layers[i].set_weights([weights, bias])
+        print(f"{i} layer modified")
+        break
+
 modified_model.save("modified_model.keras")
 
 def new_preprocess(image_path):
@@ -64,6 +71,7 @@ input_value = np.array([[confidence]])
 predicted_class_index = modified_model.predict([input_image, input_value])
 print(f"For new model predicted class index: {predicted_class_index}")
 
+loaded_model = load_model("model_epoch17_accuracy_0.70460.keras")
 input_image = old_preprocess(test_img_path)
 predict = loaded_model.predict(input_image)
 predicted_class_index = np.argmax(predict, axis=-1)
