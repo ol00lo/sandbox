@@ -19,6 +19,7 @@ BATCH_SIZE = 32
 EPOCHS = 1000  
 DATA_DIR = 'c:\\Users\\mymri\\repos\\clock_sett\\'
 AUG_LEVEL = 0
+DELTA_ACCURACY = 5
 
 def make_set(data_dir):
     import pandas as pd
@@ -84,6 +85,14 @@ def data_generator(data, batch_size, aug_sequence=None, need_shuffle=True):
             batch_data = tf.keras.applications.mobilenet.preprocess_input(batch_data)
             yield batch_data, batch_labels  
 
+
+def custom_accuracy(y_true, y_pred):
+    delta = DELTA_ACCURACY
+    lower_bound = y_pred - delta
+    upper_bound = y_pred + delta
+    y_true = tf.cast(y_true, tf.float32)
+    return tf.reduce_mean(tf.cast((y_true >= lower_bound) & (y_true <= upper_bound), tf.float32))
+
 train_data, valid_data = make_set(DATA_DIR)
 
 aug_sequence = augmenter.get_augmenter(AUG_LEVEL)
@@ -103,7 +112,7 @@ model = models.Sequential([
 ])
 
 model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4),
-              loss=custom_loss.custom_loss) 
+              loss=custom_loss.custom_loss, metrics=[custom_accuracy]) 
 
 log_dir = os.path.join("logs", "fit", "model_run")
 if os.path.exists(log_dir):
@@ -112,10 +121,10 @@ os.makedirs(log_dir)
 tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
 
 model_checkpoint = callbacks.ModelCheckpoint(
-    filepath='model_epoch{epoch:02d}_val_loss_{val_loss:.5f}.keras',
+    filepath='model_epoch{epoch:02d}_val_custom_accuracy_{val_custom_accuracy:.5f}.keras',
     save_best_only=True,
-    monitor='val_loss',
-    mode='min',
+    monitor='val_custom_accuracy',
+    mode='max',
     verbose=1
 )
 
