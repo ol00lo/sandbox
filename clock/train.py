@@ -14,12 +14,7 @@ seed_value = 0
 random.seed(seed_value)
 np.random.seed(seed_value)
 
-IMG_HEIGHT, IMG_WIDTH = 224, 224
-BATCH_SIZE = 32
-EPOCHS = 1000  
 DATA_DIR = 'c:\\Users\\mymri\\repos\\clock_sett\\'
-AUG_LEVEL = 0
-DELTA_ACCURACY = 5
 
 def make_set(data_dir):
     import pandas as pd
@@ -85,56 +80,88 @@ def data_generator(data, batch_size, aug_sequence=None, need_shuffle=True):
             batch_data = tf.keras.applications.mobilenet.preprocess_input(batch_data)
             yield batch_data, batch_labels  
 
+def build_accuracy_metrics(delta):
+    def accuracy(y_true, y_pred):
+        diff = tf.abs(tf.cast(y_pred, tf.float32) - tf.cast(y_true, tf.float32))
+        diff = tf.where(diff > 360, diff - 720, diff)
+        return tf.reduce_mean(tf.cast(diff <= delta, tf.float32))
 
-def custom_accuracy(y_true, y_pred):
-    delta = DELTA_ACCURACY
-    lower_bound = y_pred - delta
-    upper_bound = y_pred + delta
-    y_true = tf.cast(y_true, tf.float32)
-    return tf.reduce_mean(tf.cast((y_true >= lower_bound) & (y_true <= upper_bound), tf.float32))
+    return accuracy
 
-train_data, valid_data = make_set(DATA_DIR)
+def func():
+    train_data, valid_data = make_set(DATA_DIR)
+    aug_sequence = augmenter.get_augmenter(0)
+    BATCH_SIZE = 32
+    EPOCHS = 1000  
 
-aug_sequence = augmenter.get_augmenter(AUG_LEVEL)
+    train_generator = data_generator(train_data, BATCH_SIZE, aug_sequence, True)
+    valid_generator = data_generator(valid_data, BATCH_SIZE)
 
-train_generator = data_generator(train_data, BATCH_SIZE, aug_sequence, True)
-valid_generator = data_generator(valid_data, BATCH_SIZE)
+    base_model = MobileNet(weights='imagenet', include_top=False)
+    base_model.trainable = False
 
-base_model = MobileNet(weights='imagenet', include_top=False, input_shape=(IMG_HEIGHT, IMG_WIDTH, 3))
-base_model.trainable = False
+    model = models.Sequential([
+        base_model,
+        layers.GlobalAveragePooling2D(),
+        layers.Dense(128, activation='relu'),
+        layers.Dropout(0.5), 
+        layers.Dense(1, activation='linear')  
+    ])
 
-model = models.Sequential([
-    base_model,
-    layers.GlobalAveragePooling2D(),
-    layers.Dense(128, activation='relu'),
-    layers.Dropout(0.5), 
-    layers.Dense(1, activation='linear')  
-])
+    model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4),
+                  loss=custom_loss.custom_loss, metrics=[build_accuracy_metrics(5)]) 
 
-model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4),
-              loss=custom_loss.custom_loss, metrics=[custom_accuracy]) 
+    log_dir = os.path.join("logs", "fit", "model_run")
+    if os.path.exists(log_dir):
+        shutil.rmtree(log_dir)  
+    os.makedirs(log_dir) 
+    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
 
-log_dir = os.path.join("logs", "fit", "model_run")
-if os.path.exists(log_dir):
-    shutil.rmtree(log_dir)  
-os.makedirs(log_dir) 
-tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
+    model_checkpoint = callbacks.ModelCheckpoint(
+        filepath='model_epoch{epoch:02d}_val_custom_accuracy_{val_custom_accuracy:.5f}.keras',
+        save_best_only=True,
+        monitor='val_custom_accuracy',
+        mode='max',
+        verbose=1
+    )
+    model.fit(
+        train_generator,
+        steps_per_epoch=math.ceil(len(train_data) / BATCH_SIZE),
+        validation_data=valid_generator,
+        validation_steps=math.ceil(len(valid_data) / BATCH_SIZE),
+        epochs=EPOCHS,
+        callbacks=[tensorboard_callback, model_checkpoint]
+    )
+    model.save("final_model.keras")
+    print("Model saved as final_model.keras")
 
-model_checkpoint = callbacks.ModelCheckpoint(
-    filepath='model_epoch{epoch:02d}_val_custom_accuracy_{val_custom_accuracy:.5f}.keras',
-    save_best_only=True,
-    monitor='val_custom_accuracy',
-    mode='max',
-    verbose=1
-)
+def tests():
+    accuracy_fn = build_accuracy_metrics(5)
+    y_true = tf.constant([700.0])
+    y_pred = tf.constant([710.0])
+    print(f"Accuracy {0} == {accuracy_fn(y_true, y_pred).numpy()}")
+    y_true = tf.constant([700.0, 710.0])
+    y_pred = tf.constant([710.0, 710.0])
+    print(f"Accuracy {1/2} == {accuracy_fn(y_true, y_pred).numpy()}")
+    y_true = tf.constant([700.0, 710.0, 720.0])
+    y_pred = tf.constant([710.0, 710.0, 716.0])
+    print(f"Accuracy {2/3} == {accuracy_fn(y_true, y_pred).numpy()}")
+    y_true = tf.constant([700.0, 710.0, 720.0, 719.0])
+    y_pred = tf.constant([710.0, 710.0, 716.0, 710.0])
+    print(f"Accuracy {2/4} == {accuracy_fn(y_true, y_pred).numpy()}")
+    y_true = tf.constant([700.0, 710.0, 720.0, 719.0, 1.0])
+    y_pred = tf.constant([710.0, 710.0, 716.0, 710.0, 719.0])
+    print(f"Accuracy {3/5} == {accuracy_fn(y_true, y_pred).numpy()}")
+    y_true = tf.constant([700.0, 710.0, 720.0, 719.0, 1.0, 718.0])
+    y_pred = tf.constant([710.0, 710.0, 716.0, 710.0, 719.0, 1.0])
+    print(f"Accuracy {4/6} == {accuracy_fn(y_true, y_pred).numpy()}")
+    y_true = tf.constant([700.0, 710.0, 720.0, 719.0, 1.0, 718.0, 0.0])
+    y_pred = tf.constant([710.0, 710.0, 716.0, 710.0, 719.0, 1.0, 720.0])
+    print(f"Accuracy {5/7} == {accuracy_fn(y_true, y_pred).numpy()}")
+    y_true = tf.constant([700.0, 710.0, 720.0, 719.0, 1.0, 718.0, 0.0, 718.0])
+    y_pred = tf.constant([710.0, 710.0, 716.0, 710.0, 719.0, 1.0, 720.0, 719.0])
+    print(f"Accuracy {6/8} == {accuracy_fn(y_true, y_pred).numpy()}")
 
-model.fit(
-    train_generator,
-    steps_per_epoch=math.ceil(len(train_data) / BATCH_SIZE),
-    validation_data=valid_generator,
-    validation_steps=math.ceil(len(valid_data) / BATCH_SIZE),
-    epochs=EPOCHS,
-    callbacks=[tensorboard_callback, model_checkpoint]
-)
-
-model.save("final_model.keras")
+if __name__ == "__main__":
+    #func()
+    tests()
