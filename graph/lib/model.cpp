@@ -29,7 +29,7 @@ Model::Model(std::vector<std::shared_ptr<INode>> inputs, std::vector<std::shared
     }
 }
 
-std::vector<double> Model::compute(const std::vector<double>& input_values)
+std::vector<Tensor> Model::compute(const std::vector<Tensor>& input_values)
 {
     if (input_values.size() > _input_nodes.size())
     {
@@ -40,7 +40,7 @@ std::vector<double> Model::compute(const std::vector<double>& input_values)
         _input_nodes[i]->set_value(input_values[i]);
     }
 
-    std::vector<double> results;
+    std::vector<Tensor> results;
     for (const auto& output : _output_nodes)
     {
         results.push_back(output->get_value());
@@ -102,7 +102,6 @@ nlohmann::json Model::serialize() const
         io["output_nodes"].push_back(serialized.at("nodename"));
     }
     res["io"] = io;
-    // res["io"].push_back(io);
     return res;
 }
 
@@ -145,7 +144,9 @@ Model Model::deserialize(nlohmann::json j)
         }
         if (node_json.contains("value"))
         {
-            node->set_value(node_json["value"].get<double>());
+            std::vector<double> x = node_json["value"].get<std::vector<double>>();
+            Tensor val = Tensor({x});
+            node->set_value(val);
         }
     }
     for (const auto& input_name : j["io"]["input_nodes"])

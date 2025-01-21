@@ -1,11 +1,11 @@
 #include "power_nodes.hpp"
 using namespace g;
 
-double SqrNode::compute_value()
+Tensor SqrNode::compute_value()
 {
-    double value = _prev_nodes[0]->get_value();
-    double res = value * value;
-    log().debug("SqrNode compute: {:.2f}^2 = {:.2f}", value, res);
+    Tensor value = _prev_nodes[0]->get_value();
+    Tensor res = mult(value, value);
+    log().debug("SqrNode  \"{}\" compute}", nodename());
     return res;
 }
 
@@ -14,10 +14,10 @@ std::string SqrNode::classname() const
     return "SqrNode";
 }
 
-std::vector<double> SqrNode::get_gradient()
+std::vector<Tensor> SqrNode::get_gradient()
 {
-    double val = _prev_nodes[0]->get_value();
+    Tensor val = mult(_prev_nodes[0]->get_value(), _prev_nodes[0]->get_value());
     log().debug("Gradient in SqrNode compute");
-    std::vector<double> res = {2 * val};
+    std::vector<Tensor> res = {val};
     return res;
 }

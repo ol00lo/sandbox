@@ -2,26 +2,26 @@
 
 using namespace g;
 
-double DataNode::get_value()
+Tensor DataNode::get_value()
 {
     return _value;
 }
 
-void DataNode::set_value(double val)
+void DataNode::set_value(Tensor val)
 {
-    log().info("Data node value changed: from {} to {}", _value, val);
     _value = val;
+    log().info("Data node \"{}\" value changed", nodename());
     clear_forward_cache();
 }
 
 void DataNode::serialize_spec(nlohmann::json& js) const
 {
-    js["value"] = _value;
+    js["value"] = std::vector<double>(_value);
 }
-double DataNode::notself_derivative(const INode* arg)
+Tensor DataNode::notself_derivative(const INode* arg)
 {
     log().debug("Gradient in DataNode compute");
-    return 0.0;
+    return Tensor({0});
 }
 
 std::string DataNode::classname() const

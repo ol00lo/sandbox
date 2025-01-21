@@ -9,9 +9,9 @@ class MultNode : public IFunctionalNode
 public:
     MultNode(std::string nodename = "") : IFunctionalNode(nodename) {};
 protected:
-    double compute_value() override;
+    Tensor compute_value() override;
     std::string classname() const override;
-    std::vector<double> get_gradient() override;
+    std::vector<Tensor> get_gradient() override;
 
 private:
     REGISTER_INODE_CHILD(MultNode);
@@ -23,9 +23,9 @@ public:
     PlusNode(std::string nodename = "") : IFunctionalNode(nodename) {};
 
 protected:
-    double compute_value() override;
+    Tensor compute_value() override;
     std::string classname() const override;
-    std::vector<double> get_gradient() override;
+    std::vector<Tensor> get_gradient() override;
 
 private:
     REGISTER_INODE_CHILD(PlusNode);
@@ -37,9 +37,9 @@ public:
     MinusNode(std::string nodename = "") : IFunctionalNode(nodename) {};
 
 protected:
-    double compute_value() override;
+    Tensor compute_value() override;
     std::string classname() const override;
-    std::vector<double> get_gradient() override;
+    std::vector<Tensor> get_gradient() override;
 
 private:
     REGISTER_INODE_CHILD(MinusNode);
