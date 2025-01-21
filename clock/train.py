@@ -80,14 +80,6 @@ def data_generator(data, batch_size, aug_sequence=None, need_shuffle=True):
             batch_data = tf.keras.applications.mobilenet.preprocess_input(batch_data)
             yield batch_data, batch_labels  
 
-def build_accuracy_metrics(delta):
-    def accuracy(y_true, y_pred):
-        diff = tf.abs(tf.cast(y_pred, tf.float32) - tf.cast(y_true, tf.float32))
-        diff = tf.where(diff > 360, diff - 720, diff)
-        return tf.reduce_mean(tf.cast(diff <= delta, tf.float32))
-
-    return accuracy
-
 def func():
     train_data, valid_data = make_set(DATA_DIR)
     aug_sequence = augmenter.get_augmenter(0)
@@ -109,7 +101,7 @@ def func():
     ])
 
     model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4),
-                  loss=custom_loss.custom_loss, metrics=[build_accuracy_metrics(5)]) 
+                  loss=custom_loss.custom_loss, metrics=[custom_loss.build_accuracy_metrics(5)]) 
 
     log_dir = os.path.join("logs", "fit", "model_run")
     if os.path.exists(log_dir):
@@ -135,33 +127,5 @@ def func():
     model.save("final_model.keras")
     print("Model saved as final_model.keras")
 
-def tests():
-    accuracy_fn = build_accuracy_metrics(5)
-    y_true = tf.constant([700.0])
-    y_pred = tf.constant([710.0])
-    print(f"Accuracy {0} == {accuracy_fn(y_true, y_pred).numpy()}")
-    y_true = tf.constant([700.0, 710.0])
-    y_pred = tf.constant([710.0, 710.0])
-    print(f"Accuracy {1/2} == {accuracy_fn(y_true, y_pred).numpy()}")
-    y_true = tf.constant([700.0, 710.0, 720.0])
-    y_pred = tf.constant([710.0, 710.0, 716.0])
-    print(f"Accuracy {2/3} == {accuracy_fn(y_true, y_pred).numpy()}")
-    y_true = tf.constant([700.0, 710.0, 720.0, 719.0])
-    y_pred = tf.constant([710.0, 710.0, 716.0, 710.0])
-    print(f"Accuracy {2/4} == {accuracy_fn(y_true, y_pred).numpy()}")
-    y_true = tf.constant([700.0, 710.0, 720.0, 719.0, 1.0])
-    y_pred = tf.constant([710.0, 710.0, 716.0, 710.0, 719.0])
-    print(f"Accuracy {3/5} == {accuracy_fn(y_true, y_pred).numpy()}")
-    y_true = tf.constant([700.0, 710.0, 720.0, 719.0, 1.0, 718.0])
-    y_pred = tf.constant([710.0, 710.0, 716.0, 710.0, 719.0, 1.0])
-    print(f"Accuracy {4/6} == {accuracy_fn(y_true, y_pred).numpy()}")
-    y_true = tf.constant([700.0, 710.0, 720.0, 719.0, 1.0, 718.0, 0.0])
-    y_pred = tf.constant([710.0, 710.0, 716.0, 710.0, 719.0, 1.0, 720.0])
-    print(f"Accuracy {5/7} == {accuracy_fn(y_true, y_pred).numpy()}")
-    y_true = tf.constant([700.0, 710.0, 720.0, 719.0, 1.0, 718.0, 0.0, 718.0])
-    y_pred = tf.constant([710.0, 710.0, 716.0, 710.0, 719.0, 1.0, 720.0, 719.0])
-    print(f"Accuracy {6/8} == {accuracy_fn(y_true, y_pred).numpy()}")
-
 if __name__ == "__main__":
-    #func()
-    tests()
+    func()
