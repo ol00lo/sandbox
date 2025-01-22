@@ -14,7 +14,7 @@ class_names = [
     "clock", "vase", "scissors", "teddybear", "hairdrier", "toothbrush"
 ]
 
-predict_json = "predictions11.json"  
+predict_json = "predictions.json"  
 
 def iou(boxA, boxB):
     x1 = boxB[0]
@@ -37,6 +37,8 @@ def iou(boxA, boxB):
 def compute_ap(predictions, annotations, class_id, iou_threshold=0.5):
     pred_class = [p for p in predictions if p['category_id'] == class_id]
     ann_class = [a for a in annotations if a['category_id'] == class_id]
+    print(f"Number of predictions {class_id}: {len(pred_class)}")
+    print(f"Number of annotations {class_id}: {len(ann_class)}\n")
     
     true_positives = []
     false_positives = []
@@ -60,22 +62,26 @@ def compute_ap(predictions, annotations, class_id, iou_threshold=0.5):
     
     precision = tp_cumsum / (tp_cumsum + fp_cumsum + np.finfo(float).eps)  
     recall = tp_cumsum / len(ann_class) 
-    ap = np.trapz(precision, recall)  
+    
+    ap = np.sum((recall[1:] - recall[:-1]) * precision[1:])
+    #ap = np.trapz(precision, recall)  
     return ap
 
 def compute_map(predictions, annotations, classes, iou_threshold=0.5):
     ap_per_class = {}
     nc = 1
-    for class_id in classes:
+    for _ in classes:
+        if nc in {12, 26, 29, 30, 45, 66, 68, 69, 71, 83, 91}:
+            nc += 1
+            continue
         ap = compute_ap(predictions, annotations, nc, iou_threshold)
         ap_per_class[nc] = ap
         nc += 1
-        print(f"AP for class {nc}: {ap*100} %")
     mAP = np.mean(list(ap_per_class.values()))
     return ap_per_class, mAP
 
 
-with open('predictions11.json') as f:
+with open(predict_json) as f:
     predictions = json.load(f)
 
 with open('annotations/instances_val2017.json') as f:
@@ -83,4 +89,8 @@ with open('annotations/instances_val2017.json') as f:
 annotations = annotations['annotations']
 
 ap_per_class, mappp = compute_map(predictions, annotations, class_names, iou_threshold=0.5)
-print(f'AP: {mappp*100} %')
+
+for i, ap in ap_per_class.items():
+    print(f'AP for class {i}: {ap*100:.2f} %')
+
+print(f'AP: {mappp*100:.3f} %')

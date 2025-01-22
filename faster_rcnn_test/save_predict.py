@@ -4,15 +4,17 @@ import numpy as np
 import onnxruntime as ort
 import cv2
 import detect_onnx
+from tqdm import tqdm 
 
 session = ort.InferenceSession("model.onnx")
 image_folder = "val2017/val2017"  
 output_json = "predictions11.json"
 
 predictions = []
-n = 0
 
-for image_file in os.listdir(image_folder):
+image_files = os.listdir(image_folder)
+
+for image_file in tqdm(image_files, desc="Processing images", unit="image"):
     image_path = os.path.join(image_folder, image_file)
     image = cv2.imread(image_path)
 
@@ -38,11 +40,6 @@ for image_file in os.listdir(image_folder):
         "score": score.item(),
         "category_id": int(clss)
         })
-
-    n += 1
-    print(f"{n} images processed.")
-    if n >= 100:  
-        break
 
 with open(output_json, "w") as f:
     json.dump(predictions, f)
