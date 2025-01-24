@@ -1,20 +1,6 @@
 import json
 import numpy as np
-
-class_names = [
-    "back_ground", "person", "bicycle", "car", "motorbike", "aeroplane", "bus", "train", "truck", "boat",
-    "trafficlight", "firehydrant", "streetsign", "stopsign", "parkingmeter", "bench", "bird", "cat", "dog",
-    "horse", "sheep", "cow", "elephant", "bear", "zebra", "giraffe", "hat", "backpack", "umbrella", "shoe",
-    "eyeglasses", "handbag", "tie", "suitcase", "frisbee", "skis", "snowboard", "sportsball", "kite",
-    "baseballbat", "baseballglove", "skateboard", "surfboard", "tennisracket", "bottle", "plate",
-    "wineglass", "cup", "fork", "knife", "spoon", "bowl", "banana", "apple", "sandwich", "orange",
-    "broccoli", "carrot", "hotdog", "pizza", "donut", "cake", "chair", "sofa", "pottedplant", "bed",
-    "mirror", "diningtable", "window", "desk", "toilet", "door", "tvmonitor", "laptop", "mouse", "remote",
-    "keyboard", "cellphone", "microwave", "oven", "toaster", "sink", "refrigerator", "blender", "book",
-    "clock", "vase", "scissors", "teddybear", "hairdrier", "toothbrush"
-]
-
-predict_json = "predictions.json"  
+from common_func import class_names
 
 def iou(boxA, boxB):
     x1 = boxB[0]
@@ -37,12 +23,17 @@ def iou(boxA, boxB):
 def compute_ap(predictions, annotations, class_id, iou_threshold=0.5):
     pred_class = [p for p in predictions if p['category_id'] == class_id]
     ann_class = [a for a in annotations if a['category_id'] == class_id]
-    print(f"Number of predictions {class_id}: {len(pred_class)}")
-    print(f"Number of annotations {class_id}: {len(ann_class)}\n")
+
+    if(len(pred_class) == 0 and len(ann_class) == 0):
+        return None
     
+    pred_class.sort(key=lambda x: x['score'], reverse=True)
+
     true_positives = []
     false_positives = []
     
+    matched_annotations = []
+
     for pred in pred_class:
         pred_bbox = pred['bbox']
         matched = False
@@ -50,47 +41,58 @@ def compute_ap(predictions, annotations, class_id, iou_threshold=0.5):
 
         for annotation in with_image:
             annotation_bbox = annotation['bbox']
-            if iou(pred_bbox, annotation_bbox) >= iou_threshold:
+            if annotation['id'] not in matched_annotations and iou(pred_bbox, annotation_bbox) >= iou_threshold:
                 matched = True
+                matched_annotations.append(annotation['id'])
                 break
-        
+
         true_positives.append(int(matched))
         false_positives.append(int(not matched))
-    
+
     tp_cumsum = np.cumsum(true_positives)
     fp_cumsum = np.cumsum(false_positives)
-    
-    precision = tp_cumsum / (tp_cumsum + fp_cumsum + np.finfo(float).eps)  
-    recall = tp_cumsum / len(ann_class) 
-    
-    ap = np.sum((recall[1:] - recall[:-1]) * precision[1:])
-    #ap = np.trapz(precision, recall)  
+
+    precision = tp_cumsum / (tp_cumsum + fp_cumsum + np.finfo(float).eps)
+    recall = tp_cumsum / len(ann_class)
+    precision = np.maximum.accumulate(precision)
+
+    if recall[0] != 0:
+        recall = np.insert(recall, 0, 0)
+        precision = np.insert(precision, 0, precision[0])
+
+    if recall[-1] != 1:
+        recall = np.append(recall, 1)
+        precision = np.append(precision, 0)
+
+    ap = np.trapz(precision, recall)
     return ap
 
 def compute_map(predictions, annotations, classes, iou_threshold=0.5):
     ap_per_class = {}
     nc = 1
-    for _ in classes:
-        if nc in {12, 26, 29, 30, 45, 66, 68, 69, 71, 83, 91}:
-            nc += 1
-            continue
+    for c in classes:
         ap = compute_ap(predictions, annotations, nc, iou_threshold)
-        ap_per_class[nc] = ap
+        if(ap is not None):
+            ap_per_class[nc] = ap
+        else:
+            print(f"Class {c} is not present in predictions and annotations")
         nc += 1
     mAP = np.mean(list(ap_per_class.values()))
     return ap_per_class, mAP
 
 
-with open(predict_json) as f:
-    predictions = json.load(f)
+if __name__ == "__main__":
+    predict_json = "predictions.json"  
+    with open(predict_json) as f:
+        predictions = json.load(f)
 
-with open('annotations/instances_val2017.json') as f:
-    annotations = json.load(f)
-annotations = annotations['annotations']
+    with open('annotations/instances_val2017.json') as f:
+        annotations = json.load(f)
+    annotations = annotations['annotations']
 
-ap_per_class, mappp = compute_map(predictions, annotations, class_names, iou_threshold=0.5)
+    ap_per_class, mappp = compute_map(predictions, annotations, class_names, iou_threshold=0.5)
 
-for i, ap in ap_per_class.items():
-    print(f'AP for class {i}: {ap*100:.2f} %')
+    for i, ap in ap_per_class.items():
+        print(f'AP for class {i}: {ap*100:.2f} %')
 
-print(f'AP: {mappp*100:.3f} %')
+    print(f'AP: {mappp*100:.3f} %')
