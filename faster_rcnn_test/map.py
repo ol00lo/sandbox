@@ -54,14 +54,14 @@ def compute_ap(predictions, annotations, class_id, iou_threshold=0.5):
 
     precision = tp_cumsum / (tp_cumsum + fp_cumsum + np.finfo(float).eps)
     recall = tp_cumsum / len(ann_class)
-    precision = np.maximum.accumulate(precision)
-
+    precision = np.maximum.accumulate(precision[::-1])[::-1]
+    
     if recall[0] != 0:
         recall = np.insert(recall, 0, 0)
         precision = np.insert(precision, 0, precision[0])
 
     if recall[-1] != 1:
-        recall = np.append(recall, 1)
+        recall = np.append(recall, recall[-1])
         precision = np.append(precision, 0)
 
     ap = np.trapz(precision, recall)
