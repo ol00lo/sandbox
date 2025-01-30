@@ -24,10 +24,10 @@ nlohmann::json load_json(const std::string& filename)
 
 TEST_CASE("serialization", "[3]")
 {
-    g::set_log_debug();
-    std::shared_ptr<INode> x = INode::factory("DataNode", "x");
-    std::shared_ptr<INode> y = INode::factory("DataNode", "y");
-    std::shared_ptr<INode> A = INode::factory("DataNode", "A");
+    //g::set_log_debug();
+    std::shared_ptr<DataNode> x = DataNode::factory("DataNode", "xxx");
+    std::shared_ptr<DataNode> y = DataNode::factory("DataNode", "yyy");
+    std::shared_ptr<DataNode> A = DataNode::factory("DataNode", "AAA");
     x->set_value(Tensor({1}));
     y->set_value(Tensor({-1}));
     A->set_value(Tensor({1.2}));
@@ -42,25 +42,23 @@ TEST_CASE("serialization", "[3]")
 
     Model model({x, y}, {f, g});
     std::vector<Tensor> v0 = model.compute({});
-    auto res = std::vector<double>(v0[0]);
-    CHECK(res[0] == Approx(0.04));
+    CHECK(v0[0][0] == Approx(0.04));
     std::vector<Tensor> v1 = model.compute({Tensor({2}), Tensor({-3})});
-    auto res1 = std::vector<double>(v1[0]);
-    CHECK(res1[0] == Approx(0.36));
+    CHECK(v1[0][0] == Approx(0.36));
     model.save("a.json");
     Model model2 = Model::load("a.json");
     std::vector<Tensor> v2 = model2.compute({Tensor({2}), Tensor({-3})});
-    auto res2 = std::vector<double>(v2[0]);
-    CHECK(res1 == res2);
+    CHECK(v1[0] == v2[0]);
+    CHECK(v1[1] == v2[1]);
 }
 
 TEST_CASE("serialization2", "[4]")
 {
-    g::set_log_debug();
-    std::shared_ptr<INode> x = INode::factory("DataNode", {});
-    std::shared_ptr<INode> y = INode::factory("DataNode", {});
-    std::shared_ptr<INode> A = INode::factory("DataNode", {});
-    std::shared_ptr<INode> B = INode::factory("DataNode", {});
+    //g::set_log_debug();
+    std::shared_ptr<DataNode> x = DataNode::factory("DataNode", {});
+    std::shared_ptr<DataNode> y = DataNode::factory("DataNode", {});
+    std::shared_ptr<DataNode> A = DataNode::factory("DataNode", {});
+    std::shared_ptr<DataNode> B = DataNode::factory("DataNode", {});
     A->set_value(Tensor({1}));
     B->set_value(Tensor({5}));
     std::shared_ptr<INode> a1 = INode::factory("MultNode", "aa1");
@@ -78,6 +76,6 @@ TEST_CASE("serialization2", "[4]")
     Model model2 = Model::load("a.json");
     std::vector<Tensor> v2 = model2.compute({Tensor({2}), Tensor({3})});
     model.save("b.json");
-    CHECK(std::vector<double>(v1[0]) == std::vector<double>(v2[0]));
+    CHECK(v1[0] == v2[0]);
     CHECK(load_json("a.json") == load_json("b.json"));
 }

@@ -21,7 +21,7 @@ std::shared_ptr<INode> find_node_by_name(std::unordered_map<std::string, std::sh
 } // namespace
 
 Model::Model(std::vector<std::shared_ptr<INode>> inputs, std::vector<std::shared_ptr<INode>> outputs)
-    : _input_nodes(std::move(inputs)), _output_nodes(std::move(outputs))
+    : _input_nodes(inputs), _output_nodes(outputs)
 {
     for (const auto& output : _output_nodes)
     {
@@ -37,7 +37,11 @@ std::vector<Tensor> Model::compute(const std::vector<Tensor>& input_values)
     }
     for (size_t i = 0; i < input_values.size(); ++i)
     {
-        _input_nodes[i]->set_value(input_values[i]);
+        auto get_node = _input_nodes[i].get();
+        if (auto dataNode = dynamic_cast<DataNode*>(get_node))
+        {
+            dataNode->set_value(input_values[i]);
+        }
     }
 
     std::vector<Tensor> results;
@@ -46,6 +50,20 @@ std::vector<Tensor> Model::compute(const std::vector<Tensor>& input_values)
         results.push_back(output->get_value());
     }
     return results;
+}
+
+std::vector<Tensor> Model::compute_derivative(std::shared_ptr<INode> input)
+{
+    std::vector<Tensor> results;
+    for (const auto& output : _output_nodes)
+    {
+        results.push_back(output->get_derivative(input));
+    }
+    return results;
+}
+Tensor Model::compute_derivative(std::shared_ptr<INode> output, std::shared_ptr<INode> input)
+{
+    return output->get_derivative(input);
 }
 
 void Model::add_into_inter(std::shared_ptr<INode> node)
@@ -126,13 +144,22 @@ Model Model::deserialize(nlohmann::json j)
 
     for (const auto& node_json : j["nodes"])
     {
-        auto node = INode::factory(node_json.at("classname").get<std::string>(), {});
-        auto name = node_json.at("nodename").get<std::string>();
-        all_nodes.insert({name, node});
+        auto classname = node_json.at("classname").get<std::string>();
+        std::shared_ptr<INode> node;
+        if (classname == "DataNode")
+        {
+            node = DataNode::factory(classname, {});
+        }
+        else
+        {
+            node = INode::factory(classname, {});
+        }
+        all_nodes.insert({node_json.at("nodename").get<std::string>(), node});
     }
     for (const auto& node_json : j["nodes"])
     {
-        auto node = all_nodes[node_json.at("nodename").get<std::string>()];
+        std::string nname = node_json.at("nodename").get<std::string>();
+        std::shared_ptr<INode> node = all_nodes[nname];
         if (!node_json.at("prev_nodes").empty())
         {
             for (const auto& prev_node_name : node_json.at("prev_nodes"))
@@ -142,11 +169,17 @@ Model Model::deserialize(nlohmann::json j)
                 prev_node->add_next(node);
             }
         }
-        if (node_json.contains("value"))
+        if (node_json.contains("value") && node_json.contains("shape"))
         {
             std::vector<double> x = node_json["value"].get<std::vector<double>>();
-            Tensor val = Tensor({x});
-            node->set_value(val);
+            Shape shape = node_json["shape"].get<std::array<int, 4>>();
+            Tensor val = Tensor(shape, x);
+            auto get_node = node.get();
+            if (auto dataNode = dynamic_cast<DataNode*>(get_node))
+            {
+                dataNode->set_value(val);
+                all_nodes[nname] = node;
+            }
         }
     }
     for (const auto& input_name : j["io"]["input_nodes"])

@@ -26,7 +26,6 @@ public:
     using NodeBuilder = std::function<PNode(std::string nodename)>;
     INode(std::string nodename = "");
     static PNode factory(std::string classname, std::string nodename = "");
-    virtual void set_value(Tensor val) {};
     void add_prev(std::shared_ptr<INode> a);
     void add_next(std::shared_ptr<INode> a);
     virtual Tensor get_value() = 0;
@@ -37,6 +36,7 @@ public:
     virtual std::string classname() const = 0;
     nlohmann::json serialize() const;
     virtual void serialize_spec(nlohmann::json& js) const {};
+    virtual Shape get_shape() const =0;
     virtual ~INode()
     {
         _existing_names.erase(_nodename);

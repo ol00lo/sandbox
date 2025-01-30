@@ -17,6 +17,7 @@ public:
     void add_value_callback(callback_t cb);
     void add_gradient_callback(callback_t cb);
     Tensor get_value() override;
+    Shape get_shape() const override;
     virtual ~IFunctionalNode() {};
 
 protected:

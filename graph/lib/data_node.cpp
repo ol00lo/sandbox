@@ -16,15 +16,20 @@ void DataNode::set_value(Tensor val)
 
 void DataNode::serialize_spec(nlohmann::json& js) const
 {
-    js["value"] = std::vector<double>(_value);
+    _value.serialize(js);
 }
 Tensor DataNode::notself_derivative(const INode* arg)
 {
     log().debug("Gradient in DataNode compute");
-    return Tensor({0});
+    return Tensor(arg->get_shape(), 0.0);
 }
 
 std::string DataNode::classname() const
 {
     return "DataNode";
+}
+
+Shape DataNode::get_shape() const
+{
+    return _value.get_shape();
 }

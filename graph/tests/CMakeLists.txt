@@ -9,6 +9,7 @@ set(CATCH2_FRAMEWORK "Catch2::Catch2")
 set (SRC
 	main.cpp
 	tests.cpp
+	tensor_test.cpp
 )
 
 add_executable(graph_pr ${SRC} ${HEADERS})

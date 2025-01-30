@@ -106,7 +106,9 @@ void INode::clear_forward_cache()
 Tensor INode::get_derivative(const INode* argument)
 {
     if (argument == this)
-        return Tensor({1.0});
+    {
+        return Tensor(argument->get_shape(), 1.0);
+    }
     else
         return notself_derivative(argument);
 }
