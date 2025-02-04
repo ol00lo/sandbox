@@ -7,21 +7,14 @@ using namespace g;
 
 Tensor::Tensor(Shape shape, const std::vector<double>& data) : _shape(shape), _data(data)
 {
-    if (data.size() != shape[0] * shape[1] * shape[2] * shape[3])
-    {
-        throw std::runtime_error("Incorrect tensor shape.");
-    }
-}
-Tensor::Tensor(Shape shape, std::vector<double>&& data) : _shape(shape), _data(std::move(data))
-{
-    if (_data.size() != shape[0] * shape[1] * shape[2] * shape[3])
+    if (data.size() != shape.n_indexes())
     {
         throw std::runtime_error("Incorrect tensor shape.");
     }
 }
 Tensor::Tensor(Shape shape, double a) : _shape(shape)
 {
-    _data = std::vector<double>(shape[0] * shape[1] * shape[2] * shape[3], a);
+    _data = std::vector<double>(shape.n_indexes(), a);
 }
 
 void Tensor::set_zero()
@@ -96,8 +89,9 @@ void Tensor::serialize(nlohmann::json& js) const
     js["shape"] = _shape;
     js["value"] = _data;
 }
-void Tensor::to_string(std::ostream& os) const
+void Tensor::write(std::ostream& os) const
 {
+    os << " data = \n";
     for (int b = 0; b < _shape[0]; b++)
     {
         os << "[";
@@ -111,14 +105,21 @@ void Tensor::to_string(std::ostream& os) const
                 {
                     Index ind(b, i, j, c);
                     double d = _data[ind.to_linear(_shape)];
-                    os << std::fixed << std::setprecision(2) << d << "  ";
+                    os << std::fixed << std::setprecision(4) << d << "  ";
                 }
                 os << "]";
+                if (j != _shape[2] - 1)
+                    os << "\n";
             }
             os << "]";
+            if (i != _shape[1] - 1)
+                os << "\n";
         }
         os << "]";
+        if (b != _shape[0] - 1)
+            os << "\n";
     }
+    os << ",  shape = (" << _shape[0] << ", " << _shape[1] << ", " << _shape[2] << ", " << _shape[3] << ")" << std::endl;
 }
 
 Tensor g::add(const Tensor& t1, const Tensor& t2)

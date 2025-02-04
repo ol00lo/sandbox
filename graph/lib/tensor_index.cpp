@@ -3,9 +3,13 @@
 
 using namespace g;
 
-Index::Index(int linear, const Shape & shape): Shape(shape)
+int Shape::n_indexes() const
 {
-    if (linear < 0 || linear >= shape[0]*shape[1]*shape[2]*shape[3])
+    return (*this)[0] * (*this)[1] * (*this)[2] * (*this)[3];
+}
+Index::Index(int linear, const Shape& shape)
+{
+    if (linear < 0 || linear >= shape.n_indexes())
     {
         throw std::runtime_error("out of range.");
     }

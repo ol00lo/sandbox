@@ -16,12 +16,23 @@ void DataNode::set_value(Tensor val)
 
 void DataNode::serialize_spec(nlohmann::json& js) const
 {
-    _value.serialize(js);
+    nlohmann::json js2;
+    _value.serialize(js2);
+    js["value"] = js2;
+}
+
+void DataNode::deserialize_spec(const nlohmann::json& node_json, std::string copy_word)
+{
+    std::string nname = node_json["nodename"].get<std::string>() + copy_word;
+    std::vector<double> x = node_json["value"]["value"].get<std::vector<double>>();
+    Shape shape = node_json["value"]["shape"].get<std::array<int, 4>>();
+    Tensor val = Tensor(shape, x);
+    set_value(val);    
 }
 Tensor DataNode::notself_derivative(const INode* arg)
 {
     log().debug("Gradient in DataNode compute");
-    return Tensor(arg->get_shape(), 0.0);
+    return Tensor(arg->output_shape(), 0.0);
 }
 
 std::string DataNode::classname() const
@@ -29,7 +40,7 @@ std::string DataNode::classname() const
     return "DataNode";
 }
 
-Shape DataNode::get_shape() const
+Shape DataNode::output_shape() const
 {
     return _value.get_shape();
 }

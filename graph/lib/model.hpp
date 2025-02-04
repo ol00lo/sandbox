@@ -12,8 +12,6 @@ public:
     static Model load(const std::string& filename);
     static Model deserialize(nlohmann::json);
     std::vector<Tensor> compute(const std::vector<Tensor>& input_values);
-    std::vector<Tensor> compute_derivative(std::shared_ptr<INode> inpt_node);
-    Tensor compute_derivative(std::shared_ptr<INode> out_node, std::shared_ptr<INode> inpt_node);
 
 private:
     std::vector<std::shared_ptr<INode>> _input_nodes;

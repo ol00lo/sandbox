@@ -44,47 +44,23 @@ TEST_CASE("tensor test", "[tensor_test]")
     CHECK(t1[0] == 4);
     CHECK(t1[1] == 6);
     CHECK(t1[2] == 8);
-	Tensor t6 = mult(t1, t2);
-	CHECK(t6[0] == 4);
-	CHECK(t6[1] == 12);
-	CHECK(t6[2] == 24);
-    t6.div(t5); 
-    CHECK(t6[1] == 3);  
-
+    Tensor t6 = mult(t1, t2);
+    CHECK(t6[0] == 4);
+    CHECK(t6[1] == 12);
+    CHECK(t6[2] == 24);
+    t6.div(t5);
+    CHECK(t6[1] == 3);
 }
-TEST_CASE("graph", "[graph]")
+TEST_CASE("print tensor test", "[print_tensor_test]")
 {
     auto shape = Shape(1, 1, 3);
     Tensor x(shape, {1, 2, 3});
-    Tensor y(shape, {4, 5, 6});
-
-    std::shared_ptr<DataNode> x_node = DataNode::factory("DataNode", "x");
-    std::shared_ptr<DataNode> y_node = DataNode::factory("DataNode", "y");
-    std::shared_ptr<DataNode> dva_node = DataNode::factory("DataNode", "dva");
-
-    x_node->set_value(x);
-    y_node->set_value(y);
-    dva_node->set_value(Tensor(shape, 2));
-
-    std::shared_ptr<INode> a1 = INode::factory("MultNode", "dva_x");
-    g::set_dep(a1, {dva_node, x_node});
-    std::shared_ptr<INode> a2 = INode::factory("SqrNode", "sqr_y");
-    g::set_dep(a2, {y_node});
-    std::shared_ptr<INode> f_node = INode::factory("PlusNode", "f_node");
-    g::set_dep(f_node, {a1, a2});
-
-	Model model({x_node, y_node}, {f_node});
-    model.save("ssss.json");
-    Model model2 = Model::load("ssss.json");
-    std::vector<Tensor> res = model.compute({});
-    std::vector<Tensor> res1 = model2.compute({});
-    CHECK(res[0] == res1[0]);
-
-    auto gx = model.compute_derivative(f_node, x_node);
-    auto gy = model.compute_derivative(f_node, y_node);
+    CHECK(shape.n_indexes() == 3);
     std::cout << "x = " << x << std::endl;
-    std::cout << "y = " << y << std::endl;
-    std::cout<< "f = 2x+y^2 = " << res[0] << std::endl;
-    std::cout<< "df/dx= " << gx << std::endl;
-    std::cout<< "df/dy= " << gy << std::endl;
+    Tensor x1(Shape(2, 2, 1), {1, 2, 3, 4});
+    std::cout << x1 << std::endl;
+    Tensor x2(Shape(3, 1, 2), {1, 2, 3, 4, 5, 6});
+    std::cout << x2 << std::endl;
+    Tensor x3(Shape(2, 2, 1), {1, 2, 3, 4});
+    std::cout << x3 << std::endl;
 }

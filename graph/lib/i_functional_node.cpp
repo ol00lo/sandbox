@@ -65,7 +65,7 @@ Tensor IFunctionalNode::notself_derivative(const INode* arg)
 
 Tensor IFunctionalNode::compute_notself_derivative(const INode* arg)
 {
-    Tensor res(arg->get_shape(), 0.0);
+    Tensor res(arg->output_shape(), 0.0);
     if (!_has_gradient)
     {
         before_gradient_compute();
@@ -82,7 +82,14 @@ Tensor IFunctionalNode::compute_notself_derivative(const INode* arg)
     }
     return res;
 }
-Shape IFunctionalNode::get_shape() const
+Shape IFunctionalNode::output_shape() const
 {
-    return _value.get_shape();
+    std::shared_ptr<INode> a = _prev_nodes[0];
+    while (a->classname() != "DataNode")
+    {
+        a = a->get_prev()[0];
+        if (a->get_prev().size() ==0 && a->classname() != "DataNode")
+			throw std::runtime_error("Incorrect dependency");
+    }
+    return a->output_shape();
 }

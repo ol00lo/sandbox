@@ -1,6 +1,6 @@
 #include "arithmetic_nodes.hpp"
-#include "i_functional_node.hpp"
 #include "data_node.hpp"
+#include "i_functional_node.hpp"
 #include "model.hpp"
 #include "power_nodes.hpp"
 #include <catch2/catch.hpp>
@@ -25,9 +25,9 @@ nlohmann::json load_json(const std::string& filename)
 TEST_CASE("serialization", "[3]")
 {
     //g::set_log_debug();
-    std::shared_ptr<DataNode> x = DataNode::factory("DataNode", "xxx");
-    std::shared_ptr<DataNode> y = DataNode::factory("DataNode", "yyy");
-    std::shared_ptr<DataNode> A = DataNode::factory("DataNode", "AAA");
+    std::shared_ptr<DataNode> x = std::make_shared<DataNode>("xxx");
+    std::shared_ptr<DataNode> y = std::make_shared<DataNode>("yyy");
+    std::shared_ptr<DataNode> A = std::make_shared<DataNode>("AAA");
     x->set_value(Tensor({1}));
     y->set_value(Tensor({-1}));
     A->set_value(Tensor({1.2}));
@@ -46,6 +46,7 @@ TEST_CASE("serialization", "[3]")
     std::vector<Tensor> v1 = model.compute({Tensor({2}), Tensor({-3})});
     CHECK(v1[0][0] == Approx(0.36));
     model.save("a.json");
+
     Model model2 = Model::load("a.json");
     std::vector<Tensor> v2 = model2.compute({Tensor({2}), Tensor({-3})});
     CHECK(v1[0] == v2[0]);
@@ -54,11 +55,11 @@ TEST_CASE("serialization", "[3]")
 
 TEST_CASE("serialization2", "[4]")
 {
-    //g::set_log_debug();
-    std::shared_ptr<DataNode> x = DataNode::factory("DataNode", {});
-    std::shared_ptr<DataNode> y = DataNode::factory("DataNode", {});
-    std::shared_ptr<DataNode> A = DataNode::factory("DataNode", {});
-    std::shared_ptr<DataNode> B = DataNode::factory("DataNode", {});
+    // g::set_log_debug();
+    std::shared_ptr<DataNode> x = std::make_shared<DataNode>("");
+    std::shared_ptr<DataNode> y = std::make_shared<DataNode>("");
+    std::shared_ptr<DataNode> A = std::make_shared<DataNode>("");
+    std::shared_ptr<DataNode> B = std::make_shared<DataNode>("");
     A->set_value(Tensor({1}));
     B->set_value(Tensor({5}));
     std::shared_ptr<INode> a1 = INode::factory("MultNode", "aa1");

@@ -49,13 +49,13 @@ std::vector<Tensor> MultNode::get_gradient()
 std::vector<Tensor> PlusNode::get_gradient()
 {
     log().debug("Gradient in PlusNode compute");
-    std::vector<Tensor> res = {Tensor(_prev_nodes[0]->get_shape(), 1.0), Tensor(_prev_nodes[1]->get_shape(), 1.0)};
+    std::vector<Tensor> res = {Tensor(_prev_nodes[0]->output_shape(), 1.0), Tensor(_prev_nodes[1]->output_shape(), 1.0)};
     return res;
 }
 
 std::vector<Tensor> MinusNode::get_gradient()
 {
     log().debug("Gradient in MinusNode compute");
-    std::vector<Tensor> res = {Tensor(_prev_nodes[0]->get_shape(), 1.0), Tensor(_prev_nodes[1]->get_shape(), -1.0)};
+    std::vector<Tensor> res = {Tensor(_prev_nodes[0]->output_shape(), 1.0), Tensor(_prev_nodes[1]->output_shape(), -1.0)};
     return res;
 }

@@ -37,8 +37,8 @@ std::vector<Tensor> Model::compute(const std::vector<Tensor>& input_values)
     }
     for (size_t i = 0; i < input_values.size(); ++i)
     {
-        auto get_node = _input_nodes[i].get();
-        if (auto dataNode = dynamic_cast<DataNode*>(get_node))
+        INode* get_node = _input_nodes[i].get();
+        if (DataNode* dataNode = dynamic_cast<DataNode*>(get_node))
         {
             dataNode->set_value(input_values[i]);
         }
@@ -50,20 +50,6 @@ std::vector<Tensor> Model::compute(const std::vector<Tensor>& input_values)
         results.push_back(output->get_value());
     }
     return results;
-}
-
-std::vector<Tensor> Model::compute_derivative(std::shared_ptr<INode> input)
-{
-    std::vector<Tensor> results;
-    for (const auto& output : _output_nodes)
-    {
-        results.push_back(output->get_derivative(input));
-    }
-    return results;
-}
-Tensor Model::compute_derivative(std::shared_ptr<INode> output, std::shared_ptr<INode> input)
-{
-    return output->get_derivative(input);
 }
 
 void Model::add_into_inter(std::shared_ptr<INode> node)
@@ -116,7 +102,6 @@ nlohmann::json Model::serialize() const
     for (const auto& output : _output_nodes)
     {
         auto serialized = output->serialize();
-        res["nodes"].push_back(serialized);
         io["output_nodes"].push_back(serialized.at("nodename"));
     }
     res["io"] = io;
@@ -130,7 +115,6 @@ Model Model::load(const std::string& filename)
     {
         throw std::runtime_error("Cannot open file for reading.");
     }
-    std::unordered_map<std::string, std::shared_ptr<INode>> all_nodes;
     nlohmann::json j;
     file >> j;
     return deserialize(j);
@@ -139,58 +123,31 @@ Model Model::load(const std::string& filename)
 Model Model::deserialize(nlohmann::json j)
 {
     std::unordered_map<std::string, std::shared_ptr<INode>> all_nodes;
+    std::string copy_word = "_copy";
+
+    for (const auto& node_json : j["nodes"])
+    {
+        std::string nodename = node_json.at("nodename").get<std::string>() + copy_word;
+        auto classname = node_json.at("classname").get<std::string>();
+        std::shared_ptr<INode> node = INode::factory(classname, nodename);
+        all_nodes.insert({nodename, node});
+    }
+    for (const auto& node_json : j["nodes"])
+    {
+        std::string nname = node_json.at("nodename").get<std::string>() + copy_word;
+        all_nodes[nname]->deserialize(node_json, all_nodes);
+    }
+
     std::vector<std::shared_ptr<INode>> input_nodes;
     std::vector<std::shared_ptr<INode>> output_nodes;
-
-    for (const auto& node_json : j["nodes"])
-    {
-        auto classname = node_json.at("classname").get<std::string>();
-        std::shared_ptr<INode> node;
-        if (classname == "DataNode")
-        {
-            node = DataNode::factory(classname, {});
-        }
-        else
-        {
-            node = INode::factory(classname, {});
-        }
-        all_nodes.insert({node_json.at("nodename").get<std::string>(), node});
-    }
-    for (const auto& node_json : j["nodes"])
-    {
-        std::string nname = node_json.at("nodename").get<std::string>();
-        std::shared_ptr<INode> node = all_nodes[nname];
-        if (!node_json.at("prev_nodes").empty())
-        {
-            for (const auto& prev_node_name : node_json.at("prev_nodes"))
-            {
-                auto prev_node = all_nodes[prev_node_name.get<std::string>()];
-                node->add_prev(prev_node);
-                prev_node->add_next(node);
-            }
-        }
-        if (node_json.contains("value") && node_json.contains("shape"))
-        {
-            std::vector<double> x = node_json["value"].get<std::vector<double>>();
-            Shape shape = node_json["shape"].get<std::array<int, 4>>();
-            Tensor val = Tensor(shape, x);
-            auto get_node = node.get();
-            if (auto dataNode = dynamic_cast<DataNode*>(get_node))
-            {
-                dataNode->set_value(val);
-                all_nodes[nname] = node;
-            }
-        }
-    }
     for (const auto& input_name : j["io"]["input_nodes"])
     {
-        auto input_node = all_nodes[input_name.get<std::string>()];
+        auto input_node = all_nodes[input_name.get<std::string>() + copy_word];
         input_nodes.push_back(input_node);
     }
-
     for (const auto& output_name : j["io"]["output_nodes"])
     {
-        auto output_node = all_nodes[output_name.get<std::string>()];
+        auto output_node = all_nodes[output_name.get<std::string>() + copy_word];
         output_nodes.push_back(output_node);
     }
     return Model(input_nodes, output_nodes);
