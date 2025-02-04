@@ -1,27 +1,24 @@
 #include "arithmetic_nodes.hpp"
 using namespace g;
 
-double MultNode::compute_value()
+Tensor MultNode::compute_value()
 {
-    auto res = _prev_nodes[0]->get_value() * _prev_nodes[1]->get_value();
-    log().debug("MultNode compute: {:.2f} * {:.2f} = {:.2f}", _prev_nodes[0]->get_value(), _prev_nodes[1]->get_value(),
-                res);
+    Tensor res = mult(_prev_nodes[0]->get_value(), _prev_nodes[1]->get_value());
+    log().debug("MultNode  \"{}\" compute", nodename());
     return res;
 }
 
-double PlusNode::compute_value()
+Tensor PlusNode::compute_value()
 {
-    auto res = _prev_nodes[0]->get_value() + _prev_nodes[1]->get_value();
-    log().debug("PlusNode compute: {:.2f} + {:.2f} = {:.2f}", _prev_nodes[0]->get_value(), _prev_nodes[1]->get_value(),
-                res);
+    Tensor res = add(_prev_nodes[0]->get_value(), _prev_nodes[1]->get_value());
+    log().debug("PlusNode  \"{}\" compute", nodename());
     return res;
 }
 
-double MinusNode::compute_value()
+Tensor MinusNode::compute_value()
 {
-    auto res = _prev_nodes[0]->get_value() - _prev_nodes[1]->get_value();
-    log().debug("MinusNode compute: {:.2f} - {:.2f} = {:.2f}", _prev_nodes[0]->get_value(), _prev_nodes[1]->get_value(),
-                res);
+    Tensor res = sub(_prev_nodes[0]->get_value(), _prev_nodes[1]->get_value());
+    log().debug("MinusNode  \"{}\" compute", nodename());
     return res;
 }
 
@@ -40,25 +37,25 @@ std::string MinusNode::classname() const
     return "MinusNode";
 }
 
-std::vector<double> MultNode::get_gradient()
+std::vector<Tensor> MultNode::get_gradient()
 {
     log().debug("Gradient in MultNode compute");
-    double val1 = _prev_nodes[0]->get_value();
-    double val2 = _prev_nodes[1]->get_value();
-    std::vector<double> res = {val2, val1};
+    Tensor val1 = _prev_nodes[0]->get_value();
+    Tensor val2 = _prev_nodes[1]->get_value();
+    std::vector<Tensor> res = {val2, val1};
     return res;
 }
 
-std::vector<double> PlusNode::get_gradient()
+std::vector<Tensor> PlusNode::get_gradient()
 {
     log().debug("Gradient in PlusNode compute");
-    std::vector<double> res = {1.0, 1.0};
+    std::vector<Tensor> res = {Tensor(_prev_nodes[0]->output_shape(), 1.0), Tensor(_prev_nodes[1]->output_shape(), 1.0)};
     return res;
 }
 
-std::vector<double> MinusNode::get_gradient()
+std::vector<Tensor> MinusNode::get_gradient()
 {
     log().debug("Gradient in MinusNode compute");
-    std::vector<double> res = {1.0, -1.0};
+    std::vector<Tensor> res = {Tensor(_prev_nodes[0]->output_shape(), 1.0), Tensor(_prev_nodes[1]->output_shape(), -1.0)};
     return res;
 }
