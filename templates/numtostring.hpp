@@ -1,4 +1,4 @@
-#include <iostream>
+п»ї#include <iostream>
 #include <stdexcept>
 #include <string>
 
@@ -10,29 +10,29 @@ struct Units
         if constexpr (D == 0)
             return " ";
         else if constexpr (D == 1)
-            return "один";
+            return "РѕРґРёРЅ";
         else if constexpr (D == 2)
-            return "два";
+            return "РґРІР°";
         else if constexpr (D == 3)
-            return "три";
+            return "С‚СЂРё";
         else if constexpr (D == 4)
-            return "четыре";
+            return "С‡РµС‚С‹СЂРµ";
         else if constexpr (D == 5)
-            return "пять";
+            return "РїСЏС‚СЊ";
         else if constexpr (D == 6)
-            return "шесть";
+            return "С€РµСЃС‚СЊ";
         else if constexpr (D == 7)
-            return "семь";
+            return "СЃРµРјСЊ";
         else if constexpr (D == 8)
-            return "восемь";
+            return "РІРѕСЃРµРјСЊ";
         else if constexpr (D == 9)
-            return "девять";
+            return "РґРµРІСЏС‚СЊ";
     }
 
     static std::string from_thousands()
     {
         if constexpr (D == 1)
-            return "одна";
+            return "РѕРґРЅР°";
         else
             return from_hundreds();
     }
@@ -41,31 +41,31 @@ struct Units
         if constexpr (D == 1 || D == 0)
             return "";
         else if constexpr (D == 2)
-            return "две";
+            return "РґРІРµ";
         else
             return unit();
+    }
+    static std::string apply()
+    {
+        return unit();
     }
 };
 
 template <int C, int D>
 struct Tens
 {
-    template <int I, class Enable = void>
-    struct Name
+    static constexpr std::string name()
     {
-        static std::string apply()
+        if constexpr (C == 2 || C == 3)
         {
-            return "десят ";
+            return "РґС†Р°С‚СЊ ";
         }
-    };
-    template <int I>
-    struct Name<I, std::enable_if_t<I == 2 || I == 3, void>>
-    {
-        static std::string apply()
+        else
         {
-            return "дцать ";
+            return "РґРµСЃСЏС‚ ";
         }
-    };
+    }
+
     static std::string ten()
     {
         if constexpr (C == 0)
@@ -73,123 +73,108 @@ struct Tens
         else if constexpr (C == 1)
         {
             if constexpr (D == 0)
-                return "десять";
+                return "РґРµСЃСЏС‚СЊ";
             else if constexpr (D == 1)
-                return "одиннадцать";
+                return "РѕРґРёРЅРЅР°РґС†Р°С‚СЊ";
             else if constexpr (D == 2)
-                return "двенадцать";
+                return "РґРІРµРЅР°РґС†Р°С‚СЊ";
             else if constexpr (D == 3)
-                return "тринадцать";
+                return "С‚СЂРёРЅР°РґС†Р°С‚СЊ";
             else if constexpr (D == 4)
-                return "четырнадцать";
+                return "С‡РµС‚С‹СЂРЅР°РґС†Р°С‚СЊ";
             else if constexpr (D == 5)
-                return "пятнадцать";
+                return "РїСЏС‚РЅР°РґС†Р°С‚СЊ";
             else if constexpr (D == 6)
-                return "шестнадцать";
+                return "С€РµСЃС‚РЅР°РґС†Р°С‚СЊ";
             else if constexpr (D == 7)
-                return "семнадцать";
+                return "СЃРµРјРЅР°РґС†Р°С‚СЊ";
             else if constexpr (D == 8)
-                return "восемнадцать";
+                return "РІРѕСЃРµРјРЅР°РґС†Р°С‚СЊ";
             else if constexpr (D == 9)
-                return "девятнадцать";
+                return "РґРµРІСЏС‚РЅР°РґС†Р°С‚СЊ";
         }
         else if constexpr (C == 4)
-            return "сорок " + Units<D>::unit();
+            return "СЃРѕСЂРѕРє " + Units<D>::unit();
         else if constexpr (C == 9)
-            return "девяносто " + Units<D>::unit();
+            return "РґРµРІСЏРЅРѕСЃС‚Рѕ " + Units<D>::unit();
 
-        return Units<C>::unit() + Name<C>::apply() + Units<D>::unit();
+        return Units<C>::unit() + name() + Units<D>::unit();
+    }
+
+    static std::string apply()
+    {
+        return ten();
     }
 };
 
-template <int B, int C, int D>
+template <int B>
 struct Hundreds
 {
-    template <int I, class Enable = void>
-    struct Name
+    static std::string name()
     {
-        static std::string apply()
-        {
-            return "сот ";
-        }
-    };
-    template <>
-    struct Name<1, void>
-    {
-        static std::string apply()
-        {
-            return "сто ";
-        }
-    };
-    template <>
-    struct Name<0, void>
-    {
-        static std::string apply()
+        if constexpr (B == 0)
         {
             return "";
         }
-    };
-    template <>
-    struct Name<2, void>
-    {
-        static std::string apply()
+        else if constexpr (B==1)
         {
-            return "сти ";
+            return "СЃС‚Рѕ ";
         }
-    };
-    template <int I>
-    struct Name<I, std::enable_if_t<I == 3 || I == 4, void>>
-    {
-        static std::string apply()
+        else if constexpr (B==2)
         {
-            return "ста ";
+            return "СЃС‚Рё ";
         }
-    };
+        else if constexpr (B==3 || B==4)
+        {
+            return "СЃС‚Р° ";
+        }
+        else
+        {
+            return "СЃРѕС‚ ";
+        }
+    }
+   
     static std::string hundred()
     {
-        return Units<B>::from_hundreds() + Name<B>::apply() + Tens<C, D>::ten();
+        return Units<B>::from_hundreds() + name();
+    }
+
+    static std::string apply()
+    {
+        return hundred();
     }
 };
 
-template <int A, int B, int C, int D>
+template <int A>
 struct Thousands
 {
-    template <int I, class Enable = void>
-    struct Name
+    static constexpr std::string name()
     {
-        static std::string apply()
-        {
-            return " тысяч ";
-        }
-    };
-    template <>
-    struct Name<0, void>
-    {
-        static std::string apply()
+        if constexpr (A == 0)
         {
             return "";
         }
-    };
-    template <>
-    struct Name<1, void>
-    {
-        static std::string apply()
+        else if constexpr (A == 1)
         {
-            return " тысяча ";
+            return " С‚С‹СЃСЏС‡Р° ";
         }
-    };
-    template <int I>
-    struct Name<I, std::enable_if_t<I == 2 || I == 3 || I == 4, void>>
-    {
-        static std::string apply()
+        else if constexpr (A == 2 || A == 3 || A == 4)
         {
-            return " тысячи ";
+            return " С‚С‹СЃСЏС‡Рё ";
         }
-    };
-
+        else
+        {
+            return " С‚С‹СЃСЏС‡ ";
+        }
+    }
+    
     static std::string thousand()
     {
-        return Units<A>::from_thousands() + Name<A>::apply() + Hundreds<B, C, D>::hundred();
+        return Units<A>::from_thousands() + name();
+    }
+    static std::string apply()
+    {
+        return thousand();
     }
 };
 
@@ -202,7 +187,7 @@ struct NumToString
     static_assert(D >= 0 && D < 10, "Invalid D");
     static std::string apply()
     {
-        return Thousands<A, B, C, D>::thousand();
+        return Thousands<A>::apply() + Hundreds<B>::apply() + Tens<C, D>::apply();
     }
 };
 
@@ -218,6 +203,6 @@ struct NumToString<0, 0, 0, 0>
 {
     static std::string apply()
     {
-        return "ноль";
+        return "РЅРѕР»СЊ";
     }
 };
