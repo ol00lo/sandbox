@@ -1,6 +1,29 @@
 ﻿#include <iostream>
 #include <stdexcept>
 #include <string>
+#include <sstream>
+
+namespace
+{
+std::string concatenate_with_delimiter(const std::string& delimiter, const std::initializer_list<std::string>& inp)
+{
+    std::ostringstream res;
+    bool first = true;
+    for (const auto& str : inp)
+    {
+        if (!str.empty())
+        {
+            if (!first)
+            {
+                res << delimiter;
+            }
+            res << str;
+            first = false;
+        }
+    }
+    return res.str();
+}
+}
 
 template <int D>
 struct Units
@@ -8,7 +31,7 @@ struct Units
     static std::string unit()
     {
         if constexpr (D == 0)
-            return " ";
+            return "";
         else if constexpr (D == 1)
             return "один";
         else if constexpr (D == 2)
@@ -58,11 +81,11 @@ struct Tens
     {
         if constexpr (C == 2 || C == 3)
         {
-            return "дцать ";
+            return "дцать";
         }
         else
         {
-            return "десят ";
+            return "десят";
         }
     }
 
@@ -94,11 +117,11 @@ struct Tens
                 return "девятнадцать";
         }
         else if constexpr (C == 4)
-            return "сорок " + Units<D>::unit();
+            return concatenate_with_delimiter(" ", {"сорок", Units<D>::unit()});
         else if constexpr (C == 9)
-            return "девяносто " + Units<D>::unit();
-
-        return Units<C>::unit() + name() + Units<D>::unit();
+            return concatenate_with_delimiter(" ", {"девяносто", Units<D>::unit()});
+            
+        return concatenate_with_delimiter(" ", {Units<C>::unit() + name(), Units<D>::unit()});
     }
 
     static std::string apply()
@@ -118,30 +141,25 @@ struct Hundreds
         }
         else if constexpr (B==1)
         {
-            return "сто ";
+            return "сто";
         }
         else if constexpr (B==2)
         {
-            return "сти ";
+            return "сти";
         }
         else if constexpr (B==3 || B==4)
         {
-            return "ста ";
+            return "ста";
         }
         else
         {
-            return "сот ";
+            return "сот";
         }
     }
    
-    static std::string hundred()
-    {
-        return Units<B>::from_hundreds() + name();
-    }
-
     static std::string apply()
     {
-        return hundred();
+        return Units<B>::from_hundreds() + name();
     }
 };
 
@@ -156,25 +174,21 @@ struct Thousands
         }
         else if constexpr (A == 1)
         {
-            return " тысяча ";
+            return "тысяча";
         }
         else if constexpr (A == 2 || A == 3 || A == 4)
         {
-            return " тысячи ";
+            return "тысячи";
         }
         else
         {
-            return " тысяч ";
+            return "тысяч";
         }
     }
     
-    static std::string thousand()
-    {
-        return Units<A>::from_thousands() + name();
-    }
     static std::string apply()
     {
-        return thousand();
+        return concatenate_with_delimiter(" ", {Units<A>::from_thousands(), name()});
     }
 };
 
@@ -187,7 +201,7 @@ struct NumToString
     static_assert(D >= 0 && D < 10, "Invalid D");
     static std::string apply()
     {
-        return Thousands<A>::apply() + Hundreds<B>::apply() + Tens<C, D>::apply();
+        return concatenate_with_delimiter(" ", {Thousands<A>::apply(), Hundreds<B>::apply(), Tens<C, D>::apply()});
     }
 };
 
