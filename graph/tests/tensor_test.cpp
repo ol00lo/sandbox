@@ -6,6 +6,7 @@
 #include <catch2/catch.hpp>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 
 using namespace g;
 
@@ -51,16 +52,32 @@ TEST_CASE("tensor test", "[tensor_test]")
     t6.div(t5);
     CHECK(t6[1] == 3);
 }
+namespace
+{
+size_t n_braces(std::string& s)
+{
+    size_t res = 0;
+    auto i = s.find("[");
+    while (i != std::string::npos)
+    {
+        s.erase(0, i+1);
+        i = s.find("[");
+        res++;
+    }
+    return res;
+}
+}
 TEST_CASE("print tensor test", "[print_tensor_test]")
 {
     auto shape = Shape(1, 1, 3);
     Tensor x(shape, {1, 2, 3});
     CHECK(shape.n_indexes() == 3);
-    std::cout << "x = " << x << std::endl;
+    std::ostringstream oss1;
+    x.write(oss1);
+    CHECK(n_braces(oss1.str()) == 3);
     Tensor x1(Shape(2, 2, 1), {1, 2, 3, 4});
-    std::cout << x1 << std::endl;
-    Tensor x2(Shape(3, 1, 2), {1, 2, 3, 4, 5, 6});
-    std::cout << x2 << std::endl;
-    Tensor x3(Shape(2, 2, 1), {1, 2, 3, 4});
-    std::cout << x3 << std::endl;
+    std::ostringstream oss;
+    x1.write(oss); 
+    CHECK(n_braces(oss.str()) == 7);
+    CHECK(oss.str()[11] == '1');
 }

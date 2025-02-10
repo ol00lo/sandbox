@@ -91,7 +91,7 @@ void Tensor::serialize(nlohmann::json& js) const
 }
 void Tensor::write(std::ostream& os) const
 {
-    os << " data = \n";
+    os << "data = \n";
     for (int b = 0; b < _shape[0]; b++)
     {
         os << "[";

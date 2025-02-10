@@ -35,7 +35,7 @@ public:
     std::vector<std::shared_ptr<INode>> get_prev();
     virtual std::string classname() const = 0;
     nlohmann::json serialize() const;
-    void deserialize(const nlohmann::json&, std::unordered_map<std::string, std::shared_ptr<INode>>&, std::string copy_word = "_copy");
+    void deserialize(const nlohmann::json&, const std::unordered_map<std::string, std::shared_ptr<INode>>&, std::string copy_word = "_copy");
     virtual void serialize_spec(nlohmann::json& js) const {};
     virtual void deserialize_spec(const nlohmann::json&, std::string copy_word = "_copy") {};
     virtual Shape output_shape() const =0;

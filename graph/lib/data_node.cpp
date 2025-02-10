@@ -25,8 +25,8 @@ void DataNode::deserialize_spec(const nlohmann::json& node_json, std::string cop
 {
     std::string nname = node_json["nodename"].get<std::string>() + copy_word;
     std::vector<double> x = node_json["value"]["value"].get<std::vector<double>>();
-    Shape shape = node_json["value"]["shape"].get<std::array<int, 4>>();
-    Tensor val = Tensor(shape, x);
+    Shape shape = node_json["value"]["shape"].get<Arr4>();
+    Tensor val(shape, x);
     set_value(val);    
 }
 Tensor DataNode::notself_derivative(const INode* arg)

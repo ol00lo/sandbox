@@ -77,21 +77,21 @@ nlohmann::json INode::serialize() const
     return res;
 }
 
-void INode::deserialize(const nlohmann::json& node_json, std::unordered_map<std::string, std::shared_ptr<INode>>& all_nodes, std::string copy_word)
+void INode::deserialize(const nlohmann::json& node_json,
+                        const std::unordered_map<std::string, std::shared_ptr<INode>>& all_nodes, std::string copy_word)
 {
     if (!node_json.at("prev_nodes").empty())
     {
         for (const auto& prev_node_name : node_json.at("prev_nodes"))
         {
-            std::shared_ptr<INode> prev_node = all_nodes[prev_node_name.get<std::string>() + copy_word];
-            add_prev(prev_node);
-            prev_node->add_next(all_nodes[_nodename]);
+            auto prev_node = all_nodes.find(prev_node_name.get<std::string>() + copy_word);
+            add_prev(prev_node->second);
+            auto this_node = all_nodes.find(_nodename);
+            prev_node->second->add_next(this_node->second);
         }
     }
-    if (node_json.contains("value"))
-    {
-        deserialize_spec(node_json);
-    }
+    deserialize_spec(node_json);
+
     log().debug("Node {} of the {} class is deserialized", _nodename, classname());
 }
 std::string INode::nodename() const
