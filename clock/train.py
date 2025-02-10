@@ -10,6 +10,7 @@ from tensorflow.keras import layers, models, callbacks
 import augmenter
 import custom_loss
 from prepare import prepare_data
+from matplotlib import pyplot as plt
 
 seed_value = 0
 random.seed(seed_value)
@@ -86,13 +87,25 @@ def data_generator_from_folder(data_dir, batch_size, need_shuffle=True):
     label_files = sorted([f for f in os.listdir(data_dir) if f.startswith('labels_') and f.endswith('.npy')])
 
     while True:
-        for data_file, label_file in zip(data_files, label_files):
+        indices = list(range(len(data_files)))
+        if need_shuffle:
+            random.shuffle(indices)
+            
+        for ind in indices:
+            data_file = data_files[ind]
+            label_file = label_files[ind]
             data_path = os.path.join(data_dir, data_file)
             labels_path = os.path.join(data_dir, label_file)
             
             batch_data = np.load(data_path)
             batch_labels = np.load(labels_path)
             
+            if need_shuffle:
+                bindices = np.linspace(0, len(batch_data)-1, len(batch_data), dtype=int)
+                np.random.shuffle(bindices)
+                batch_data = batch_data[bindices]
+                batch_labels = batch_labels[bindices]
+
             for i in range(0, len(batch_data), batch_size):
                 batch_images = batch_data[i:i + batch_size]
                 batch_labels_slice = batch_labels[i:i + batch_size]
@@ -100,6 +113,13 @@ def data_generator_from_folder(data_dir, batch_size, need_shuffle=True):
                 batch_images = tf.keras.applications.mobilenet.preprocess_input(batch_images)
 
                 yield batch_images, batch_labels_slice
+# for im, label in data_generator_from_folder("train_data", 32, True):
+#     print(im.shape, label.shape)
+#     im0 = im[0]
+#     print(label[0])
+#     plt.imshow(im0)
+#     plt.show()
+# quit()
 
 def data_generator_fictive(batch_data, batch_labels, batch_size):
     while True:
@@ -107,6 +127,7 @@ def data_generator_fictive(batch_data, batch_labels, batch_size):
             batch_images = batch_data[i:i + batch_size]
             batch_labels_slice = batch_labels[i:i + batch_size]
             batch_images = tf.keras.applications.mobilenet.preprocess_input(batch_images)
+            
             yield batch_images, batch_labels_slice
 
 def for_fictive(BATCH_SIZE):
@@ -134,8 +155,8 @@ def func():
     train_data_dir = "train_data"
     valid_data_dir = "valid_data"
         
-    #prepare_data(train_data, train_data_dir, N = 256, aug_sequence = aug_sequence)
-    #prepare_data(valid_data, valid_data_dir, N = 256)
+    #prepare_data(train_data, train_data_dir, N = 4096, aug_sequence = aug_sequence)
+    #prepare_data(valid_data, valid_data_dir, N = 4096)
 
     train_generator = data_generator(train_data, BATCH_SIZE, aug_sequence, True)
     valid_generator = data_generator(valid_data, BATCH_SIZE)
@@ -147,7 +168,7 @@ def func():
 
 
     base_model = MobileNet(weights='imagenet', include_top=False)
-    base_model.trainable = False
+    base_model.trainable = True
 
     model = models.Sequential([
         base_model,

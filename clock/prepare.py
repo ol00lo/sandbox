@@ -7,7 +7,7 @@ import tqdm
 def prepare_data(data_list, output_dir, N, aug_sequence=None):
     os.makedirs(output_dir, exist_ok=True)
     
-    for i in tqdm.tqdm(range(0, len(data_list), N)):
+    for num, i in enumerate(tqdm.tqdm(range(0, len(data_list), N))):
         batch_data = []
         batch_labels = []
         
@@ -26,5 +26,5 @@ def prepare_data(data_list, output_dir, N, aug_sequence=None):
         if aug_sequence is not None:
             batch_data = aug_sequence(images=np.array(batch_data))
 
-        np.save(os.path.join(output_dir, f"data_{i//N}.npy"), np.array(batch_data))
-        np.save(os.path.join(output_dir, f"labels_{i//N}.npy"), np.array(batch_labels))
+        np.save(os.path.join(output_dir, f"data_{num}.npy"), np.array(batch_data))
+        np.save(os.path.join(output_dir, f"labels_{num}.npy"), np.array(batch_labels))
