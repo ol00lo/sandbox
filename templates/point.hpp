@@ -1,42 +1,60 @@
 #ifndef POINT_HPP
 #define POINT_HPP
 #include <array>
-#include <string>
 #include <sstream>
+#include <string>
+
+template <typename U, std::size_t N>
+constexpr static auto trimArray(const std::array<U, N>& arr)
+{
+    std::array<U, N - 1> newArr{};
+    for (std::size_t i = 1; i < N; ++i)
+    {
+        newArr[i - 1] = arr[i];
+    }
+    return newArr;
+}
 
 template <class T, int Dim>
-struct Point
+struct Point;
+
+template <class T, int Dim>
+struct PointImpl
+{
+    T _value;
+
+    PointImpl(T val) : _value(val) {}
+
+    virtual std::string to_help_string() = 0;
+    virtual T measure(const Point<T, Dim>& p2) = 0;
+
+    T distance(const Point<T, Dim>& p2)
+    {
+        return std::sqrt(measure(p2));
+    }
+
+    std::string to_string()
+    {
+        return "( " + to_help_string() + " )";
+    }
+};
+
+template <class T, int Dim>
+struct Point : public PointImpl<T, Dim>
 {
     static_assert(Dim > 0 && Dim <= 3, "Dim should be 1, 2 or 3");
     Point<T, Dim - 1> pred;
-    T value;
-    Point(std::array<T, Dim> arr) : pred(Point<T, Dim - 1>(trimArray(arr))), value(arr[0])
-    {
-    }
+    Point(std::array<T, Dim> arr) : PointImpl<T, Dim>(arr[0]), pred(trimArray(arr)){}
 
-    template <typename U, std::size_t N>
-    constexpr static auto trimArray(const std::array<U, N>& arr)
+    T measure(const Point<T, Dim>& p2) override
     {
-        std::array<U, N - 1> newArr{};
-        for (std::size_t i = 1; i < N; ++i)
-        {
-            newArr[i - 1] = arr[i];
-        }
-        return newArr;
+        T this_dim_dist = _value - p2._value;
+        T pred_dim_measure = pred.measure( p2.pred);
+        return this_dim_dist * this_dim_dist + pred_dim_measure;
     }
-    static T distance(Point<T, Dim> p1, Point<T, Dim> p2)
+    std::string to_help_string() override
     {
-        T this_dim_dist = p1.value - p2.value;
-        T pred_dim_dist = Point<T, Dim - 1>::distance(p1.pred, p2.pred);
-        return std::sqrt(this_dim_dist * this_dim_dist + pred_dim_dist * pred_dim_dist);
-    }
-    std::string to_string()
-    {
-        return "( " + to_help_string();
-    }
-    std::string to_help_string()
-    {
-        return std::to_string(value) + ", " + pred.to_help_string();
+        return std::to_string(_value) + ", " + pred.to_help_string();
     }
 
     constexpr static Point<T, Dim> from_string_impl(const std::string& inp)
@@ -67,25 +85,17 @@ struct Point
 };
 
 template <class T>
-struct Point<T, 1>
+struct Point<T, 1> : public PointImpl<T, 1>
 {
-    T value;
-    Point(std::array<T, 1> arr)
+    Point(std::array<T, 1> arr): PointImpl<T, 1>(arr[0]){}
+    T measure(const Point<T, 1>& p2) override 
     {
-        value = arr[0];
+        T dist = _value - p2._value;
+        return dist * dist;
     }
-    static T distance(Point<T, 1> p1, Point<T, 1> p2)
+    std::string to_help_string() override
     {
-        T dist = p1.value - p2.value;
-        return std::sqrt(dist * dist);
-    }
-    std::string to_help_string()
-    {
-        return std::to_string(value) + ")";
-    }
-    std::string to_string()
-    {
-        return "(" + to_help_string();
+        return std::to_string(_value) + ")";
     }
 };
 #endif

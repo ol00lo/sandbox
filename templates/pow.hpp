@@ -30,6 +30,39 @@ struct Pow<0>
     }
 };
 
+template <int I = 0>
+double pow_apply(int N, double a)
+{
+    static_assert(I >= -10 && I <= 10, "I should be in [-10, 10]");
+
+    if (I == N)
+    {
+        return Pow<I>::apply(a);
+    }
+    else if (I < N)
+    {
+        if constexpr (I < 10)
+        {
+            return pow_apply<I + 1>(N, a);
+        }
+        else
+        {
+            throw std::runtime_error("unreachable code");
+        }
+    }
+    else
+    {
+        if constexpr (I > -10)
+        {
+            return pow_apply<I - 1>(N, a);
+        }
+        else
+        {
+            throw std::runtime_error("unreachable code");
+        }
+    }
+}
+
 double Pow_apply(int N, double a)
 {
     switch (N)
