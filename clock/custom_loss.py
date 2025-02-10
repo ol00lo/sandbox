@@ -15,11 +15,11 @@ def custom_loss(y_true, y_pred):
     return tf.reduce_mean(tf.square(diff(y_true, y_pred)))
 
 def build_accuracy_metrics(delta):
-    def accuracy(y_true, y_pred):
+    def custom_accuracy(y_true, y_pred):
         angle_diff = diff(y_true, y_pred)
         return tf.reduce_mean(tf.cast(tf.abs(angle_diff) <= delta, tf.float32))
 
-    return accuracy
+    return custom_accuracy
 
 
 if __name__ == "__main__":
