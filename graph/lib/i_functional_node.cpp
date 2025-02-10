@@ -12,7 +12,7 @@ void IFunctionalNode::add_gradient_callback(callback_t cb)
     _gradient_callbacks.push_back(cb);
 }
 
-double IFunctionalNode::get_value()
+Tensor IFunctionalNode::get_value()
 {
     if (!_has_value)
     {
@@ -30,7 +30,7 @@ void IFunctionalNode::clear_cache()
     _derivative_cache.clear();
     log().debug("derivative cache cleaned");
     _has_value = false;
-    _value = 0;
+    _value.set_zero();
 }
 
 void IFunctionalNode::before_value_compute()
@@ -48,12 +48,12 @@ void IFunctionalNode::before_gradient_compute()
     }
 }
 
-double IFunctionalNode::notself_derivative(const INode* arg)
+Tensor IFunctionalNode::notself_derivative(const INode* arg)
 {
     auto x = _derivative_cache.find(arg);
     if (x == _derivative_cache.end())
     {
-        double res = compute_notself_derivative(arg);
+        Tensor res = compute_notself_derivative(arg);
         _derivative_cache.insert({arg, res});
         return res;
     }
@@ -63,9 +63,9 @@ double IFunctionalNode::notself_derivative(const INode* arg)
     }
 }
 
-double IFunctionalNode::compute_notself_derivative(const INode* arg)
+Tensor IFunctionalNode::compute_notself_derivative(const INode* arg)
 {
-    double res = 0;
+    Tensor res(arg->output_shape(), 0.0);
     if (!_has_gradient)
     {
         before_gradient_compute();
@@ -74,7 +74,15 @@ double IFunctionalNode::compute_notself_derivative(const INode* arg)
     }
     for (int i = 0; i < _prev_nodes.size(); i++)
     {
-        res += _gradient[i] * _prev_nodes[i]->get_derivative(arg);
+        auto pr_der = _prev_nodes[i]->get_derivative(arg);
+        if (_gradient[i].get_shape() == pr_der.get_shape())
+            res.add(mult(_gradient[i], pr_der));
+        else
+            throw std::runtime_error("Not implemented");
     }
     return res;
+}
+Shape IFunctionalNode::output_shape() const
+{
+    return _prev_nodes[0]->output_shape();
 }

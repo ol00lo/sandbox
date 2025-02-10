@@ -11,7 +11,7 @@ public:
     nlohmann::json serialize() const;
     static Model load(const std::string& filename);
     static Model deserialize(nlohmann::json);
-    std::vector<double> compute(const std::vector<double>& input_values);
+    std::vector<Tensor> compute(const std::vector<Tensor>& input_values);
 
 private:
     std::vector<std::shared_ptr<INode>> _input_nodes;

@@ -3,6 +3,7 @@
 
 #include <nlohmann/json.hpp>
 #include "graph.hpp"
+#include "tensor.hpp"
 #include <functional>
 #include <memory>
 #include <vector>
@@ -25,21 +26,24 @@ public:
     using NodeBuilder = std::function<PNode(std::string nodename)>;
     INode(std::string nodename = "");
     static PNode factory(std::string classname, std::string nodename = "");
-    virtual void set_value(double val) {};
     void add_prev(std::shared_ptr<INode> a);
     void add_next(std::shared_ptr<INode> a);
-    virtual double get_value() = 0;
+    virtual Tensor get_value() = 0;
     std::string nodename() const;
-    double get_derivative(const INode* argument);
-    double get_derivative(std::shared_ptr<INode>);
+    Tensor get_derivative(const INode* argument);
+    Tensor get_derivative(std::shared_ptr<INode>);
     std::vector<std::shared_ptr<INode>> get_prev();
     virtual std::string classname() const = 0;
     nlohmann::json serialize() const;
+    void deserialize(const nlohmann::json&, const std::unordered_map<std::string, std::shared_ptr<INode>>&, std::string copy_word = "_copy");
     virtual void serialize_spec(nlohmann::json& js) const {};
+    virtual void deserialize_spec(const nlohmann::json&, std::string copy_word = "_copy") {};
+    virtual Shape output_shape() const =0;
     virtual ~INode()
     {
         _existing_names.erase(_nodename);
     };
+
     static inline std::unordered_set<std::string> _existing_names;
 
 protected:
@@ -53,7 +57,7 @@ protected:
     void clear_forward_cache();
 
 private:
-    virtual double notself_derivative(const INode* arg) = 0;
+    virtual Tensor notself_derivative(const INode* arg) = 0;
 };
 void set_dep(std::shared_ptr<INode>, std::initializer_list<std::shared_ptr<INode>>);
 } // namespace g

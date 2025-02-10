@@ -10,9 +10,9 @@ public:
     SqrNode(std::string nodename = "") : IFunctionalNode(nodename) {};
 
 protected:
-    double compute_value() override;
+    Tensor compute_value() override;
     std::string classname() const override;
-    std::vector<double> get_gradient() override;
+    std::vector<Tensor> get_gradient() override;
 
 private:
     REGISTER_INODE_CHILD(SqrNode);

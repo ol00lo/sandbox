@@ -76,6 +76,24 @@ nlohmann::json INode::serialize() const
     log().debug("Node {} of the {} class is serialized.", _nodename, classname());
     return res;
 }
+
+void INode::deserialize(const nlohmann::json& node_json,
+                        const std::unordered_map<std::string, std::shared_ptr<INode>>& all_nodes, std::string copy_word)
+{
+    if (!node_json.at("prev_nodes").empty())
+    {
+        for (const auto& prev_node_name : node_json.at("prev_nodes"))
+        {
+            auto prev_node = all_nodes.find(prev_node_name.get<std::string>() + copy_word);
+            add_prev(prev_node->second);
+            auto this_node = all_nodes.find(_nodename);
+            prev_node->second->add_next(this_node->second);
+        }
+    }
+    deserialize_spec(node_json);
+
+    log().debug("Node {} of the {} class is deserialized", _nodename, classname());
+}
 std::string INode::nodename() const
 {
     return _nodename;
@@ -103,15 +121,17 @@ void INode::clear_forward_cache()
     }
 }
 
-double INode::get_derivative(const INode* argument)
+Tensor INode::get_derivative(const INode* argument)
 {
     if (argument == this)
-        return 1;
+    {
+        return Tensor(argument->output_shape(), 1.0);
+    }
     else
         return notself_derivative(argument);
 }
 
-double INode::get_derivative(std::shared_ptr<INode> argument)
+Tensor INode::get_derivative(std::shared_ptr<INode> argument)
 {
     return get_derivative(argument.get());
 }
