@@ -84,27 +84,19 @@ void Model::save(const std::string& filename)
 nlohmann::json Model::serialize() const
 {
     nlohmann::json res;
-    nlohmann::json io;
-    std::unordered_set<std::string> node_names;
-
     for (const auto& input : _input_nodes)
     {
-        auto serialized = input->serialize();
-        res["nodes"].push_back(serialized);
-        io["input_nodes"].push_back(serialized.at("nodename"));
+        res["nodes"].push_back(input);
+        res["io"]["input_nodes"].push_back(input->nodename());
     }
-
     for (const auto& inter : _inter_nodes)
     {
-        res["nodes"].push_back(inter->serialize());
+        res["nodes"].push_back(inter);
     }
-
     for (const auto& output : _output_nodes)
     {
-        auto serialized = output->serialize();
-        io["output_nodes"].push_back(serialized.at("nodename"));
+        res["io"]["output_nodes"].push_back(output->nodename());
     }
-    res["io"] = io;
     return res;
 }
 
@@ -127,15 +119,13 @@ Model Model::deserialize(nlohmann::json j)
 
     for (const auto& node_json : j["nodes"])
     {
-        std::string nodename = node_json.at("nodename").get<std::string>() + copy_word;
-        auto classname = node_json.at("classname").get<std::string>();
-        std::shared_ptr<INode> node = INode::factory(classname, nodename);
-        all_nodes.insert({nodename, node});
+        std::shared_ptr<INode> node(node_json.get<std::shared_ptr<INode>>());
+        all_nodes.insert({node->nodename(), node});
     }
     for (const auto& node_json : j["nodes"])
     {
         std::string nname = node_json.at("nodename").get<std::string>() + copy_word;
-        all_nodes[nname]->deserialize(node_json, all_nodes);
+        all_nodes[nname]->set_dep(node_json, all_nodes);
     }
 
     std::vector<std::shared_ptr<INode>> input_nodes;

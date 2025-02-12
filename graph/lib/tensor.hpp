@@ -3,13 +3,15 @@
 
 #include "graph.hpp"
 #include "tensor_index.hpp"
-#include <nlohmann/json.hpp>
 #include <array>
+#include <nlohmann/json.hpp>
+
 namespace g
 {
 class Tensor
 {
 public:
+    Tensor() : _shape(1), _data(0) {};
     Tensor(const Tensor& t) : _data(t._data), _shape(t._shape) {}
     Tensor(Tensor&& t): _data(std::move(t._data)), _shape(std::move(t._shape)){}
 
@@ -24,9 +26,10 @@ public:
     void div(const Tensor& other);
     void scalar_mult(double a);
     Shape get_shape() const;
+    std::vector<double> get_data() const;
     Tensor& operator=(const Tensor& t);
     bool operator==(const Tensor& other) const;
-    void serialize(nlohmann::json& js) const;
+    //void serialize(nlohmann::json& js) const;
     void write(std::ostream& os = std::cout) const;
     friend std::ostream& operator<<(std::ostream& os, const Tensor& tensor)
     {
@@ -45,4 +48,22 @@ Tensor sub(const Tensor& t1, const Tensor& t2);
 Tensor div(const Tensor& t1, const Tensor& t2);
 } // namespace g
 
+namespace nlohmann
+{
+template <>
+struct adl_serializer<g::Tensor>
+{
+    static void to_json(json& j, const g::Tensor& t)
+    {
+        j = json{{"value", t.get_data()}, {"shape", t.get_shape()}};
+    }
+
+    static void from_json(const json& j, g::Tensor& t)
+    {
+        std::vector<double> data = j.at("value").get<std::vector<double>>();
+        g::Shape shape = j.at("shape").get<std::array<int, 4>>();
+        t = g::Tensor(shape, data);
+    }
+};
+} // namespace nlohmann
 #endif

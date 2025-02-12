@@ -16,9 +16,7 @@ void DataNode::set_value(Tensor val)
 
 void DataNode::serialize_spec(nlohmann::json& js) const
 {
-    nlohmann::json js2;
-    _value.serialize(js2);
-    js["value"] = js2;
+    js["value"] = _value;
 }
 
 void DataNode::deserialize_spec(const nlohmann::json& node_json, std::string copy_word)

@@ -32,10 +32,10 @@ public:
     std::string nodename() const;
     Tensor get_derivative(const INode* argument);
     Tensor get_derivative(std::shared_ptr<INode>);
-    std::vector<std::shared_ptr<INode>> get_prev();
+    std::vector<std::shared_ptr<INode>> get_prev() const;
     virtual std::string classname() const = 0;
-    nlohmann::json serialize() const;
-    void deserialize(const nlohmann::json&, const std::unordered_map<std::string, std::shared_ptr<INode>>&, std::string copy_word = "_copy");
+    void set_dep(const nlohmann::json&, const std::unordered_map<std::string, std::shared_ptr<INode>>&,
+                 std::string copy_word = "_copy");
     virtual void serialize_spec(nlohmann::json& js) const {};
     virtual void deserialize_spec(const nlohmann::json&, std::string copy_word = "_copy") {};
     virtual Shape output_shape() const =0;
@@ -61,4 +61,33 @@ private:
 };
 void set_dep(std::shared_ptr<INode>, std::initializer_list<std::shared_ptr<INode>>);
 } // namespace g
+
+namespace nlohmann
+{
+template <>
+struct adl_serializer<g::INode::PNode>
+{
+    static void to_json(json& j, const g::INode::PNode& node)
+    {
+        std::vector<std::string> prev;
+        for (auto& a : node->get_prev())
+        {
+            prev.push_back(a->nodename());
+        }
+        j = json{{"classname", node->classname()},
+                 {"nodename", node->nodename()},
+                 {"prev_nodes", prev},
+                 {"value", node->get_value()}};
+        node->serialize_spec(j);
+    }
+
+    static void from_json(const json& node_json, g::INode::PNode& node)
+    {
+        std::string classname = node_json.at("classname").get<std::string>();
+        std::string nodename = node_json.at("nodename").get<std::string>() + "_copy";
+        node = g::INode::factory(classname, nodename);
+        node->deserialize_spec(node_json);
+    }
+};
+} // namespace nlohmann
 #endif
