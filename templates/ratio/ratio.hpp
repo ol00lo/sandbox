@@ -37,29 +37,32 @@ struct Simplify
     using type = Ratio<R::num / gcd, R::denum / gcd>;
 };
 
+template <typename R>
+using ratio_simplify_t = typename Simplify<R>::type;
+
 template <class R1, class R2>
 struct Add
 {
-    using type = Ratio<R1::num * R2::denum + R2::num * R1::denum, R1::denum * R2::denum>;
+    using type = ratio_simplify_t<Ratio<R1::num * R2::denum + R2::num * R1::denum, R1::denum * R2::denum>>;
 };
 
 template <class R1, class R2>
 struct Sub
 {
-    using type = Ratio<R1::num * R2::denum - R2::num * R1::denum, R1::denum * R2::denum>;
+    using type = ratio_simplify_t<Ratio<R1::num * R2::denum - R2::num * R1::denum, R1::denum * R2::denum>>;
 };
 
 template <class R1, class R2>
 struct Mult
 {
-    using type = Ratio<R1::num * R2::num, R1::denum * R2::denum>;
+    using type = ratio_simplify_t<Ratio<R1::num * R2::num, R1::denum * R2::denum>>;
 };
 
 template <class R1, class R2>
 struct Div
 {
     static_assert(R2::num != 0, "Cannot divide by zero");
-    using type = Ratio<R1::num * R2::denum, R1::denum * R2::num>;
+    using type = ratio_simplify_t<Ratio<R1::num * R2::denum, R1::denum * R2::num>>;
 };
 
 template <class R1, class R2>
