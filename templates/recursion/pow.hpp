@@ -35,31 +35,38 @@ double pow_apply(int N, double a)
 {
     static_assert(I >= -10 && I <= 10, "I should be in [-10, 10]");
 
-    if (I == N)
+    if (N >= -10 && N <= 10)
     {
-        return Pow<I>::apply(a);
-    }
-    else if (I < N)
-    {
-        if constexpr (I < 10)
+        if (I == N)
         {
-            return pow_apply<I + 1>(N, a);
+            return Pow<I>::apply(a);
+        }
+        else if (I < N)
+        {
+            if constexpr (I < 10)
+            {
+                return pow_apply<I + 1>(N, a);
+            }
+            else
+            {
+                throw std::runtime_error("unreachable code");
+            }
         }
         else
         {
-            throw std::runtime_error("unreachable code");
+            if constexpr (I > -10)
+            {
+                return pow_apply<I - 1>(N, a);
+            }
+            else
+            {
+                throw std::runtime_error("unreachable code");
+            }
         }
     }
     else
     {
-        if constexpr (I > -10)
-        {
-            return pow_apply<I - 1>(N, a);
-        }
-        else
-        {
-            throw std::runtime_error("unreachable code");
-        }
+        throw std::runtime_error("N should be in [-10, 10]");
     }
 }
 

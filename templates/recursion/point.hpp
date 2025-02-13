@@ -3,9 +3,10 @@
 #include <array>
 #include <sstream>
 #include <string>
+#include <cmath>
 
 template <typename U, std::size_t N>
-constexpr static auto trimArray(const std::array<U, N>& arr)
+constexpr static std::array<U, N - 1> trimArray(const std::array<U, N>& arr)
 {
     std::array<U, N - 1> newArr{};
     for (std::size_t i = 1; i < N; ++i)
@@ -48,16 +49,16 @@ struct Point : public PointImpl<T, Dim>
 
     T measure(const Point<T, Dim>& p2) override
     {
-        T this_dim_dist = _value - p2._value;
+        T this_dim_dist = this->_value - p2._value;
         T pred_dim_measure = pred.measure( p2.pred);
         return this_dim_dist * this_dim_dist + pred_dim_measure;
     }
     std::string to_help_string() override
     {
-        return std::to_string(_value) + ", " + pred.to_help_string();
+        return std::to_string(this->_value) + ", " + pred.to_help_string();
     }
 
-    constexpr static Point<T, Dim> from_string_impl(const std::string& inp)
+    static Point<T, Dim> from_string_impl(const std::string& inp)
     {
         std::string cl_inp;
         for (char c : inp)
@@ -90,12 +91,12 @@ struct Point<T, 1> : public PointImpl<T, 1>
     Point(std::array<T, 1> arr): PointImpl<T, 1>(arr[0]){}
     T measure(const Point<T, 1>& p2) override 
     {
-        T dist = _value - p2._value;
+        T dist = this->_value - p2._value;
         return dist * dist;
     }
     std::string to_help_string() override
     {
-        return std::to_string(_value) + ")";
+        return std::to_string(this->_value) + ")";
     }
 };
 #endif
