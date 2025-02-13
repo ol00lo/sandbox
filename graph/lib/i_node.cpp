@@ -47,7 +47,7 @@ INode::INode(std::string nodename) : _nodename(set_nodename(nodename, _existing_
 {
     _existing_names.insert(_nodename);
 }
-INode::PNode INode::factory(std::string classname, std::string nodename)
+INode::ptr_t INode::factory(std::string classname, std::string nodename)
 {
     auto fnd = _registered_classes.find(classname);
     if (fnd == _registered_classes.end())
@@ -64,20 +64,7 @@ void INode::add_next(const std::shared_ptr<INode> a)
 {
     _next_nodes.push_back(a);
 }
-nlohmann::json INode::serialize() const
-{
-    std::vector<std::string> prev;
-    for (auto& a : _prev_nodes)
-    {
-        prev.push_back(a->nodename());
-    }
-    nlohmann::json res = {{"classname", classname()}, {"nodename", _nodename}, {"prev_nodes", prev}};
-    serialize_spec(res);
-    log().debug("Node {} of the {} class is serialized.", _nodename, classname());
-    return res;
-}
-
-void INode::deserialize(const nlohmann::json& node_json,
+void INode::set_dep(const nlohmann::json& node_json,
                         const std::unordered_map<std::string, std::shared_ptr<INode>>& all_nodes, std::string copy_word)
 {
     if (!node_json.at("prev_nodes").empty())
@@ -90,15 +77,14 @@ void INode::deserialize(const nlohmann::json& node_json,
             prev_node->second->add_next(this_node->second);
         }
     }
-    deserialize_spec(node_json);
 
-    log().debug("Node {} of the {} class is deserialized", _nodename, classname());
+    log().debug("Set dependencies for node {} of the {} class", _nodename, classname());
 }
 std::string INode::nodename() const
 {
     return _nodename;
 }
-bool INode::register_class(std::string classname, NodeBuilder builder)
+bool INode::register_class(std::string classname, node_builder_t builder)
 {
     _registered_classes[classname] = builder;
     return true;
@@ -136,7 +122,7 @@ Tensor INode::get_derivative(std::shared_ptr<INode> argument)
     return get_derivative(argument.get());
 }
 
-std::vector<std::shared_ptr<INode>> INode::get_prev()
+std::vector<std::shared_ptr<INode>> INode::get_prev() const
 {
     return _prev_nodes;
 }

@@ -84,10 +84,9 @@ Shape Tensor::get_shape() const
 {
     return _shape;
 }
-void Tensor::serialize(nlohmann::json& js) const
+const std::vector<double>& Tensor::data() const
 {
-    js["shape"] = _shape;
-    js["value"] = _data;
+    return _data;
 }
 void Tensor::write(std::ostream& os) const
 {

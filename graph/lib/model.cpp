@@ -71,41 +71,14 @@ void Model::add_into_inter(std::shared_ptr<INode> node)
 
 void Model::save(const std::string& filename)
 {
-
     std::ofstream file(filename);
     if (!file.is_open())
     {
         throw std::runtime_error("Cannot open file for writing.");
     }
-    file << serialize().dump(4);
+    nlohmann::json js = *this;
+    file << js.dump(4);
     log().debug("Model saved to {}", filename);
-}
-
-nlohmann::json Model::serialize() const
-{
-    nlohmann::json res;
-    nlohmann::json io;
-    std::unordered_set<std::string> node_names;
-
-    for (const auto& input : _input_nodes)
-    {
-        auto serialized = input->serialize();
-        res["nodes"].push_back(serialized);
-        io["input_nodes"].push_back(serialized.at("nodename"));
-    }
-
-    for (const auto& inter : _inter_nodes)
-    {
-        res["nodes"].push_back(inter->serialize());
-    }
-
-    for (const auto& output : _output_nodes)
-    {
-        auto serialized = output->serialize();
-        io["output_nodes"].push_back(serialized.at("nodename"));
-    }
-    res["io"] = io;
-    return res;
 }
 
 Model Model::load(const std::string& filename)
@@ -117,38 +90,17 @@ Model Model::load(const std::string& filename)
     }
     nlohmann::json j;
     file >> j;
-    return deserialize(j);
+    return Model(j.get<Model>());
 }
-
-Model Model::deserialize(nlohmann::json j)
+const std::vector<INode::ptr_t>& Model::input_nodes() const
 {
-    std::unordered_map<std::string, std::shared_ptr<INode>> all_nodes;
-    std::string copy_word = "_copy";
-
-    for (const auto& node_json : j["nodes"])
-    {
-        std::string nodename = node_json.at("nodename").get<std::string>() + copy_word;
-        auto classname = node_json.at("classname").get<std::string>();
-        std::shared_ptr<INode> node = INode::factory(classname, nodename);
-        all_nodes.insert({nodename, node});
-    }
-    for (const auto& node_json : j["nodes"])
-    {
-        std::string nname = node_json.at("nodename").get<std::string>() + copy_word;
-        all_nodes[nname]->deserialize(node_json, all_nodes);
-    }
-
-    std::vector<std::shared_ptr<INode>> input_nodes;
-    std::vector<std::shared_ptr<INode>> output_nodes;
-    for (const auto& input_name : j["io"]["input_nodes"])
-    {
-        auto input_node = all_nodes[input_name.get<std::string>() + copy_word];
-        input_nodes.push_back(input_node);
-    }
-    for (const auto& output_name : j["io"]["output_nodes"])
-    {
-        auto output_node = all_nodes[output_name.get<std::string>() + copy_word];
-        output_nodes.push_back(output_node);
-    }
-    return Model(input_nodes, output_nodes);
+    return _input_nodes;
+}
+const std::vector<INode::ptr_t>& Model::output_nodes() const
+{
+    return _output_nodes;
+}
+const std::vector<INode::ptr_t>& Model::inter_nodes() const
+{
+    return _inter_nodes;
 }
