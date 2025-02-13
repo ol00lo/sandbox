@@ -47,7 +47,7 @@ INode::INode(std::string nodename) : _nodename(set_nodename(nodename, _existing_
 {
     _existing_names.insert(_nodename);
 }
-INode::PNode INode::factory(std::string classname, std::string nodename)
+INode::ptr_t INode::factory(std::string classname, std::string nodename)
 {
     auto fnd = _registered_classes.find(classname);
     if (fnd == _registered_classes.end())
@@ -78,13 +78,13 @@ void INode::set_dep(const nlohmann::json& node_json,
         }
     }
 
-    log().debug("Node {} of the {} class is deserialized", _nodename, classname());
+    log().debug("Set dependencies for node {} of the {} class", _nodename, classname());
 }
 std::string INode::nodename() const
 {
     return _nodename;
 }
-bool INode::register_class(std::string classname, NodeBuilder builder)
+bool INode::register_class(std::string classname, node_builder_t builder)
 {
     _registered_classes[classname] = builder;
     return true;

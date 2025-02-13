@@ -84,7 +84,7 @@ Shape Tensor::get_shape() const
 {
     return _shape;
 }
-std::vector<double> Tensor::get_data() const
+const std::vector<double>& Tensor::data() const
 {
     return _data;
 }
