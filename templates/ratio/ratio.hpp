@@ -72,4 +72,19 @@ struct Compare
                                  : (R1::num * R2::denum > R2::num * R1::denum) ? 1
                                                                                : 0;
 };
+template <typename R1, typename R2>
+using ratio_add_t = typename Add<R1, R2>::type;
+
+template <typename R1, typename R2>
+using ratio_sub_t = typename Sub<R1, R2>::type;
+
+template <typename R1, typename R2>
+using ratio_mult_t = typename Mult<R1, R2>::type;
+
+template <typename R1, typename R2>
+using ratio_div_t = typename Div<R1, R2>::type;
+
+template <typename R1, typename R2>
+constexpr int ratio_compare_v = Compare<R1, R2>::value;
+
 #endif
