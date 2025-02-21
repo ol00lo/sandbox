@@ -27,6 +27,59 @@ std::string concatenate_with_delimiter(const std::string& delimiter, const std::
 }
 } // namespace
 
+namespace num
+{
+namespace impl
+{
+template <int... D>
+constexpr bool all_zero()
+{
+    return (... && (D == 0));
+}
+
+template <int... D>
+constexpr bool is_in_range()
+{
+    return (... && (D >= 0 && D < 10));
+}
+
+template <typename T, typename = void>
+struct has_digit_name : std::false_type{};
+
+template <typename T>
+struct has_digit_name<T, std::void_t<decltype(T::name)>> : std::true_type{};
+
+template <int T, int U, bool is_thousands = false>
+std::string suffix()
+{
+    if constexpr (is_thousands)
+    {
+        if constexpr (U == 1 && T != 1)
+        {
+            return "а";
+        }
+        else if constexpr ((U == 2 || U == 3 || U == 4) && T != 1)
+        {
+            return "и";
+        }
+        else
+        {
+            return "";
+        }
+    }
+    else if constexpr (U == 1 && T != 1)
+    {
+        return "";
+    }
+    else if constexpr ((U == 2 || U == 3 || U == 4) && T != 1)
+    {
+        return "а";
+    }
+    else
+    {
+        return "ов";
+    }
+}
 template <int D>
 struct Units
 {
@@ -166,4 +219,7 @@ struct Hundreds
         return concatenate_with_delimiter(" ", {Units<A>::from_hundreds() + name(), Tens<B, C, from_thousands>::apply()});
     }
 };
+} // namespace impl
+} // namespace num
+
 #endif
