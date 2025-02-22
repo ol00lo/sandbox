@@ -1,11 +1,13 @@
 ﻿#ifndef HUNDREDS_HPP
 #define HUNDREDS_HPP
 #include <iostream>
+#include <sstream>
 #include <stdexcept>
 #include <string>
-#include <sstream>
 
-namespace
+namespace num
+{
+namespace impl
 {
 std::string concatenate_with_delimiter(const std::string& delimiter, const std::initializer_list<std::string>& inp)
 {
@@ -25,12 +27,7 @@ std::string concatenate_with_delimiter(const std::string& delimiter, const std::
     }
     return res.str();
 }
-} // namespace
 
-namespace num
-{
-namespace impl
-{
 template <int... D>
 constexpr bool all_zero()
 {
@@ -42,12 +39,6 @@ constexpr bool is_in_range()
 {
     return (... && (D >= 0 && D < 10));
 }
-
-template <typename T, typename = void>
-struct has_digit_name : std::false_type{};
-
-template <typename T>
-struct has_digit_name<T, std::void_t<decltype(T::name)>> : std::true_type{};
 
 template <int T, int U, bool is_thousands = false>
 std::string suffix()
@@ -179,7 +170,7 @@ struct Tens
             return concatenate_with_delimiter(" ", {"сорок", unit});
         else if constexpr (C == 9)
             return concatenate_with_delimiter(" ", {"девяносто", unit});
-            
+
         return concatenate_with_delimiter(" ", {Units<C>::unit() + name(), unit});
     }
     static std::string apply()
@@ -197,15 +188,15 @@ struct Hundreds
         {
             return "";
         }
-        else if constexpr (A==1)
+        else if constexpr (A == 1)
         {
             return "сто";
         }
-        else if constexpr (A==2)
+        else if constexpr (A == 2)
         {
             return "двести";
         }
-        else if constexpr (A==3 || A==4)
+        else if constexpr (A == 3 || A == 4)
         {
             return "ста";
         }

@@ -2,8 +2,8 @@
 #define SHORT_SCALE_NUMS
 #include "numtostring.hpp"
 
-using namespace num;
-
+namespace num
+{
 template <>
 struct DigitTraits<33>
 {
@@ -55,8 +55,14 @@ struct DigitTraits<12>
 template <>
 struct DigitTraits<9>
 {
-    static constexpr std::string_view name = "биллион";
+    static constexpr std::string_view name = "миллиард";
 };
 
+template <>
+struct DigitTraits<6>
+{
+    static constexpr std::string_view name = "миллион";
+};
 
+} // namespace num
 #endif
