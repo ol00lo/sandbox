@@ -123,7 +123,7 @@ void INode::clear_forward_cache()
 
 Tensor INode::get_derivative(const INode* argument)
 {
-    if (argument == this)
+    if (argument->nodename() == this->nodename())
     {
         return Tensor(argument->output_shape(), 1.0);
     }
@@ -139,6 +139,15 @@ Tensor INode::get_derivative(std::shared_ptr<INode> argument)
 std::vector<std::shared_ptr<INode>> INode::get_prev()
 {
     return _prev_nodes;
+}
+
+std::vector<std::shared_ptr<INode>> INode::get_next()
+{
+    return _next_nodes;
+}
+void INode::clear_prev()
+{
+    _prev_nodes.clear();
 }
 
 void g::set_dep(std::shared_ptr<INode> node, std::initializer_list<std::shared_ptr<INode>> prevs)

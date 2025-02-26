@@ -22,6 +22,7 @@ public:
     void sub(const Tensor& other);
     void mult(const Tensor& other);
     void div(const Tensor& other);
+    void sqrt();
     void scalar_mult(double a);
     Shape get_shape() const;
     Tensor& operator=(const Tensor& t);

@@ -20,6 +20,9 @@ add_library(graph_lib STATIC
   model.cpp
   tensor.cpp
   tensor_index.cpp
+  generator.cpp
+  optimizer.cpp
+  training_graph.cpp
 )
 target_link_libraries(graph_lib PUBLIC spdlog::spdlog nlohmann_json::nlohmann_json)
 target_include_directories(graph_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

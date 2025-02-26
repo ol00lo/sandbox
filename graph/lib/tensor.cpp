@@ -58,6 +58,14 @@ void Tensor::div(const Tensor& other)
     }
 }
 
+void Tensor::sqrt()
+{
+    for (int i = 0; i < _data.size(); i++)
+    {
+        _data[i] *= _data[i];
+    }
+}
+
 void Tensor::scalar_mult(double a)
 {
     for (int i = 0; i < _data.size(); i++)

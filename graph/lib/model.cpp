@@ -8,8 +8,7 @@
 using namespace g;
 namespace
 {
-std::shared_ptr<INode> find_node_by_name(std::unordered_map<std::string, std::shared_ptr<INode>> all_nodes,
-                                         const std::string& name)
+INode::PNode find_node_by_name(std::unordered_map<std::string, INode::PNode> all_nodes, const std::string& name)
 {
     auto it = all_nodes.find(name);
     if (it != all_nodes.end())
@@ -20,7 +19,7 @@ std::shared_ptr<INode> find_node_by_name(std::unordered_map<std::string, std::sh
 }
 } // namespace
 
-Model::Model(std::vector<std::shared_ptr<INode>> inputs, std::vector<std::shared_ptr<INode>> outputs)
+Model::Model(std::vector<INode::PNode> inputs, std::vector<INode::PNode> outputs)
     : _input_nodes(inputs), _output_nodes(outputs)
 {
     for (const auto& output : _output_nodes)
@@ -51,15 +50,64 @@ std::vector<Tensor> Model::compute(const std::vector<Tensor>& input_values)
     }
     return results;
 }
-
-void Model::add_into_inter(std::shared_ptr<INode> node)
+std::vector<INode::PNode> Model::get_input_nodes() const
 {
-    auto fnd = std::find(_input_nodes.begin(), _input_nodes.end(), node);
-    if (fnd != _input_nodes.end())
+    return _input_nodes;
+}
+std::vector<INode::PNode> Model::get_inter_nodes() const
+{
+    return _inter_nodes;
+}
+std::vector<INode::PNode> Model::get_output_nodes() const
+{
+    return _output_nodes;
+}
+std::vector<std::shared_ptr<DataNode>> Model::get_param_nodes() const
+{
+    return _param_nodes;
+}
+bool Model::is_in_param(DataNode* node)
+{
+    for (const auto& param : _param_nodes)
     {
-        return;
+        if (param->nodename() == node->nodename())
+        {
+            return true;
+        }
     }
-    if (std::find(_inter_nodes.begin(), _inter_nodes.end(), node) == _inter_nodes.end())
+    return false;
+}
+void Model::set_param(const std::vector<std::shared_ptr<DataNode>>& p)
+{
+    for (int i = 0; i < _param_nodes.size(); i++)
+    {
+        _param_nodes[i]->set_value(p[i]->get_value());
+    }
+}
+void Model::add_into_inter(INode::PNode node)
+{
+    if (node->classname() == "DataNode")
+    {
+        auto fnd = std::find(_input_nodes.begin(), _input_nodes.end(), node);
+        if (fnd != _input_nodes.end())
+        {
+            return;
+        }
+        else
+        {
+            if (DataNode* dataNode = dynamic_cast<DataNode*>(node.get()))
+            {
+                if(is_in_param(dataNode))
+                {
+                    return;
+                }
+                std::shared_ptr<DataNode> node_p = std::make_shared<DataNode>(*dataNode);
+                _param_nodes.push_back(node_p);
+                _inter_nodes.push_back(node_p);
+            }
+        }
+    }
+    else if (std::find(_inter_nodes.begin(), _inter_nodes.end(), node) == _inter_nodes.end())
     {
         _inter_nodes.push_back(node);
     }
@@ -122,14 +170,14 @@ Model Model::load(const std::string& filename)
 
 Model Model::deserialize(nlohmann::json j)
 {
-    std::unordered_map<std::string, std::shared_ptr<INode>> all_nodes;
+    std::unordered_map<std::string, INode::PNode> all_nodes;
     std::string copy_word = "_copy";
 
     for (const auto& node_json : j["nodes"])
     {
         std::string nodename = node_json.at("nodename").get<std::string>() + copy_word;
         auto classname = node_json.at("classname").get<std::string>();
-        std::shared_ptr<INode> node = INode::factory(classname, nodename);
+        INode::PNode node = INode::factory(classname, nodename);
         all_nodes.insert({nodename, node});
     }
     for (const auto& node_json : j["nodes"])
@@ -138,8 +186,8 @@ Model Model::deserialize(nlohmann::json j)
         all_nodes[nname]->deserialize(node_json, all_nodes);
     }
 
-    std::vector<std::shared_ptr<INode>> input_nodes;
-    std::vector<std::shared_ptr<INode>> output_nodes;
+    std::vector<INode::PNode> input_nodes;
+    std::vector<INode::PNode> output_nodes;
     for (const auto& input_name : j["io"]["input_nodes"])
     {
         auto input_node = all_nodes[input_name.get<std::string>() + copy_word];

@@ -33,6 +33,8 @@ public:
     Tensor get_derivative(const INode* argument);
     Tensor get_derivative(std::shared_ptr<INode>);
     std::vector<std::shared_ptr<INode>> get_prev();
+    std::vector<std::shared_ptr<INode>> get_next();
+    void clear_prev();
     virtual std::string classname() const = 0;
     nlohmann::json serialize() const;
     void deserialize(const nlohmann::json&, const std::unordered_map<std::string, std::shared_ptr<INode>>&, std::string copy_word = "_copy");
