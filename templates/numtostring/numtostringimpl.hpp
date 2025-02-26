@@ -5,16 +5,20 @@
 
 namespace num
 {
+template <int... D>
+struct NumToString;
 namespace impl
 {
 
 template <int N1, int N2, int N3, int... D>
 struct ImplNumToString
 {
+    static_assert(is_in_range<N1, N2, N3>(), "N must be in range [0, 9].");
     static constexpr int Order = sizeof...(D);
     static_assert(Order % 3 == 0, "Order must be a multiple of 3.");
     static_assert(DigitTraits<Order>::name != "", "Not implemented order");
 
+    static_assert(is_right_traits<Order>(), "Incorrect traits");
     static std::string apply()
     {
         if constexpr (N1 == 0 && N2 == 0 && N3 == 0)

@@ -26,7 +26,6 @@ struct DigitTraits<3>
 template <int... D>
 struct NumToString
 {
-    static_assert(is_in_range<D...>(), "N must be in range [0, 9].");
     static std::string apply()
     {
         constexpr int size = sizeof...(D);

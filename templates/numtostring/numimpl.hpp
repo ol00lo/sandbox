@@ -7,6 +7,8 @@
 
 namespace num
 {
+template <int N>
+struct DigitTraits;
 namespace impl
 {
 std::string concatenate_with_delimiter(const std::string& delimiter, const std::initializer_list<std::string>& inp)
@@ -34,10 +36,27 @@ constexpr bool all_zero()
     return (... && (D == 0));
 }
 
-template <int... D>
+template <int N1, int N2, int N3>
 constexpr bool is_in_range()
 {
-    return (... && (D >= 0 && D < 10));
+    return (N1 >= 0 && N1 < 10) && (N2 >= 0 && N2 < 10) && (N3 >= 0 && N3 < 10);
+}
+
+template <int Order, int I = Order>
+constexpr bool is_right_traits()
+{
+    if constexpr (I < 1)
+    {
+        return true; 
+    }
+    else if constexpr (I % 3 != 0 && DigitTraits<I>::name != "")
+    {
+        return false;
+    }
+    else
+    {
+        return is_right_traits<Order, I - 1>();
+    }
 }
 
 template <int T, int U, bool is_thousands = false>
