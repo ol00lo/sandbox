@@ -50,7 +50,7 @@ bool any_of(const Tuple& t, Operator&& oper)
 {
     if constexpr (Index < std::tuple_size_v<Tuple>)
     {
-        return (std::forward<Operator>(oper)(std::get<Index>(t))) ? true : any_of<Index + 1>(t, oper);
+        return oper(std::get<Index>(t)) ? true : any_of<Index + 1>(t, oper);
     }
     return false;
 }
@@ -98,7 +98,7 @@ typename TransformT<Operator, T...>::type_t transform(const std::tuple<T...>& t,
     using ret_t = typename TransformT<Operator, T...>::type_t;
     constexpr size_t size = std::tuple_size_v<in_t>;
     ret_t ret;
-    fill_tuple<size - 1>(ret, t, oper);
+    fill_tuple<size - 1>(ret, t, std::forward<Operator>(oper));
 
     return ret;
 }

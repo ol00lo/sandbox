@@ -43,6 +43,7 @@ public:
     {
         a = 2 * v;
     }
+    A() = delete;
     int a;
 };
 A transform_entry(A a)
