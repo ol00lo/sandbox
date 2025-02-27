@@ -26,6 +26,29 @@ int transform_entry(float x)
 {
     return 2 * (int)x;
 }
+struct Functor
+{
+    int ncalls = 0;
+    void operator()(int x)
+    {
+        x *= 2;
+        ncalls += 1;
+    }
+};
+
+class A
+{
+public:
+    A(int v)
+    {
+        a = 2 * v;
+    }
+    int a;
+};
+A transform_entry(A a)
+{
+    return a.a*=2;
+}
 
 int main()
 {
@@ -42,6 +65,11 @@ int main()
     for_each_fe(tt, set_one);
     std::cout << "\nafter set 1: \n";
     for_each_fe(tt, [](auto v) { my_print(v); });
+    Functor f;
+    for_each(tt, f);
+    std::cout << f.ncalls << " == 3\n";
+    for_each(tt, Functor());
+
 
     std::cout << "\nany of:\n\n";
     std::tuple<double, double, int> t1{1.0, -2.0, 6};
@@ -67,4 +95,8 @@ int main()
     std::cout << "\nresult fe:\n";
     out_t t2 = transform_fe(h, op);
     for_each(t2, [](auto v) { my_print(v); });
+
+    std::tuple<A, int, bool> t3{A(1), 2, true};
+    transform_fe(t3, op);
+    //transform(t3, op);
 }
