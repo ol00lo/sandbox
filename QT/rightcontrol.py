@@ -13,31 +13,19 @@ class RightControl(QtWidgets.QWidget):
         self._lineedit1.setMinimumHeight(50)  
         self._label1 = QtWidgets.QLabel("write sum of digits:", self)
 
-        # create buttons 3 and 4
-        self.button3 = QtWidgets.QPushButton("3", self)
-        self.button4 = QtWidgets.QPushButton("4", self)
-        self.button3.setMinimumHeight(50)
-        self.button4.setMinimumHeight(50)
-
-        # set options
-        self.button3.setCheckable(True)
-        self.button4.setCheckable(True)
-
-        # button3 is  default
-        self.button3.setChecked(True)  
-        self.button3.setStyleSheet("background-color: lightblue;") 
-
-        self.button3.clicked.connect(self.select_number)
-        self.button4.clicked.connect(self.select_number)
-
-        # create layout for 3 and 4
+        # create radio buttons
+        self.rb3 = QtWidgets.QRadioButton("3", self)
+        self.rb4 = QtWidgets.QRadioButton("4", self)
+        self.rb3.setMinimumHeight(50)
+        self.rb4.setMinimumHeight(50)
+        self.rb3.setChecked(True)
         button_layout = QtWidgets.QHBoxLayout()
-        button_layout.addWidget(self.button3)
-        button_layout.addWidget(self.button4)
+        button_layout.addWidget(self.rb3)
+        button_layout.addWidget(self.rb4)
         self._label2 = QtWidgets.QLabel("choose num of digits:", self)
 
         # create start button
-        button = QtWidgets.QPushButton("START")
+        button = QtWidgets.QPushButton("RUN")
         button.setMinimumHeight(50)
         button.clicked.connect(lambda: self._triggered.emit())
 
@@ -45,6 +33,8 @@ class RightControl(QtWidgets.QWidget):
         font = QtGui.QFont()
         font.setPointSize(15)  
         self._lineedit1.setFont(font)
+        self.rb3.setFont(font)
+        self.rb4.setFont(font)
         font2 = QtGui.QFont()
         font2.setPointSize(12)
         self._label1.setFont(font2)
@@ -56,15 +46,15 @@ class RightControl(QtWidgets.QWidget):
         self.layout().addWidget(self._label2)
         self.layout().addLayout(button_layout)
         self.layout().addWidget(button)
-
-    def select_number(self):
-        if self.sender() == self.button3:
-            self.button3.setChecked(True)
-            self.button4.setChecked(False)
-            self.button3.setStyleSheet("background-color: lightblue;")
-            self.button4.setStyleSheet("background-color: none;")
-        else:
-            self.button4.setChecked(True)
-            self.button3.setChecked(False)
-            self.button4.setStyleSheet("background-color: lightblue;")
-            self.button3.setStyleSheet("background-color: none;")
+        self.layout().addItem(QtWidgets.QSpacerItem(50, 50, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Expanding))
+    
+    def get_data(self):
+        x = self._lineedit1.text()
+        try:
+            x = int(x)
+        except Exception as e:
+            raise Exception("Enter numbers only")
+        if x < 0:
+            raise Exception("Sum of digits must be positive")
+        y = 3 if self.rb3.isChecked() else 4
+        return x, y

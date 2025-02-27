@@ -16,7 +16,4 @@ def generate_numbers(target_sum, num_digits):
     return valid_numbers
 
 def to_string_numbers(numbers):
-    string_numbers = ""
-    for number in numbers:
-        string_numbers += "\n"+str(number)
-    return string_numbers
+    return '\n'.join([str(x) for x in numbers])
