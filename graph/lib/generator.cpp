@@ -8,12 +8,20 @@ SimpleDataGenerator::SimpleDataGenerator(const std::vector<std::vector<Tensor>>&
     : inputs(in), outputs(out)
 {
 }
-std::vector<Tensor> SimpleDataGenerator::next_input()
+std::vector<Tensor> SimpleDataGenerator::next_input(int batch_size)
 {
+    if (batch_size != 1)
+    {
+        throw std::runtime_error("Not implemented");
+    }
     return inputs[current_index];
 }
-std::vector<Tensor> SimpleDataGenerator::next_gt()
+std::vector<Tensor> SimpleDataGenerator::next_gt(int batch_size)
 {
+    if (batch_size != 1)
+    {
+        throw std::runtime_error("Not implemented");
+    }
     return outputs[current_index++];
 }
 bool SimpleDataGenerator::is_epoch_end()

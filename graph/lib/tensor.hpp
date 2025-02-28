@@ -22,6 +22,10 @@ public:
     void sub(const Tensor& other);
     void mult(const Tensor& other);
     void div(const Tensor& other);
+    void sin();
+    void cos();
+    void tg();
+    void ctg();
     void sqrt();
     void scalar_mult(double a);
     Shape get_shape() const;
@@ -44,6 +48,10 @@ Tensor mult(const Tensor& t1, const Tensor& t2);
 Tensor scalar_mult(double a, const Tensor& t);
 Tensor sub(const Tensor& t1, const Tensor& t2);
 Tensor div(const Tensor& t1, const Tensor& t2);
+Tensor sin(const Tensor& t);
+Tensor cos(const Tensor& t1);
+Tensor tg(const Tensor& t1);
+Tensor ctg(const Tensor& t1);
 } // namespace g
 
 #endif

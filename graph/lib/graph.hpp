@@ -8,7 +8,7 @@ namespace g
 {
 int graph_ping();
 spdlog::logger& log();
-void set_log_debug();
+std::shared_ptr<spdlog::logger> get_logger();
 }
 
 #endif

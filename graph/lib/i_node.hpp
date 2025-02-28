@@ -24,7 +24,10 @@ class INode
 public:
     using PNode = std::shared_ptr<INode>;
     using NodeBuilder = std::function<PNode(std::string nodename)>;
-    INode(std::string nodename = "");
+    explicit INode(std::string nodename = "");
+    INode() = delete;
+    INode(const INode&) = delete;
+    INode& operator=(const INode&) = delete;
     static PNode factory(std::string classname, std::string nodename = "");
     void add_prev(std::shared_ptr<INode> a);
     void add_next(std::shared_ptr<INode> a);

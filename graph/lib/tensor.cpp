@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <sstream>
 #include <iomanip>
+#include <cmath>
 
 using namespace g;
 
@@ -55,6 +56,42 @@ void Tensor::div(const Tensor& other)
     for (int i = 0; i < _data.size(); i++)
     {
         _data[i] /= other._data[i];
+    }
+}
+void Tensor::sin()
+{
+    for (int i = 0; i < _data.size(); i++)
+    {
+        _data[i] = std::sin(_data[i]);
+    }
+}
+void Tensor::cos()
+{
+    for (int i = 0; i < _data.size(); i++)
+    {
+        _data[i] = std::cos(_data[i]);
+    }
+}
+void Tensor::tg()
+{
+    for (int i = 0; i < _data.size(); i++)
+    {
+        _data[i] = std::tan(_data[i]);
+    }
+}
+void Tensor::ctg()
+{
+    for (int i = 0; i < _data.size(); i++)
+    {
+        double t = std::tan(_data[i]);
+        if (t != 0)
+        {
+            _data[i] = 1 / t;
+        }
+        else
+        {
+            throw std::runtime_error("Division by zero");
+        }
     }
 }
 
@@ -159,5 +196,30 @@ Tensor g::div(const Tensor& t1, const Tensor& t2)
 {
     Tensor res(t1);
     res.div(t2);
+    return res;
+}
+
+Tensor g::sin(const Tensor& t)
+{
+    Tensor res(t);
+    res.sin();
+    return res;
+}
+Tensor g::cos(const Tensor& t)
+{
+    Tensor res(t);
+    res.cos();
+    return res;
+}
+Tensor g::tg(const Tensor& t)
+{
+    Tensor res(t);
+    res.tg();
+    return res;
+}
+Tensor g::ctg(const Tensor& t)
+{
+    Tensor res(t);
+    res.ctg();
     return res;
 }

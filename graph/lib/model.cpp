@@ -1,6 +1,7 @@
 #include "model.hpp"
 #include "arithmetic_nodes.hpp"
 #include "power_nodes.hpp"
+#include "trigonometric_nodes.hpp"
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
@@ -95,15 +96,15 @@ void Model::add_into_inter(INode::PNode node)
         }
         else
         {
-            if (DataNode* dataNode = dynamic_cast<DataNode*>(node.get()))
+            auto dataNode = std::dynamic_pointer_cast<DataNode>(node);
+            if (dataNode)
             {
-                if(is_in_param(dataNode))
+                if (is_in_param(dataNode.get()))
                 {
                     return;
                 }
-                std::shared_ptr<DataNode> node_p = std::make_shared<DataNode>(*dataNode);
-                _param_nodes.push_back(node_p);
-                _inter_nodes.push_back(node_p);
+                _param_nodes.push_back(dataNode);
+                _inter_nodes.push_back(dataNode);
             }
         }
     }

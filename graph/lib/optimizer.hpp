@@ -14,13 +14,15 @@ struct IOptimizer
 struct SGDOptimizer : public IOptimizer
 {
 public:
-    SGDOptimizer(Tensor lr) : _learning_rate(lr){}
+    SGDOptimizer(double lr) : _learning_rate(lr)
+    {
+    }
     void set_param_nodes(const std::vector<std::shared_ptr<DataNode>>& params) override;
     void apply(const std::vector<Tensor>& gradients) override;
 
 private:
     std::vector<std::shared_ptr<DataNode>> _params;
-    Tensor _learning_rate;
+    double _learning_rate;
 };
 
 class OptimizationWorker
@@ -28,8 +30,8 @@ class OptimizationWorker
 public:
     OptimizationWorker(Model model, std::string loss_type) : _graph(model, loss_type){}
     void set_optimizer(std::shared_ptr<IOptimizer> optimizer);
-    Tensor train(std::vector<Tensor> inputs, std::vector<Tensor> gt);
-    Tensor validate(std::vector<Tensor> inputs, std::vector<Tensor> gt);
+    double train(std::vector<Tensor> inputs, std::vector<Tensor> gt, int batch_size = 1);
+    double validate(std::vector<Tensor> inputs, std::vector<Tensor> gt, int batch_size = 1);
     void commit();
 
 private:

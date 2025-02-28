@@ -7,13 +7,26 @@
 
 using namespace g;
 
-TEST_CASE("simmple test 1", "[st1]")
+TEST_CASE("generator test", "[gt]")
 {
-    //==================================================
-    // L*y + K = out
-    //==================================================
-    // g::set_log_debug();
+    std::vector<std::vector<Tensor>> inp;
+    std::vector<std::vector<Tensor>> outp;
+    for (int j = 0; j < 10; ++j)
+    {
+        int i = j;
+        inp.push_back({Tensor({double(i)})});
+        outp.push_back({Tensor({double(2 * i + 2)})});
+    }
+    SimpleDataGenerator train_data(inp, outp);
+    train_data.next_epoch(false);
+    CHECK(train_data.next_input()[0][0] == 0);
+    train_data.next_epoch(true);
+    CHECK(train_data.next_input()[0][0] != 1);
+    CHECK(train_data.is_epoch_end() == false);
+}
 
+TEST_CASE("train test", "[tt]")
+{
     std::shared_ptr<DataNode> y = std::make_shared<DataNode>("y");
     std::shared_ptr<DataNode> L = std::make_shared<DataNode>("L");
     std::shared_ptr<DataNode> K = std::make_shared<DataNode>("K");
@@ -24,126 +37,224 @@ TEST_CASE("simmple test 1", "[st1]")
     INode::PNode out = INode::factory("PlusNode", "out");
     g::set_dep(out, {b1, K});
     Model model({y}, {out});
+    OptimizationWorker wrk(model, "MSE");
+    wrk.set_optimizer(std::make_shared<SGDOptimizer>(1e-2));
+
+    double loss = wrk.train({Tensor({1})}, {Tensor({4})});
+    CHECK(loss == 36);
+    loss = wrk.train({Tensor({2})}, {Tensor({6})});
+    CHECK(loss == Approx(74.65));
+    CHECK(K->get_value() == Tensor({5}));
+    wrk.commit();
+    CHECK(K->get_value()[0] != 5);
+}
+
+namespace
+{
+const double PI = 3.1415926;
+const double a = 1;
+const double b = 2;
+const double c = 0;
+const double d = 0.5;
+const double e = 1;
+Tensor compute_out(const Tensor& inp)
+{
+    Tensor out = g::scalar_mult(b, inp);
+    out.add(Tensor({c}));
+    out.sin();
+    out.mult(Tensor({a}));
+    Tensor Dx = g::mult(inp, Tensor({d}));
+    out.add(Dx);
+    out.add(Tensor({e}));
+    return out;
+}
+} // namespace
+
+TEST_CASE("sin test", "[st]")
+{
+    //==================================================
+    // A*sin(B*x + C) + D*x + E = out
+    //==================================================
+    g::get_logger()->set_level(spdlog::level::off);
+
+    std::shared_ptr<DataNode> x = std::make_shared<DataNode>("x");
+    std::shared_ptr<DataNode> A = std::make_shared<DataNode>("A");
+    std::shared_ptr<DataNode> B = std::make_shared<DataNode>("B");
+    std::shared_ptr<DataNode> C = std::make_shared<DataNode>("C");
+    std::shared_ptr<DataNode> D = std::make_shared<DataNode>("D");
+    std::shared_ptr<DataNode> E = std::make_shared<DataNode>("E");
+    A->set_value(Tensor({1.0}));
+    B->set_value(Tensor({1.0}));
+    C->set_value(Tensor({0.0}));
+    D->set_value(Tensor({0.1}));
+    E->set_value(Tensor({0.0}));
+    INode::PNode a1 = INode::factory("MultNode", "");
+    g::set_dep(a1, {B, x});
+    INode::PNode a2 = INode::factory("PlusNode", "");
+    g::set_dep(a2, {a1, C});
+    INode::PNode a3 = INode::factory("CosNode", "");
+    g::set_dep(a3, {a2});
+    INode::PNode a4 = INode::factory("MultNode", "");
+    g::set_dep(a4, {a3, A});
+    INode::PNode a5 = INode::factory("MultNode", "");
+    g::set_dep(a5, {D, x});
+    INode::PNode a6 = INode::factory("PlusNode", "");
+    g::set_dep(a6, {a4, a5});
+    INode::PNode out = INode::factory("PlusNode", "");
+    g::set_dep(out, {a6, E});
+
+    Model model({x}, {out});
 
     OptimizationWorker wrk(model, "MSE");
-    wrk.set_optimizer(std::make_shared<SGDOptimizer>(Tensor({1e-2})));
+    wrk.set_optimizer(std::make_shared<SGDOptimizer>(1e-2));
 
     std::vector<std::vector<Tensor>> inp;
     std::vector<std::vector<Tensor>> outp;
-    for (int i = 1; i < 8; ++i)
+    for (int j = 0; j < 10; ++j)
     {
+        double i = j;
         inp.push_back({Tensor({double(i)})});
-		outp.push_back({Tensor({double(2 * i + 2)})});
+        outp.push_back({compute_out(Tensor({double(i)}))});
+        double(i) /= 2;
+        inp.push_back({Tensor({double(i)})});
+        outp.push_back({compute_out(Tensor({double(i)}))});
+        double(i) /= 2;
+        inp.push_back({Tensor({double(i)})});
+        outp.push_back({compute_out(Tensor({double(i)}))});
+        double(i) *= 3;
+        inp.push_back({Tensor({double(i)})});
+        outp.push_back({compute_out(Tensor({double(i)}))});
     }
     SimpleDataGenerator train_data(inp, outp);
     inp.clear();
-	outp.clear();
-    for (int i = 8; i < 10; ++i)
+    outp.clear();
+    for (int j = 0; j < 10; ++j)
     {
+        double i = double(j) / 3;
         inp.push_back({Tensor({double(i)})});
-		outp.push_back({Tensor({double(2 * i + 2)})});
+        outp.push_back({compute_out(Tensor({double(i)}))});
     }
     SimpleDataGenerator val_data(inp, outp);
 
-    for (int iepoch = 0; iepoch < 10; ++iepoch)
+    for (int iepoch = 0; iepoch < 100; ++iepoch)
     {
-        train_data.next_epoch(false);
-        Tensor sum_loss({0});
+        std::cout << "epoch = " << iepoch << std::endl;
+        train_data.next_epoch(true);
+        double sum_loss = 0;
         int n_steps = 0;
         while (!train_data.is_epoch_end())
         {
             auto inp = train_data.next_input();
             auto gt = train_data.next_gt();
-            Tensor train_loss = wrk.train(inp, gt);
-            sum_loss.add(train_loss);
+            double train_loss = wrk.train(inp, gt);
+            sum_loss += train_loss;
             n_steps += 1;
         }
-        sum_loss.div(Tensor({double(n_steps)}));
         wrk.commit();
-        std::cout << "Train loss= " << sum_loss << std::endl;
-        
+        std::cout << "Train loss= " << sum_loss / double(n_steps) << std::endl;
+
         // validate step
         val_data.next_epoch(false);
-        Tensor sum_loss_val({0});
-		n_steps = 0;
+        double sum_loss_val = 0;
+        n_steps = 0;
         while (!val_data.is_epoch_end())
         {
             auto inp = val_data.next_input();
             auto gt = val_data.next_gt();
-            Tensor val_loss = wrk.validate(inp, gt);
-            sum_loss_val.add(val_loss);
+            double val_loss = wrk.validate(inp, gt);
+            sum_loss_val += val_loss;
             n_steps += 1;
         }
-		sum_loss_val.div(Tensor({double(n_steps)}));
-
+        sum_loss_val /= double(n_steps);
         std::cout << "Val loss= " << sum_loss_val << std::endl;
-
+        if (sum_loss_val <= 0.001)
+            break;
     }
+    CHECK(A->get_value()[0] == Approx(a));
+    CHECK(B->get_value()[0] == Approx(b));
+    CHECK(C->get_value()[0] == Approx(c));
+    CHECK(D->get_value()[0] == Approx(d));
+    CHECK(E->get_value()[0] == Approx(e));
 }
-//
-//TEST_CASE("cf", "[cf_t]")
-//{
-//    std::shared_ptr<DataNode> x = std::make_shared<DataNode>("x");
-//    std::shared_ptr<DataNode> gt = std::make_shared<DataNode>("gt");
-//    std::shared_ptr<DataNode> A = std::make_shared<DataNode>("A");
-//    std::shared_ptr<DataNode> B = std::make_shared<DataNode>("B");
-//    std::shared_ptr<DataNode> C = std::make_shared<DataNode>("C");
-//    std::shared_ptr<DataNode> D = std::make_shared<DataNode>("D");
-//    std::shared_ptr<DataNode> E = std::make_shared<DataNode>("E");
-//    x->set_value(Tensor({1}));
-//    gt->set_value(Tensor({6}));
-//    A->set_value(Tensor({0.2}));
-//    B->set_value(Tensor({0.2}));
-//    C->set_value(Tensor({0.2}));
-//    D->set_value(Tensor({0.2}));
-//    E->set_value(Tensor({0.2}));
-//    INode::PNode b1 = INode::factory("MultNode", "b1");
-//    g::set_dep(b1, {B, x});
-//    INode::PNode b2 = INode::factory("PlusNode", "b2");
-//    g::set_dep(b2, {b1, C});
-//    INode::PNode b3 = INode::factory("MultNode", "b3");
-//    g::set_dep(b3, {A, b2});
-//    INode::PNode b4 = INode::factory("MultNode", "b4");
-//    g::set_dep(b4, {D, x});
-//    INode::PNode b5 = INode::factory("PlusNode", "b5");
-//    g::set_dep(b5, {b4, b3});
-//    INode::PNode b6 = INode::factory("PlusNode", "b6");
-//    g::set_dep(b6, {b5, E});
-//
-//    Model model({x}, {b6});
-//
-//    //========================================================
-//    INode::PNode inpf = INode::factory("DataNode", "inpf");
-//    INode::PNode loss = INode::factory("SqrNode", "loss");
-//
-//    Model loss_function({inpf, gt}, {loss});
-//
-//    OptimizationWorker wrk(model, loss_function);
-//
-//    wrk.set_optimizer(std::make_shared<SGDOptimizer>(Tensor({1e-2})));
-//
-//    // SimpleDataGenerator train_data(inp, outp);
-//    // SimpleDataGenerator val_data(inp, outp);
-//
-//    // for (int iepoch = 0; iepoch < 10; ++iepoch)
-//    //{
-//    //     // train-step
-//    //     train_data.next_epoch(true);
-//    //     double sum_loss = 0;
-//    //     int n_steps = 0;
-//    //     while (!train_data.is_epoch_end())
-//    //     {
-//    //         double train_loss = wrk.train(train_data.next_input(), train_data.next_gt());
-//    //         sum_loss += train_loss;
-//    //         n_steps += 1;
-//    //     }
-//    //     std::cout << "Train loss=" << sum_loss / n_steps << std::endl;
-//
-//    //    // validate step
-//    //    val_data.next_epoch(false);
-//    //    // ....
-//    //    std::cout << "Val loss=" << sum_loss / n_steps << std::endl;
-//
-//    //    wrk.commit();
-//    //}
-//}
+
+TEST_CASE("simmple test 1", "[st1]")
+{
+    //==================================================
+    // L*y + K = out
+    //==================================================
+    g::get_logger()->set_level(spdlog::level::off);
+
+    std::shared_ptr<DataNode> y = std::make_shared<DataNode>("");
+    std::shared_ptr<DataNode> L = std::make_shared<DataNode>("");
+    std::shared_ptr<DataNode> K = std::make_shared<DataNode>("");
+    L->set_value(Tensor({5}));
+    K->set_value(Tensor({5}));
+    INode::PNode b1 = INode::factory("MultNode", "");
+    g::set_dep(b1, {L, y});
+    INode::PNode out = INode::factory("PlusNode", "");
+    g::set_dep(out, {b1, K});
+    Model model({y}, {out});
+
+    OptimizationWorker wrk(model, "MSE");
+    wrk.set_optimizer(std::make_shared<SGDOptimizer>(1e-2));
+
+    std::vector<std::vector<Tensor>> inp;
+    std::vector<std::vector<Tensor>> outp;
+    for (int j = 0; j < 10; ++j)
+    {
+        int i = j;
+        inp.push_back({Tensor({double(i)})});
+        outp.push_back({Tensor({double(2 * i + 2)})});
+        i /= 3;
+        inp.push_back({Tensor({double(i)})});
+        outp.push_back({Tensor({double(2 * i + 2)})});
+        i *= 2;
+        inp.push_back({Tensor({double(i)})});
+        outp.push_back({Tensor({double(2 * i + 2)})});
+    }
+    SimpleDataGenerator train_data(inp, outp);
+    inp.clear();
+    outp.clear();
+    for (int i = 10; i < 15; ++i)
+    {
+        inp.push_back({Tensor({double(i)})});
+        outp.push_back({Tensor({double(2 * i + 2)})});
+    }
+    SimpleDataGenerator val_data(inp, outp);
+
+    for (int iepoch = 0; iepoch < 50; ++iepoch)
+    {
+        train_data.next_epoch(false);
+        double sum_loss = 0;
+        int n_steps = 0;
+        while (!train_data.is_epoch_end())
+        {
+            auto inp = train_data.next_input();
+            auto gt = train_data.next_gt();
+            double train_loss = wrk.train(inp, gt);
+            sum_loss += train_loss;
+            n_steps += 1;
+        }
+        wrk.commit();
+        std::cout << "epoch = " << iepoch << ", Train loss= " << sum_loss / double(n_steps) << std::endl;
+
+        // validate step
+        val_data.next_epoch(false);
+        double sum_loss_val = 0;
+        n_steps = 0;
+        while (!val_data.is_epoch_end())
+        {
+            auto inp = val_data.next_input();
+            auto gt = val_data.next_gt();
+            double val_loss = wrk.validate(inp, gt);
+            sum_loss_val += val_loss;
+            n_steps += 1;
+        }
+        sum_loss_val /= double(n_steps);
+        std::cout << "epoch = " << iepoch << ", Val loss= " << sum_loss_val << std::endl;
+        if (sum_loss_val <= 0.001)
+            break;
+    }
+    CHECK(K->get_value()[0] == Approx(2));
+    CHECK(L->get_value()[0] == Approx(2));
+}
