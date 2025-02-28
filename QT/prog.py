@@ -13,7 +13,7 @@ def generate_numbers(target_sum, num_digits):
         if sum(int(digit) for digit in str(number)) == target_sum:
             valid_numbers.append(str(number).zfill(num_digits))
 
-    return valid_numbers
+    return valid_numbers, len(valid_numbers)
 
 def to_string_numbers(numbers):
     return '\n'.join([str(x) for x in numbers])

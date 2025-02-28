@@ -19,8 +19,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._left = QtWidgets.QTextEdit(self)
         self._left.setFontPointSize(18)
         self._left.setReadOnly(True)  
-        self._left.setMinimumSize(150, 200)
-
+        self._left.setMinimumWidth(260)
 
         mainframe.layout().addWidget(self._left)
         mainframe.layout().addWidget(self._right)
@@ -28,11 +27,11 @@ class MainWindow(QtWidgets.QMainWindow):
     def _button_clicked(self):
         try:    
             digits_sum, num_digits = self._right.get_data()
-            result = prog.generate_numbers(digits_sum, num_digits)  
+            result, count = prog.generate_numbers(digits_sum, num_digits)  
             if result == []:
                 self._left.setText("Total numbers: 0")
             else:
-                self._left.setText(f"Automobile numbers:\n" + prog.to_string_numbers(result))
+                self._left.setText(f"Total numbers: {count}\nAutomobile numbers:\n" + prog.to_string_numbers(result))
 
         except Exception as e:
             QtWidgets.QMessageBox.critical(self, "Error", str(e), QtWidgets.QMessageBox.StandardButton.Ok)
