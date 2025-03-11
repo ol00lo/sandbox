@@ -1,45 +1,46 @@
 #include "generator.hpp"
-#include <random>
 
-std::mt19937 rng(0);
 using namespace g;
-SimpleDataGenerator::SimpleDataGenerator(const std::vector<std::vector<Tensor>>& in,
-                                         const std::vector<std::vector<Tensor>>& out)
-    : inputs(in), outputs(out)
+SimpleDataGenerator::SimpleDataGenerator(const std::vector<tvec_t>& in, const std::vector<tvec_t>& out, int batch_size, int seed)
+    : IDataGenerator(seed), _inputs(in), _outputs(out),_batch_size(batch_size), _distribution(0, _inputs.size() - 1)
 {
-}
-std::vector<Tensor> SimpleDataGenerator::next_input(int batch_size)
-{
-    if (batch_size != 1)
+    if (in[0][0].get_shape()[0] != 1 || out[0][0].get_shape()[0] != 1)
     {
-        throw std::runtime_error("Not implemented");
+        throw std::runtime_error("Expected batch size of 1");
     }
-    return inputs[current_index];
+
 }
-std::vector<Tensor> SimpleDataGenerator::next_gt(int batch_size)
+tvec_t SimpleDataGenerator::next_input()
 {
-    if (batch_size != 1)
+	if (_batch_size != 1)
+	{
+		_THROW_NOT_IMP_
+	}
+    return _inputs[_input_index++];
+}
+tvec_t SimpleDataGenerator::next_gt()
+{
+    if (_batch_size != 1)
     {
-        throw std::runtime_error("Not implemented");
+        _THROW_NOT_IMP_
     }
-    return outputs[current_index++];
+    return _outputs[_gt_index++];
 }
 bool SimpleDataGenerator::is_epoch_end()
 {
-    return current_index >= inputs.size();
+    return _input_index >= _inputs.size() || _gt_index >= _outputs.size();
 }
 void SimpleDataGenerator::next_epoch(bool shuffle)
 {
-    current_index = 0;
+    _input_index = 0;
+    _gt_index = 0;
     if (shuffle)
     {
-        for (int i = 0; i < inputs.size(); i++)
+        for (int i = 0; i < _inputs.size(); i++)
         {
-            std::uniform_int_distribution<std::size_t> distribution(0, inputs.size() - 1);
-            std::size_t j = distribution(rng);
-
-            std::swap(inputs[i], inputs[j]);
-            std::swap(outputs[i], outputs[j]);
+            std::size_t j = _distribution(_rng);
+            std::swap(_inputs[i], _inputs[j]);
+            std::swap(_outputs[i], _outputs[j]);
         }
     }
 }

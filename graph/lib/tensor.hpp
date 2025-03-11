@@ -3,8 +3,8 @@
 
 #include "graph.hpp"
 #include "tensor_index.hpp"
-#include <nlohmann/json.hpp>
 #include <array>
+#include <nlohmann/json.hpp>
 namespace g
 {
 class Tensor
@@ -22,11 +22,6 @@ public:
     void sub(const Tensor& other);
     void mult(const Tensor& other);
     void div(const Tensor& other);
-    void sin();
-    void cos();
-    void tg();
-    void ctg();
-    void sqrt();
     void scalar_mult(double a);
     Shape get_shape() const;
     Tensor& operator=(const Tensor& t);
@@ -37,6 +32,14 @@ public:
     {
         tensor.write(os);
         return os;
+    }
+    template <class Oper>
+    void apply_oper(Oper&& op)
+    {
+        for (auto& x: _data)
+        {
+            x = op(x);
+        }
     }
 
 private:

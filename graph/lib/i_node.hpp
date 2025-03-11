@@ -22,13 +22,13 @@ namespace g
 class INode
 {
 public:
-    using PNode = std::shared_ptr<INode>;
-    using NodeBuilder = std::function<PNode(std::string nodename)>;
+    using ptr_t = std::shared_ptr<INode>;
+    using node_builder_t = std::function<ptr_t(std::string nodename)>;
     explicit INode(std::string nodename = "");
     INode() = delete;
     INode(const INode&) = delete;
     INode& operator=(const INode&) = delete;
-    static PNode factory(std::string classname, std::string nodename = "");
+    static ptr_t factory(std::string classname, std::string nodename = "");
     void add_prev(std::shared_ptr<INode> a);
     void add_next(std::shared_ptr<INode> a);
     virtual Tensor get_value() = 0;
@@ -53,8 +53,8 @@ public:
 
 protected:
     const std::string _nodename;
-    static inline std::map<std::string, NodeBuilder> _registered_classes;
-    static bool register_class(std::string classname, NodeBuilder builder);
+    static inline std::map<std::string, node_builder_t> _registered_classes;
+    static bool register_class(std::string classname, node_builder_t builder);
     std::vector<std::shared_ptr<INode>> _prev_nodes;
     std::vector<std::shared_ptr<INode>> _next_nodes;
     virtual void clear_cache() {};

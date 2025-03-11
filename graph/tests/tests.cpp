@@ -80,3 +80,25 @@ TEST_CASE("serialization2", "[4]")
     CHECK(v1[0] == v2[0]);
     CHECK(load_json("a.json") == load_json("b.json"));
 }
+
+TEST_CASE("trigonometric nodes test", "[tn_test]")
+{
+    std::shared_ptr<DataNode> x = std::make_shared<DataNode>("");
+    std::shared_ptr<INode> a = INode::factory("SinNode", "");
+    g::set_dep(a, {x});
+    Model model({x}, {a});
+    std::vector<Tensor> v1 = model.compute({Tensor({0})});
+    model.save("a.json");
+    Model model2 = Model::load("a.json");
+    std::vector<Tensor> v2 = model2.compute({Tensor({0})});
+    model.save("b.json");
+    CHECK(v1[0] == v2[0]);
+    CHECK(load_json("a.json") == load_json("b.json"));
+
+    std::shared_ptr<DataNode> y = std::make_shared<DataNode>("");
+    std::shared_ptr<INode> b = INode::factory("CosNode", "");
+    g::set_dep(b, {y});
+    Model model1({y}, {b});
+    std::vector<Tensor> v3 = model1.compute({Tensor({3.14159/2})});
+    CHECK(v3[0][0] == Approx(v1[0][0]).margin(1e-5));
+}

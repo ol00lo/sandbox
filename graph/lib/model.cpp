@@ -9,7 +9,8 @@
 using namespace g;
 namespace
 {
-INode::PNode find_node_by_name(std::unordered_map<std::string, INode::PNode> all_nodes, const std::string& name)
+using pnode_t = INode::ptr_t;
+pnode_t find_node_by_name(std::unordered_map<std::string, pnode_t> all_nodes, const std::string& name)
 {
     auto it = all_nodes.find(name);
     if (it != all_nodes.end())
@@ -20,7 +21,7 @@ INode::PNode find_node_by_name(std::unordered_map<std::string, INode::PNode> all
 }
 } // namespace
 
-Model::Model(std::vector<INode::PNode> inputs, std::vector<INode::PNode> outputs)
+Model::Model(std::vector<pnode_t> inputs, std::vector<pnode_t> outputs)
     : _input_nodes(inputs), _output_nodes(outputs)
 {
     for (const auto& output : _output_nodes)
@@ -51,15 +52,15 @@ std::vector<Tensor> Model::compute(const std::vector<Tensor>& input_values)
     }
     return results;
 }
-std::vector<INode::PNode> Model::get_input_nodes() const
+std::vector<pnode_t> Model::get_input_nodes() const
 {
     return _input_nodes;
 }
-std::vector<INode::PNode> Model::get_inter_nodes() const
+std::vector<pnode_t> Model::get_inter_nodes() const
 {
     return _inter_nodes;
 }
-std::vector<INode::PNode> Model::get_output_nodes() const
+std::vector<pnode_t> Model::get_output_nodes() const
 {
     return _output_nodes;
 }
@@ -67,7 +68,7 @@ std::vector<std::shared_ptr<DataNode>> Model::get_param_nodes() const
 {
     return _param_nodes;
 }
-bool Model::is_in_param(DataNode* node)
+bool Model::is_in_param(const DataNode* node)
 {
     for (const auto& param : _param_nodes)
     {
@@ -85,9 +86,9 @@ void Model::set_param(const std::vector<std::shared_ptr<DataNode>>& p)
         _param_nodes[i]->set_value(p[i]->get_value());
     }
 }
-void Model::add_into_inter(INode::PNode node)
+void Model::add_into_inter(pnode_t node)
 {
-    if (node->classname() == "DataNode")
+    if (dynamic_cast<DataNode*>(node.get())!=nullptr)
     {
         auto fnd = std::find(_input_nodes.begin(), _input_nodes.end(), node);
         if (fnd != _input_nodes.end())
@@ -171,14 +172,14 @@ Model Model::load(const std::string& filename)
 
 Model Model::deserialize(nlohmann::json j)
 {
-    std::unordered_map<std::string, INode::PNode> all_nodes;
+    std::unordered_map<std::string, pnode_t> all_nodes;
     std::string copy_word = "_copy";
 
     for (const auto& node_json : j["nodes"])
     {
         std::string nodename = node_json.at("nodename").get<std::string>() + copy_word;
         auto classname = node_json.at("classname").get<std::string>();
-        INode::PNode node = INode::factory(classname, nodename);
+        pnode_t node = INode::factory(classname, nodename);
         all_nodes.insert({nodename, node});
     }
     for (const auto& node_json : j["nodes"])
@@ -187,8 +188,8 @@ Model Model::deserialize(nlohmann::json j)
         all_nodes[nname]->deserialize(node_json, all_nodes);
     }
 
-    std::vector<INode::PNode> input_nodes;
-    std::vector<INode::PNode> output_nodes;
+    std::vector<pnode_t> input_nodes;
+    std::vector<pnode_t> output_nodes;
     for (const auto& input_name : j["io"]["input_nodes"])
     {
         auto input_node = all_nodes[input_name.get<std::string>() + copy_word];

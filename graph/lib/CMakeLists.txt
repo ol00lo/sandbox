@@ -24,6 +24,7 @@ add_library(graph_lib STATIC
   training_graph.cpp
   generator.cpp
   optimizer.cpp
+  optimization_worker.cpp
 )
 target_link_libraries(graph_lib PUBLIC spdlog::spdlog nlohmann_json::nlohmann_json)
 target_include_directories(graph_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

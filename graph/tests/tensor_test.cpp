@@ -52,9 +52,25 @@ TEST_CASE("tensor test", "[tensor_test]")
     t6.div(t5);
     CHECK(t6[1] == 3);
 }
+
+TEST_CASE("compute test", "[compute_test]")
+{
+    Tensor a1(Shape(1),{0});
+    Tensor a2(Shape(2),{1, 1});
+    CHECK_THROWS(g::mult(a1, a2));
+	CHECK_THROWS(g::add(a1, a2));
+    a1.apply_oper([](double x) { return std::sin(x); });
+    CHECK(a1[0] == Approx(0.0));
+    CHECK(g::sin(a1)[0] == Approx(0.0));
+    CHECK(g::cos(a1)[0] == Approx(1.0));
+    CHECK(g::tg(a1)[0] == Approx(0.0));
+    CHECK_THROWS(g::ctg(a1));
+    CHECK(g::cos(a2)[0] == g::cos(a2)[1]);
+}
+
 namespace
 {
-size_t n_braces(std::string& s)
+size_t n_braces(std::string s)
 {
     size_t res = 0;
     auto i = s.find("[");

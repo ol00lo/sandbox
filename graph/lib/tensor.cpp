@@ -58,50 +58,6 @@ void Tensor::div(const Tensor& other)
         _data[i] /= other._data[i];
     }
 }
-void Tensor::sin()
-{
-    for (int i = 0; i < _data.size(); i++)
-    {
-        _data[i] = std::sin(_data[i]);
-    }
-}
-void Tensor::cos()
-{
-    for (int i = 0; i < _data.size(); i++)
-    {
-        _data[i] = std::cos(_data[i]);
-    }
-}
-void Tensor::tg()
-{
-    for (int i = 0; i < _data.size(); i++)
-    {
-        _data[i] = std::tan(_data[i]);
-    }
-}
-void Tensor::ctg()
-{
-    for (int i = 0; i < _data.size(); i++)
-    {
-        double t = std::tan(_data[i]);
-        if (t != 0)
-        {
-            _data[i] = 1 / t;
-        }
-        else
-        {
-            throw std::runtime_error("Division by zero");
-        }
-    }
-}
-
-void Tensor::sqrt()
-{
-    for (int i = 0; i < _data.size(); i++)
-    {
-        _data[i] *= _data[i];
-    }
-}
 
 void Tensor::scalar_mult(double a)
 {
@@ -169,12 +125,20 @@ void Tensor::write(std::ostream& os) const
 
 Tensor g::add(const Tensor& t1, const Tensor& t2)
 {
+    if (t1.get_shape() != t2.get_shape())
+    {
+        throw std::runtime_error("Incorrect shapes");
+    }
     Tensor res(t1);
     res.add(t2);
     return res;
 }
 Tensor g::mult(const Tensor& t1, const Tensor& t2)
 {
+    if (t1.get_shape() != t2.get_shape())
+    {
+		throw std::runtime_error("Incorrect shapes");
+    }
     Tensor res(t1);
     res.mult(t2);
     return res;
@@ -188,12 +152,20 @@ Tensor g::scalar_mult(double a, const Tensor& t)
 
 Tensor g::sub(const Tensor& t1, const Tensor& t2)
 {
+    if (t1.get_shape() != t2.get_shape())
+    {
+        throw std::runtime_error("Incorrect shapes");
+    }
     Tensor res(t1);
     res.sub(t2);
     return res;
 }
 Tensor g::div(const Tensor& t1, const Tensor& t2)
 {
+    if (t1.get_shape() != t2.get_shape())
+    {
+        throw std::runtime_error("Incorrect shapes");
+    }
     Tensor res(t1);
     res.div(t2);
     return res;
@@ -202,24 +174,27 @@ Tensor g::div(const Tensor& t1, const Tensor& t2)
 Tensor g::sin(const Tensor& t)
 {
     Tensor res(t);
-    res.sin();
+    res.apply_oper([](double x) { return std::sin(x); });
     return res;
 }
 Tensor g::cos(const Tensor& t)
 {
     Tensor res(t);
-    res.cos();
+    res.apply_oper([](double x) { return std::cos(x); });
     return res;
 }
 Tensor g::tg(const Tensor& t)
 {
     Tensor res(t);
-    res.tg();
+    res.apply_oper([](double x) { return std::tan(x); });
     return res;
 }
 Tensor g::ctg(const Tensor& t)
 {
     Tensor res(t);
-    res.ctg();
+    res.apply_oper([](double x) {
+        auto tg = std::tan(x);
+        if (tg == 0) throw std::runtime_error("Division by zero");
+        return 1 / tg; });
     return res;
 }

@@ -1,34 +1,37 @@
 #include "training_graph.hpp"
+#include "arithmetic_nodes.hpp"
+#include "power_nodes.hpp"
 
 using namespace g;
 
-TrainingGraph::TrainingGraph(Model target_model, std::string loss_type) : _target_model(target_model)
+TrainingGraph::TrainingGraph(const Model& target_model, LossType loss_type)
+    : _target_model(target_model), Model(std::move(deserialize(target_model.serialize())))
 {
-    Model copy_model = Model::deserialize(target_model.serialize());
-    _input_nodes = copy_model.get_input_nodes();
-    _param_nodes = copy_model.get_param_nodes();
-    _inter_nodes = copy_model.get_inter_nodes();
-    auto out_vector = copy_model.get_output_nodes();
-    if (out_vector.size() != 1)
+    if (_output_nodes.size() != 1)
     {
-        throw std::runtime_error("Not implemented");
+        _THROW_NOT_IMP_
     }
+    auto out_vector = std::move(_output_nodes);
     auto out = out_vector[0];
 
-    if (loss_type == "MSE")
+    if (loss_type == LossType::MSE)
     {
         for (int i = 0; i < out_vector.size(); i++)
         {
             std::shared_ptr<DataNode> gr_t = std::make_shared<DataNode>("");
             _input_nodes.push_back(gr_t);
-            INode::PNode minus = INode::factory("MinusNode", "");
+            INode::ptr_t minus = std::make_shared<MinusNode>("");
             g::set_dep(minus, {gr_t, out});
             _inter_nodes.push_back(minus);
-            INode::PNode loss = INode::factory("SqrNode", "");
+            INode::ptr_t loss = std::make_shared<SqrNode>("");
             g::set_dep(loss, {minus});
             _inter_nodes.push_back(loss);
             _output_nodes.push_back(loss);
         }
+    }
+    else
+    {
+        _THROW_NOT_IMP_
     }
 }
 

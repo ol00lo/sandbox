@@ -4,10 +4,14 @@
 
 namespace g
 {
+enum struct LossType
+{
+    MSE
+};
 class TrainingGraph : public Model
 {
 public:
-    TrainingGraph(Model target_model, std::string loss_type);
+    TrainingGraph(const Model& target_model, LossType loss_type);
     void copy_to_target();
     std::vector<Tensor> get_gradients() const;
 
