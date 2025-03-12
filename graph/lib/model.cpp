@@ -68,17 +68,6 @@ std::vector<std::shared_ptr<DataNode>> Model::get_param_nodes() const
 {
     return _param_nodes;
 }
-bool Model::is_in_param(const DataNode* node)
-{
-    for (const auto& param : _param_nodes)
-    {
-        if (param->nodename() == node->nodename())
-        {
-            return true;
-        }
-    }
-    return false;
-}
 void Model::set_param(const std::vector<std::shared_ptr<DataNode>>& p)
 {
     for (int i = 0; i < _param_nodes.size(); i++)
@@ -88,30 +77,20 @@ void Model::set_param(const std::vector<std::shared_ptr<DataNode>>& p)
 }
 void Model::add_into_inter(pnode_t node)
 {
-    if (dynamic_cast<DataNode*>(node.get())!=nullptr)
+    auto is_in_input = std::find(_input_nodes.begin(), _input_nodes.end(), node) != _input_nodes.end();
+    if (is_in_input)
     {
-        auto fnd = std::find(_input_nodes.begin(), _input_nodes.end(), node);
-        if (fnd != _input_nodes.end())
-        {
-            return;
-        }
-        else
-        {
-            auto dataNode = std::dynamic_pointer_cast<DataNode>(node);
-            if (dataNode)
-            {
-                if (is_in_param(dataNode.get()))
-                {
-                    return;
-                }
-                _param_nodes.push_back(dataNode);
-                _inter_nodes.push_back(dataNode);
-            }
-        }
+        return;
     }
-    else if (std::find(_inter_nodes.begin(), _inter_nodes.end(), node) == _inter_nodes.end())
+    bool not_in_inter = std::find(_inter_nodes.begin(), _inter_nodes.end(), node) == _inter_nodes.end();
+    if (not_in_inter)
     {
         _inter_nodes.push_back(node);
+        auto dataNode = std::dynamic_pointer_cast<DataNode>(node);
+        if (dataNode != nullptr)
+        {
+            _param_nodes.push_back(dataNode);
+        }
     }
     for (const auto& prev : node->get_prev())
     {

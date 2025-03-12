@@ -1,8 +1,8 @@
 #ifndef GENERATOR_H
 #define GENERATOR_H
-#include <vector>
 #include "tensor.hpp"
 #include <random>
+#include <vector>
 
 namespace g
 {
@@ -16,7 +16,7 @@ public:
     virtual tvec_t next_gt() = 0;
     virtual bool is_epoch_end() = 0;
     virtual void next_epoch(bool shuffle) = 0;
-	virtual ~IDataGenerator() {}
+    virtual ~IDataGenerator() {}
 
 protected:
     std::mt19937 _rng;

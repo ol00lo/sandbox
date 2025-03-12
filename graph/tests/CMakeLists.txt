@@ -10,6 +10,7 @@ set (SRC
 	main.cpp
 	tests.cpp
 	tensor_test.cpp
+	generator_test.cpp
 	curve_fitting_test.cpp
 )
 

@@ -14,8 +14,9 @@ TrainingGraph::TrainingGraph(const Model& target_model, LossType loss_type)
     auto out_vector = std::move(_output_nodes);
     auto out = out_vector[0];
 
-    if (loss_type == LossType::MSE)
+    switch (loss_type)
     {
+    case g::LossType::MSE:
         for (int i = 0; i < out_vector.size(); i++)
         {
             std::shared_ptr<DataNode> gr_t = std::make_shared<DataNode>("");
@@ -28,10 +29,10 @@ TrainingGraph::TrainingGraph(const Model& target_model, LossType loss_type)
             _inter_nodes.push_back(loss);
             _output_nodes.push_back(loss);
         }
-    }
-    else
-    {
+        break;
+    default:
         _THROW_NOT_IMP_
+        break;
     }
 }
 

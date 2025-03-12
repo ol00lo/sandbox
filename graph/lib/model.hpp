@@ -27,7 +27,6 @@ protected:
     std::vector<INode::ptr_t> _output_nodes;
     std::vector<INode::ptr_t> _inter_nodes;
     void add_into_inter(INode::ptr_t node);
-    bool is_in_param(const DataNode* node);
 };
 
 } // namespace g
