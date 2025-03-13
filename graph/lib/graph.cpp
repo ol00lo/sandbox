@@ -14,9 +14,9 @@ struct GraphInitializer
 GraphInitializer graph_init;
 } // namespace
 
-void g::set_log_debug()
+std::shared_ptr<spdlog::logger> g::get_logger()
 {
-    logger->set_level(spdlog::level::debug);
+    return logger;
 }
 
 spdlog::logger& g::log()

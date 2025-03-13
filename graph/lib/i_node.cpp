@@ -64,8 +64,9 @@ void INode::add_next(const std::shared_ptr<INode> a)
 {
     _next_nodes.push_back(a);
 }
+
 void INode::set_dep(const nlohmann::json& node_json,
-                        const std::unordered_map<std::string, std::shared_ptr<INode>>& all_nodes, std::string copy_word)
+                    const std::unordered_map<std::string, std::shared_ptr<INode>>& all_nodes, std::string copy_word)
 {
     if (!node_json.at("prev_nodes").empty())
     {
@@ -109,7 +110,7 @@ void INode::clear_forward_cache()
 
 Tensor INode::get_derivative(const INode* argument)
 {
-    if (argument == this)
+    if (argument->nodename() == this->nodename())
     {
         return Tensor(argument->output_shape(), 1.0);
     }
@@ -125,6 +126,15 @@ Tensor INode::get_derivative(std::shared_ptr<INode> argument)
 std::vector<std::shared_ptr<INode>> INode::get_prev() const
 {
     return _prev_nodes;
+}
+
+std::vector<std::shared_ptr<INode>> INode::get_next()
+{
+    return _next_nodes;
+}
+void INode::clear_prev()
+{
+    _prev_nodes.clear();
 }
 
 void g::set_dep(std::shared_ptr<INode> node, std::initializer_list<std::shared_ptr<INode>> prevs)

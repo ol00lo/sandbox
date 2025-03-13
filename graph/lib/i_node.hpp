@@ -1,20 +1,18 @@
 #ifndef I_NODE_HPP
 #define I_NODE_HPP
 
+#include <nlohmann/json.hpp>
 #include "graph.hpp"
 #include "tensor.hpp"
 #include <functional>
-#include <map>
 #include <memory>
-#include <nlohmann/json.hpp>
-#include <unordered_set>
 #include <vector>
+#include <map>
+#include <unordered_set>
 
 #define REGISTER_INODE_CHILD(classname)                                                                                \
-    static inline const bool __registered = INode::register_class(                                                     \
-        #classname, [](std::string nodename) {                                                                         \
-        return std::static_pointer_cast<INode>(                                                                        \
-                std::make_shared<classname>(nodename));                                                                \
+    static inline const bool __registered = INode::register_class(#classname, [](std::string nodename) {               \
+        return std::static_pointer_cast<INode>(std::make_shared<classname>(nodename));                                 \
     })
 
 namespace g
@@ -24,7 +22,10 @@ class INode
 public:
     using ptr_t = std::shared_ptr<INode>;
     using node_builder_t = std::function<ptr_t(std::string nodename)>;
-    INode(std::string nodename = "");
+    explicit INode(std::string nodename = "");
+    INode() = delete;
+    INode(const INode&) = delete;
+    INode& operator=(const INode&) = delete;
     static ptr_t factory(std::string classname, std::string nodename = "");
     void add_prev(std::shared_ptr<INode> a);
     void add_next(std::shared_ptr<INode> a);
@@ -33,6 +34,8 @@ public:
     Tensor get_derivative(const INode* argument);
     Tensor get_derivative(std::shared_ptr<INode>);
     std::vector<std::shared_ptr<INode>> get_prev() const;
+    std::vector<std::shared_ptr<INode>> get_next();
+    void clear_prev();
     virtual std::string classname() const = 0;
     void set_dep(const nlohmann::json&, const std::unordered_map<std::string, std::shared_ptr<INode>>&,
                  std::string copy_word = "_copy");

@@ -9,23 +9,25 @@ namespace g
 class Model
 {
 public:
-    Model()
-    {
-    }
+    Model() {};
     Model(std::vector<INode::ptr_t> inputs, std::vector<INode::ptr_t> outputs);
     void save(const std::string& filename);
     static Model load(const std::string& filename);
-    const std::vector<INode::ptr_t>& input_nodes() const;
-    const std::vector<INode::ptr_t>& output_nodes() const;
-    const std::vector<INode::ptr_t>& inter_nodes() const;
     std::vector<Tensor> compute(const std::vector<Tensor>& input_values);
+    const std::vector<INode::ptr_t> get_input_nodes() const;
+    const std::vector<INode::ptr_t> get_inter_nodes() const;
+    const std::vector<INode::ptr_t> get_output_nodes() const;
+    std::vector<std::shared_ptr<DataNode>> get_param_nodes() const;
+    void set_param(const std::vector<std::shared_ptr<DataNode>>& p);
 
-private:
+protected:
+    std::vector<std::shared_ptr<DataNode>> _param_nodes;
     std::vector<INode::ptr_t> _input_nodes;
     std::vector<INode::ptr_t> _output_nodes;
     std::vector<INode::ptr_t> _inter_nodes;
     void add_into_inter(INode::ptr_t node);
 };
+
 } // namespace g
 
 namespace nlohmann
@@ -35,16 +37,16 @@ struct adl_serializer<g::Model>
 {
     static void to_json(json& j, const g::Model& model)
     {
-        for (const auto& input : model.input_nodes())
+        for (const auto& input : model.get_input_nodes())
         {
             j["nodes"].push_back(input);
             j["io"]["input_nodes"].push_back(input->nodename());
         }
-        for (const auto& inter : model.inter_nodes())
+        for (const auto& inter : model.get_inter_nodes())
         {
             j["nodes"].push_back(inter);
         }
-        for (const auto& output : model.output_nodes())
+        for (const auto& output : model.get_output_nodes())
         {
             j["io"]["output_nodes"].push_back(output->nodename());
         }

@@ -1,6 +1,7 @@
 #include "model.hpp"
 #include "arithmetic_nodes.hpp"
 #include "power_nodes.hpp"
+#include "trigonometric_nodes.hpp"
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
@@ -8,8 +9,8 @@
 using namespace g;
 namespace
 {
-std::shared_ptr<INode> find_node_by_name(std::unordered_map<std::string, std::shared_ptr<INode>> all_nodes,
-                                         const std::string& name)
+using pnode_t = INode::ptr_t;
+pnode_t find_node_by_name(std::unordered_map<std::string, pnode_t> all_nodes, const std::string& name)
 {
     auto it = all_nodes.find(name);
     if (it != all_nodes.end())
@@ -20,8 +21,7 @@ std::shared_ptr<INode> find_node_by_name(std::unordered_map<std::string, std::sh
 }
 } // namespace
 
-Model::Model(std::vector<std::shared_ptr<INode>> inputs, std::vector<std::shared_ptr<INode>> outputs)
-    : _input_nodes(inputs), _output_nodes(outputs)
+Model::Model(std::vector<pnode_t> inputs, std::vector<pnode_t> outputs) : _input_nodes(inputs), _output_nodes(outputs)
 {
     for (const auto& output : _output_nodes)
     {
@@ -51,17 +51,45 @@ std::vector<Tensor> Model::compute(const std::vector<Tensor>& input_values)
     }
     return results;
 }
-
-void Model::add_into_inter(std::shared_ptr<INode> node)
+const std::vector<pnode_t> Model::get_input_nodes() const
 {
-    auto fnd = std::find(_input_nodes.begin(), _input_nodes.end(), node);
-    if (fnd != _input_nodes.end())
+    return _input_nodes;
+}
+const std::vector<pnode_t> Model::get_inter_nodes() const
+{
+    return _inter_nodes;
+}
+const std::vector<pnode_t> Model::get_output_nodes() const
+{
+    return _output_nodes;
+}
+std::vector<std::shared_ptr<DataNode>> Model::get_param_nodes() const
+{
+    return _param_nodes;
+}
+void Model::set_param(const std::vector<std::shared_ptr<DataNode>>& p)
+{
+    for (int i = 0; i < _param_nodes.size(); i++)
+    {
+        _param_nodes[i]->set_value(p[i]->get_value());
+    }
+}
+void Model::add_into_inter(pnode_t node)
+{
+    auto is_in_input = std::find(_input_nodes.begin(), _input_nodes.end(), node) != _input_nodes.end();
+    if (is_in_input)
     {
         return;
     }
-    if (std::find(_inter_nodes.begin(), _inter_nodes.end(), node) == _inter_nodes.end())
+    bool not_in_inter = std::find(_inter_nodes.begin(), _inter_nodes.end(), node) == _inter_nodes.end();
+    if (not_in_inter)
     {
         _inter_nodes.push_back(node);
+        auto dataNode = std::dynamic_pointer_cast<DataNode>(node);
+        if (dataNode != nullptr)
+        {
+            _param_nodes.push_back(dataNode);
+        }
     }
     for (const auto& prev : node->get_prev())
     {
@@ -71,6 +99,7 @@ void Model::add_into_inter(std::shared_ptr<INode> node)
 
 void Model::save(const std::string& filename)
 {
+
     std::ofstream file(filename);
     if (!file.is_open())
     {
@@ -90,17 +119,5 @@ Model Model::load(const std::string& filename)
     }
     nlohmann::json j;
     file >> j;
-    return Model(j.get<Model>());
-}
-const std::vector<INode::ptr_t>& Model::input_nodes() const
-{
-    return _input_nodes;
-}
-const std::vector<INode::ptr_t>& Model::output_nodes() const
-{
-    return _output_nodes;
-}
-const std::vector<INode::ptr_t>& Model::inter_nodes() const
-{
-    return _inter_nodes;
+    return j.get<Model>();
 }

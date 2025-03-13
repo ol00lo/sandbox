@@ -5,6 +5,7 @@
 #include "tensor_index.hpp"
 #include <array>
 #include <nlohmann/json.hpp>
+#include <vector>
 
 namespace g
 {
@@ -12,10 +13,9 @@ class Tensor
 {
 public:
     Tensor() : _shape(1), _data(0) {};
-    Tensor(const Tensor& t) : _data(t._data), _shape(t._shape) {}
-    Tensor(Tensor&& t): _data(std::move(t._data)), _shape(std::move(t._shape)){}
-
-    Tensor(const std::vector<double>& data) : _data(data), _shape(data.size()) {}
+    Tensor(const Tensor& t) : _data(t._data), _shape(t._shape) {};
+    Tensor(Tensor&& t) : _data(std::move(t._data)), _shape(std::move(t._shape)) {};
+    Tensor(const std::vector<double>& data) : _data(data), _shape(data.size()) {};
     Tensor(Shape shape, const std::vector<double>& data);
     Tensor(Shape shape, double a);
     void set_zero();
@@ -35,6 +35,14 @@ public:
         tensor.write(os);
         return os;
     }
+    template <class Oper>
+    void apply_oper(Oper&& op)
+    {
+        for (auto& x : _data)
+        {
+            x = op(x);
+        }
+    }
 
 private:
     std::vector<double> _data;
@@ -45,6 +53,10 @@ Tensor mult(const Tensor& t1, const Tensor& t2);
 Tensor scalar_mult(double a, const Tensor& t);
 Tensor sub(const Tensor& t1, const Tensor& t2);
 Tensor div(const Tensor& t1, const Tensor& t2);
+Tensor sin(const Tensor& t);
+Tensor cos(const Tensor& t1);
+Tensor tg(const Tensor& t1);
+Tensor ctg(const Tensor& t1);
 } // namespace g
 
 namespace nlohmann

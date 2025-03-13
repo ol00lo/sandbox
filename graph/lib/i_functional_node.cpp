@@ -78,7 +78,7 @@ Tensor IFunctionalNode::compute_notself_derivative(const INode* arg)
         if (_gradient[i].get_shape() == pr_der.get_shape())
             res.add(mult(_gradient[i], pr_der));
         else
-            throw std::runtime_error("Not implemented");
+            _THROW_NOT_IMP_
     }
     return res;
 }

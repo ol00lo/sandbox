@@ -1,7 +1,8 @@
 #include "tensor.hpp"
 #include <algorithm>
-#include <sstream>
+#include <cmath>
 #include <iomanip>
+#include <sstream>
 
 using namespace g;
 
@@ -88,6 +89,7 @@ const std::vector<double>& Tensor::data() const
 {
     return _data;
 }
+
 void Tensor::write(std::ostream& os) const
 {
     os << "data = \n";
@@ -123,12 +125,20 @@ void Tensor::write(std::ostream& os) const
 
 Tensor g::add(const Tensor& t1, const Tensor& t2)
 {
+    if (t1.get_shape() != t2.get_shape())
+    {
+        throw std::runtime_error("Incorrect shapes");
+    }
     Tensor res(t1);
     res.add(t2);
     return res;
 }
 Tensor g::mult(const Tensor& t1, const Tensor& t2)
 {
+    if (t1.get_shape() != t2.get_shape())
+    {
+        throw std::runtime_error("Incorrect shapes");
+    }
     Tensor res(t1);
     res.mult(t2);
     return res;
@@ -142,13 +152,49 @@ Tensor g::scalar_mult(double a, const Tensor& t)
 
 Tensor g::sub(const Tensor& t1, const Tensor& t2)
 {
+    if (t1.get_shape() != t2.get_shape())
+    {
+        throw std::runtime_error("Incorrect shapes");
+    }
     Tensor res(t1);
     res.sub(t2);
     return res;
 }
 Tensor g::div(const Tensor& t1, const Tensor& t2)
 {
+    if (t1.get_shape() != t2.get_shape())
+    {
+        throw std::runtime_error("Incorrect shapes");
+    }
     Tensor res(t1);
     res.div(t2);
+    return res;
+}
+
+Tensor g::sin(const Tensor& t)
+{
+    Tensor res(t);
+    res.apply_oper([](double x) { return std::sin(x); });
+    return res;
+}
+Tensor g::cos(const Tensor& t)
+{
+    Tensor res(t);
+    res.apply_oper([](double x) { return std::cos(x); });
+    return res;
+}
+Tensor g::tg(const Tensor& t)
+{
+    Tensor res(t);
+    res.apply_oper([](double x) { return std::tan(x); });
+    return res;
+}
+Tensor g::ctg(const Tensor& t)
+{
+    Tensor res(t);
+    res.apply_oper([](double x) {
+        auto tg = std::tan(x);
+        if (tg == 0) throw std::runtime_error("Division by zero");
+        return 1 / tg; });
     return res;
 }
