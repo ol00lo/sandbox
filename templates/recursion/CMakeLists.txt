@@ -3,4 +3,4 @@ project(templates)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
-add_executable(templates main.cpp)
+add_executable(templates recursion.cpp)

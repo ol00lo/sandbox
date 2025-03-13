@@ -110,6 +110,33 @@ void Model::save(const std::string& filename)
     log().debug("Model saved to {}", filename);
 }
 
+nlohmann::json Model::serialize() const
+{
+    nlohmann::json res;
+    nlohmann::json io;
+    std::unordered_set<std::string> node_names;
+
+    for (const auto& input : _input_nodes)
+    {
+        auto serialized = input->serialize();
+        res["nodes"].push_back(serialized);
+        io["input_nodes"].push_back(serialized.at("nodename"));
+    }
+
+    for (const auto& inter : _inter_nodes)
+    {
+        res["nodes"].push_back(inter->serialize());
+    }
+
+    for (const auto& output : _output_nodes)
+    {
+        auto serialized = output->serialize();
+        io["output_nodes"].push_back(serialized.at("nodename"));
+    }
+    res["io"] = io;
+    return res;
+}
+
 Model Model::load(const std::string& filename)
 {
     std::ifstream file(filename);

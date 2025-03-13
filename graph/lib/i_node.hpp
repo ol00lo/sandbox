@@ -1,14 +1,14 @@
 #ifndef I_NODE_HPP
 #define I_NODE_HPP
 
+#include <nlohmann/json.hpp>
 #include "graph.hpp"
 #include "tensor.hpp"
 #include <functional>
-#include <map>
 #include <memory>
-#include <nlohmann/json.hpp>
-#include <unordered_set>
 #include <vector>
+#include <map>
+#include <unordered_set>
 
 #define REGISTER_INODE_CHILD(classname)                                                                                \
     static inline const bool __registered = INode::register_class(#classname, [](std::string nodename) {               \
