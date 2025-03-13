@@ -4,9 +4,12 @@
 
 using namespace g;
 
-TrainingGraph::TrainingGraph(const Model& target_model, LossType loss_type)
-    : _target_model(target_model), Model(std::move(deserialize(target_model.serialize())))
+TrainingGraph::TrainingGraph(const Model& target_model, LossType loss_type) : _target_model(target_model), Model()
 {
+    nlohmann::json j;
+    nlohmann::adl_serializer<g::Model>::to_json(j, target_model);
+    nlohmann::adl_serializer<g::Model>::from_json(j, *this);
+
     if (_output_nodes.size() != 1)
     {
         _THROW_NOT_IMP_

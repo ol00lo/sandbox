@@ -12,6 +12,7 @@ set (SRC
 	tensor_test.cpp
 	generator_test.cpp
 	curve_fitting_test.cpp
+	serialize_test.cpp
 )
 
 add_executable(graph_pr ${SRC} ${HEADERS})

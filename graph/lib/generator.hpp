@@ -11,12 +11,12 @@ using tvec_t = std::vector<Tensor>;
 struct IDataGenerator
 {
 public:
-    IDataGenerator(int seed = 0): _rng(seed){}
+    IDataGenerator(int seed = 0) : _rng(seed) {};
     virtual tvec_t next_input() = 0;
     virtual tvec_t next_gt() = 0;
     virtual bool is_epoch_end() = 0;
     virtual void next_epoch(bool shuffle) = 0;
-    virtual ~IDataGenerator() {}
+    virtual ~IDataGenerator() {};
 
 protected:
     std::mt19937 _rng;
