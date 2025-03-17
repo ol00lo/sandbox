@@ -54,30 +54,10 @@ template <class Tuple, size_t... I>
 struct TupleSlice
 {
     using type_t = std::tuple<std::tuple_element_t<I, Tuple>...>;
+
     static type_t apply(Tuple t)
     {
-        type_t ret;
-        apply_impl<0, I...>(t, ret);
-        return ret;
-    }
-    template <int I, int J0, int... J1>
-    static void apply_impl(Tuple t, type_t& ret)
-    {
-        std::get<I>(ret) = std::get<J0>(t);
-        if constexpr (sizeof...(J1) > 0)
-        {
-            apply_impl<I + 1, J1...>(t, ret);
-        }
-    }
-};
-
-template <typename... Types, int... I>
-struct TupleSlice<std::tuple<Types...>, I...>
-{
-    using type = std::tuple<std::tuple_element_t<I, std::tuple<Types...>>...>;
-    static type apply(const std::tuple<Types...>& t)
-    {
-        return type{std::get<I>(t)...};
+        return type_t{std::get<I>(t)...};
     }
 };
 
