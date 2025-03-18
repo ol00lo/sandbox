@@ -74,7 +74,12 @@ class ImageModel(QtCore.QAbstractTableModel):
     def flags(self, index):
         if not index.isValid():
             return QtCore.Qt.ItemFlag.NoItemFlags
-        return QtCore.Qt.ItemFlag.ItemIsEditable | QtCore.Qt.ItemFlag.ItemIsEnabled | QtCore.Qt.ItemFlag.ItemIsSelectable
+        ret = super().flags(index)
+
+        if index.column() == 0: ret |= QtCore.Qt.ItemFlag.ItemIsEditable
+        ret |= QtCore.Qt.ItemFlag.ItemIsEnabled
+        ret |= QtCore.Qt.ItemFlag.ItemIsSelectable
+        return ret
 
 
     def filterImages(self, filter_text):
@@ -82,6 +87,27 @@ class ImageModel(QtCore.QAbstractTableModel):
         self.images = [img for img in self.original_images if filter_text.lower() in img.name.lower()]
         self.endResetModel()
 
+class ImageProxyModel(QtCore.QSortFilterProxyModel):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+    def lessThan(self, left, right):
+        left_data = self.sourceModel().data(left, QtCore.Qt.ItemDataRole.DisplayRole)
+        right_data = self.sourceModel().data(right, QtCore.Qt.ItemDataRole.DisplayRole)
+
+        if left.column() == 0:
+            return left_data < right_data
+        elif left.column() == 1:
+            return int(left_data) < int(right_data)
+        elif left.column() == 2:
+            return int(left_data) < int(right_data)
+        elif left.column() == 3:
+            return int(left_data) < int(right_data)
+        elif left.column() == 4:
+            return float(left_data) < float(right_data)
+        else:
+            return left_data < right_data
+        
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
@@ -126,7 +152,19 @@ class MainWindow(QtWidgets.QMainWindow):
 
             if images:  
                 self.image_model = ImageModel(images, dir_path=folder)
-                self.table_view.setModel(self.image_model)
+                self.image_proxy_model = ImageProxyModel(self)
+                self.image_proxy_model.setSourceModel(self.image_model)
+                self.table_view.setModel(self.image_proxy_model)
+
+                for column_index, column_name in enumerate(self.image_model.columns):
+                    self.table_view.horizontalHeader().setSectionResizeMode(column_index, QtWidgets.QHeaderView.ResizeMode.Stretch)
+                    self.table_view.model().setHeaderData(column_index, QtCore.Qt.Orientation.Horizontal, column_name)
+
+                self.table_view.horizontalHeader().sectionDoubleClicked.connect(self.sort_table)
+
+    def sort_table(self, index):
+        self.image_proxy_model.sort(index)
+
 
     def on_filter_text_changed(self, text):
         if self.image_model:
