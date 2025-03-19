@@ -23,6 +23,11 @@ class ImageViewer(QtWidgets.QGraphicsView):
         super().__init__(parent)
         self.image_scene = ImageScene(self)
         self.setScene(self.image_scene)
+        self.setMouseTracking(True)
+
+        self.coord_label = QtWidgets.QLabel(self)
+        self.coord_label.setStyleSheet("background-color: rgba(255, 255, 255, 150);")
+        self.coord_label.setGeometry(10, 10, 110, 30)
 
     def display_image(self, image_path):
         self.image_scene.display_image(image_path)
@@ -33,6 +38,11 @@ class ImageViewer(QtWidgets.QGraphicsView):
         if current_image_path:
             image_path = current_image_path[0].pixmap().toImage()
             self.display_image(image_path)
+    
+    def mouseMoveEvent(self, event):
+        scene_pos = self.mapToScene(event.pos())
+        self.coord_label.setText(f'X: {scene_pos.x():.2f}, Y: {scene_pos.y():.2f}')
+        super().mouseMoveEvent(event)
 
 
 class ImageModelViewer:
