@@ -1,4 +1,4 @@
-from PyQt6 import QtWidgets, QtGui
+from PyQt6 import QtWidgets, QtGui, QtCore
 import os
 import cv2
 from model import ImageModel, ImageInfo, ImageProxyModel
@@ -39,6 +39,9 @@ class ImageModelViewer:
         self.load_images_button = QtWidgets.QPushButton("Load Images")
         self.load_images_button.clicked.connect(self.load_images)
 
+        self.delete_images_button = QtWidgets.QPushButton("Delete All Images")
+        self.delete_images_button.clicked.connect(self.delete_all_images)
+
         self.image_viewer = ImageViewer(self.parent)
 
         layout = QtWidgets.QHBoxLayout(self.parent.central_widget)
@@ -47,9 +50,11 @@ class ImageModelViewer:
         left_layout.addWidget(self.filter_line_edit)
         left_layout.addWidget(self.table_view)
         left_layout.addWidget(self.load_images_button)
+        left_layout.addWidget(self.delete_images_button)
 
         self.table_view.setMaximumWidth(400)
 
+        self.image_model = ImageModel([], dir_path="")
         layout.addLayout(left_layout)
         layout.addWidget(self.image_viewer)
 
@@ -83,6 +88,48 @@ class ImageModelViewer:
                     self.table_view.horizontalHeader().setSectionResizeMode(column_index, QtWidgets.QHeaderView.ResizeMode.Stretch)
 
                 self.table_view.horizontalHeader().sectionDoubleClicked.connect(self.sort_table)
+
+    def delete_all_images(self):
+        if self.image_model.dir_path:
+            reply = QtWidgets.QMessageBox.question(
+                self.parent,
+                'Delete All Images',
+                'Are you sure you want to delete all images?',
+                QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No,
+                QtWidgets.QMessageBox.StandardButton.No
+            )
+
+            if reply == QtWidgets.QMessageBox.StandardButton.Yes:
+                try:
+                    for filename in os.listdir(self.image_model.dir_path):
+                        file_path = os.path.join(self.image_model.dir_path, filename)
+                        if os.path.isfile(file_path) and filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp')):
+                            os.remove(file_path)
+
+                    self.image_model.images = []
+                    self.table_view.setModel(None)
+                    self.image_viewer.display_image("")
+                    self.filter_line_edit.clear()
+                    self.image_model.dir_path = ""
+
+                    self.show_message("Success", "All images have been deleted.", is_error=False)
+                except Exception as e:
+                    self.show_message("Error", f"Error while deleting images: {str(e)}", is_error=True)
+        else:
+            self.show_message("Error", "No directory selected.", is_error=True)
+
+    def show_message(self, title, message, is_error=False):
+        dialog = QtWidgets.QMessageBox(self.parent)
+        dialog.setWindowTitle(title)
+        dialog.setText(message)
+
+        if is_error:
+            dialog.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+        else:
+            dialog.setIcon(QtWidgets.QMessageBox.Icon.Information)
+
+        dialog.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+        dialog.exec()
 
     def sort_table(self, index):
         self.image_proxy_model.sort(index)
