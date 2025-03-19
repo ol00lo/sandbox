@@ -9,8 +9,13 @@ class ImageScene(QtWidgets.QGraphicsScene):
 
     def display_image(self, image_path):
         self.clear()
+        self.current_image_path = image_path
         pixmap = QtGui.QPixmap(image_path)
-        pixmap_item = self.addPixmap(pixmap)
+        view_width = self.parent().width()
+        view_height = self.parent().height()
+
+        scaled_pixmap = pixmap.scaled(view_width, view_height, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation)
+        pixmap_item = self.addPixmap(scaled_pixmap)
         self.setSceneRect(pixmap_item.boundingRect())
 
 class ImageViewer(QtWidgets.QGraphicsView):
@@ -21,6 +26,13 @@ class ImageViewer(QtWidgets.QGraphicsView):
 
     def display_image(self, image_path):
         self.image_scene.display_image(image_path)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        current_image_path = self.image_scene.items()
+        if current_image_path:
+            image_path = current_image_path[0].pixmap().toImage()
+            self.display_image(image_path)
 
 
 class ImageModelViewer:
@@ -35,6 +47,7 @@ class ImageModelViewer:
 
         self.table_view = QtWidgets.QTableView()
         self.table_view.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.DoubleClicked)
+        self.table_view.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows) 
 
         self.load_images_button = QtWidgets.QPushButton("Load Images")
         self.load_images_button.clicked.connect(self.load_images)
