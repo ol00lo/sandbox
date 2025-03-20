@@ -3,11 +3,11 @@ import os
 import sys
 from PyQt6 import QtWidgets
 import mainwin
-#import resources
+import resources
 
 def main(app):
     # create window
-    # resources.qInitResources()
+    resources.qInitResources()
     mwin = mainwin.MainWindow()
     mwin.show()
 

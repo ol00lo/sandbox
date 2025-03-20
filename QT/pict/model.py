@@ -25,8 +25,6 @@ class ImageModel(QtCore.QAbstractTableModel):
         return len(self.columns)
 
     def data(self, index, role):
-        if not index.isValid():
-            return None
         if role in [QtCore.Qt.ItemDataRole.DisplayRole, QtCore.Qt.ItemDataRole.EditRole]:
             image_info = self.images[index.row()]
             if index.column() == 0:
@@ -70,8 +68,6 @@ class ImageModel(QtCore.QAbstractTableModel):
         return False
 
     def flags(self, index):
-        if not index.isValid():
-            return QtCore.Qt.ItemFlag.NoItemFlags
         ret = super().flags(index)
 
         if index.column() == 0: 
