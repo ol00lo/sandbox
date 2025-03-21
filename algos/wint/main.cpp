@@ -42,6 +42,9 @@ void arithmetic()
     std::cout << std::setw(5) << "l*=k" << "  ==  " << l << std::endl;
     k *= k;
     std::cout << std::setw(5) << "k*=k" << "  ==  " << k << std::endl;
+    WInt<8> m = -k;
+    std::cout << std::setw(5) << "k" << "  ==  " << k << std::endl;
+    std::cout << std::setw(5) << "-k" << "  ==  " << m << std::endl;
 }
 
 void inequalities()
@@ -56,6 +59,7 @@ void inequalities()
     std::cout << std::setw(5) << "false" << " ==  " << (y < z) << std::endl;
     std::cout << std::setw(5) << "true" << " ==  " << (y <= z) << std::endl;
     std::cout << std::setw(5) << "true" << " ==  " << (y == z) << std::endl;
+    std::cout << std::setw(5) << "true" << " ==  " << (y != x) << std::endl;
 
     WInt<8> l(3);
     WInt<8> k(-3);
@@ -65,23 +69,32 @@ void inequalities()
 void cast()
 {
     WInt<16> a(270);
-    WInt<8> b(a);
-    std::cout << a.print_binary() << " - NBits= 16" << std::endl << "           "
-              << b.print_binary() << " - NBits = 8" << std::endl;
+    WInt<12> b(a);
     WInt<32> c(b);
     WInt<32> d(a);
-    std::cout << std::setw(5) << "false" << " ==  " << (c == d) << std::endl;
+    std::cout << std::setw(5) << "false" << " ==  " << (c != d) << std::endl;
+    std::cout << std::noboolalpha;
 
     WInt<16, false> e(a);
     WInt<16, false> f(b);
 
-    std::cout << a.print_binary() << " - 16, true\n" << e.print_binary() << " - 16, false\n";
-    std::cout << "           " << b.print_binary() << " -  8, true\n" << f.print_binary() << " - 16, false\n";
+    std::cout << a.print_binary() << " - 16, true\n" 
+              << e.print_binary() << " - 16, false\n";
+    std::cout << "      " << b.print_binary() << " -  8, true\n" << f.print_binary() << " - 16, false\n";
 
     WInt<8, false> g(255);
     std::cout << "  g  = " << g << " = <8, false> " << g.print_binary() << std::endl;
     WInt<8, true> h(g);
     std::cout << "h(g) = " << h << " = <8, true > " << h.print_binary() << std::endl;
+}
+
+void big_number()
+{
+    std::bitset<67> b;
+    b.set(66);
+    WInt<67, false> a(b);
+    std::cout << "2^66= " << a << std::endl;
+    std::cout << "      73,786,976,294,838,206,464" << std::endl;
 }
 
 int main()
@@ -97,4 +110,8 @@ int main()
 
     std::cout << "\n---------- CAST TEST ----------\n";
     cast();
+
+    std::cout << "\n---------- BIG NUMBER TEST ----------\n";
+    big_number();
+
 }

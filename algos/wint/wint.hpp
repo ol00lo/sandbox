@@ -1,22 +1,44 @@
 ﻿#ifndef WINT_H
 #define WINT_H
 #include <bitset>
+#include <cmath>
 #include <iostream>
 #include <string>
+#include <vector>
+
+static std::vector<int> double_vec(std::vector<int> vec)
+{
+    std::vector<int> result(vec.size(), 0);
+    for (int i = 0; i < vec.size(); ++i)
+    {
+        result[i] += vec[i] * 2;
+        if (result[i] > 9)
+        {
+            result[i] -= 10;
+            result[i + 1] += 1;
+        }
+    }
+    return result;
+}
 
 template <int NBits, bool Signed = true>
 class WInt
 {
 public:
-    WInt(int n = 0)
-    {
-        data_ = n;
-    }
+    WInt(int n = 0) : data_(n) {};
+    WInt(const std::bitset<NBits>& n) : data_(n) {};
 
     template <int NBits2, bool Signed2>
     WInt(const WInt<NBits2, Signed2>& other)
     {
-        auto othdata = other.get_data();
+        const std::bitset<NBits2>& othdata = other.get_data();
+        for (int i = NBits; i < NBits2; ++i)
+        {
+            if (othdata[i])
+            {
+                throw std::runtime_error("Cannot fit the value into the current bitset.");
+            }
+        }
 
         for (int i = 0; i < NBits; i++)
         {
@@ -29,17 +51,23 @@ public:
         }
     }
 
-    WInt& operator+=(const WInt& other)
+    WInt operator-() const
     {
-        std::bitset<NBits> plus1 = other.data_;
-        data_ = sum(data_, plus1, 0);
-        return *this;
+        if (!Signed)
+        {
+            throw std::runtime_error("Negation is not supported for unsigned integers.");
+        }
+        return WInt(sum(~data_, std::bitset<NBits>(1)));
     }
 
+    WInt& operator+=(const WInt& other)
+    {
+        data_ = sum(data_, other.data_);
+        return *this;
+    }
     WInt& operator-=(const WInt& other)
     {
-        std::bitset<NBits> plus1 = other.data_;
-        data_ = sum(data_, plus1, 1);
+        data_ = subtract(data_, other.data_);
         return *this;
     }
 
@@ -52,7 +80,7 @@ public:
         {
             if (other.data_[i])
             {
-                result = sum(result, temp << i, 0);
+                result = sum(result, temp << i);
             }
         }
 
@@ -70,20 +98,17 @@ public:
         std::bitset<NBits> rem(0);
 
         const std::bitset<NBits> one(1);
-        const std::bitset<NBits> zero(0);
 
-        for (int I = NBits - 1; I >= 0; I--)
+        for (int i = NBits - 1; i >= 0; i--)
         {
             rem = rem << 1;
-            if (data_[I] == 1)
+            if (data_[i] == 1)
                 rem = rem | one;
-            else
-                rem = rem | zero;
 
-            if (is_more_then(rem, other.data_, 1))
+            if (is_greater_than(rem, other.data_, 1))
             {
-                rem = sum(rem, other.data_, 1);
-                res[I] = 1;
+                rem = subtract(rem, other.data_);
+                res[i] = 1;
             }
         }
         data_ = res;
@@ -92,26 +117,68 @@ public:
 
     bool operator<(const WInt& other) const
     {
-        return is_more_then(other.data_, data_, 0);
+        return is_greater_than(other.data_, data_, 0);
     }
     bool operator>(const WInt& other) const
     {
-        return is_more_then(data_, other.data_, 0);
+        return is_greater_than(data_, other.data_, 0);
     }
     bool operator<=(const WInt& other) const
     {
-        return is_more_then(other.data_, data_, 1);
+        return is_greater_than(other.data_, data_, 1);
     }
     bool operator>=(const WInt& other) const
     {
-        return is_more_then(data_, other.data_, 1);
+        return is_greater_than(data_, other.data_, 1);
     }
+
     bool operator==(const WInt& other) const
     {
         return (data_ ^ other.data_) == 0;
     }
+    bool operator!=(const WInt& other) const
+    {
+        return (data_ ^ other.data_) != 0;
+    }
 
-    std::string print_binary()
+    const std::bitset<NBits>& get_data() const
+    {
+        return data_;
+    }
+    
+    bool is_negate() const
+    {
+        return (Signed && data_[NBits - 1]) ? true : false;
+    }
+    friend std::ostream& operator<<(std::ostream& oss, const WInt& x)
+    {
+        auto res = x.to_vector();
+        int i = res.size() - 1;
+        while (res[i] == 0)
+        {
+            i--;
+            if (i < 0)
+            {
+                return oss << "0";
+            }
+        }
+        if (x.is_negate())
+        {
+            oss << "-";
+        }
+        std::string str = "";
+        for (int j = i; j >= 0; j--)
+        {
+            str += std::to_string(res[j]);
+            if (j % 3 == 0 && j != 0)
+            {
+                str += "'";
+            }
+        }
+        return oss << str;
+    }
+   
+    std::string print_binary() const
     {
         std::string str = data_.to_string();
         std::string res = "";
@@ -126,45 +193,37 @@ public:
         return res;
     }
 
-    friend std::ostream& operator<<(std::ostream& oss, const WInt& x)
-    {
-        long long decimalValue = x.to_decimal();
-
-        std::string str = std::to_string(decimalValue);
-        for (size_t i = 0; i < str.size(); ++i)
-        {
-            if (i > 0 && (str.size() - i) % 3 == 0)
-            {
-                oss << "'";
-            }
-            oss << str[i];
-        }
-        return oss;
-    }
-
-    std::bitset<NBits> get_data() const
-    {
-        return data_;
-    }
-
 private:
     std::bitset<NBits> data_;
-    std::bitset<NBits> sum(std::bitset<NBits> a, std::bitset<NBits> b, bool is_substract)
+
+    static std::bitset<NBits> sum(const std::bitset<NBits>& s1, const std::bitset<NBits>& s2)
     {
         std::bitset<NBits> s;
+        std::bitset<NBits> a(s1);
+        std::bitset<NBits> b(s2);
         while (b != 0)
         {
             s = a ^ b;
-            if (is_substract)
-                b = (~a & b) << 1;
-            else
-                b = (a & b) << 1;
+            b = (a & b) << 1;
+            a = s;
+        }
+        return a;
+    }
+    static std::bitset<NBits> subtract(const std::bitset<NBits>& s1, const std::bitset<NBits>& s2)
+    {
+        std::bitset<NBits> s;
+        std::bitset<NBits> a(s1);
+        std::bitset<NBits> b(s2);
+        while (b != 0)
+        {
+            s = a ^ b;
+            b = (~a & b) << 1;
             a = s;
         }
         return a;
     }
 
-    bool compare_positive(const std::bitset<NBits>& a, const std::bitset<NBits>& b, bool need_equal) const
+    bool is_greater(const std::bitset<NBits>& a, const std::bitset<NBits>& b, bool need_equal) const
     {
         for (int I = NBits - 1; I >= 0; I--)
         {
@@ -176,36 +235,46 @@ private:
         return need_equal;
     }
 
-    bool is_more_then(const std::bitset<NBits>& a, const std::bitset<NBits>& b, bool need_equal) const
+    bool is_greater_than(const std::bitset<NBits>& a, const std::bitset<NBits>& b, bool need_equal) const
     {
-        bool is_a_negative = a[NBits - 1];
-        bool is_b_negative = b[NBits - 1];
-
-        if (!is_a_negative && !is_b_negative)
+        if (!Signed || (Signed && !a[NBits - 1] && !b[NBits - 1]))
         {
-            return compare_positive(a, b, need_equal);
+            return is_greater(a, b, need_equal);
         }
-        else if (is_a_negative && is_b_negative)
+        else if (a[NBits - 1] && b[NBits - 1])
         {
-            return compare_positive(b, a, need_equal);
+            return is_greater(b, a, need_equal);
         }
-
-        return !is_a_negative;
+        return !a[NBits - 1];
     }
 
-    long long to_decimal() const
+    std::vector<int> to_vector() const
     {
-        long long result = 0;
-        for (int i = 0; i < NBits; ++i)
-        {
-            if (data_[i])
-            {
-                result += (1LL << i);
-            }
-        }
+        int n = (std::floor(NBits * std::log10(2))) + 1;
+        std::vector<int> result(n, 0);
+        std::vector<int> pow_of2(n, 0);
+        pow_of2[0] = 1;
+
+        auto data = data_;
         if (Signed && data_[NBits - 1])
         {
-            result -= (1LL << NBits);
+            data = sum(~data, std::bitset<NBits>(1));
+        }
+        for (int i = 0; i < NBits; ++i)
+        {
+            if (data[i])
+            {
+                for (int j = 0; j < pow_of2.size(); ++j)
+                {
+                    result[j] += pow_of2[j];
+                    while (result[j] > 9)
+                    {
+                        result[j] -= 10;
+                        result[j + 1] += 1;
+                    }
+                }
+            }
+            pow_of2 = double_vec(pow_of2);
         }
         return result;
     }
