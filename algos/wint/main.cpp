@@ -53,6 +53,7 @@ void inequalities()
     WInt<8, false> y(5);
     WInt<8, false> z(5);
 
+    std::cout << std::boolalpha;
     std::cout << std::setw(5) << "true" << " ==  " << (x < y) << std::endl;
     std::cout << std::setw(5) << "true" << " ==  " << (y > x) << std::endl;
     std::cout << std::setw(5) << "false" << " ==  " << (y > z) << std::endl;
@@ -63,7 +64,15 @@ void inequalities()
 
     WInt<8> l(3);
     WInt<8> k(-3);
+    WInt<8> m(0);
     std::cout << std::setw(5) << "true" << " ==  " << (k < l) << std::endl;
+    std::cout << std::setw(5) << "true" << " ==  " << (k < m) << std::endl;
+    std::cout << std::setw(5) << "true" << " ==  " << (m < l) << std::endl;
+    std::cout << std::setw(5) << "true" << " ==  " << (m <= l) << std::endl;
+    k *= m;
+    std::cout << std::setw(5) << "true" << " ==  " << (m == k) << std::endl;
+    std::cout << std::setw(5) << "true" << " ==  " << (m <= k) << std::endl;
+    std::cout << std::noboolalpha;
 }
 
 void cast()
@@ -72,6 +81,7 @@ void cast()
     WInt<12> b(a);
     WInt<32> c(b);
     WInt<32> d(a);
+    std::cout<< std::boolalpha;
     std::cout << std::setw(5) << "false" << " ==  " << (c != d) << std::endl;
     std::cout << std::noboolalpha;
 

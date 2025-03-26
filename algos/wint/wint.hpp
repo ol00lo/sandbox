@@ -6,21 +6,6 @@
 #include <string>
 #include <vector>
 
-static std::vector<int> double_vec(std::vector<int> vec)
-{
-    std::vector<int> result(vec.size(), 0);
-    for (int i = 0; i < vec.size(); ++i)
-    {
-        result[i] += vec[i] * 2;
-        if (result[i] > 9)
-        {
-            result[i] -= 10;
-            result[i + 1] += 1;
-        }
-    }
-    return result;
-}
-
 template <int NBits, bool Signed = true>
 class WInt
 {
@@ -31,13 +16,21 @@ public:
     template <int NBits2, bool Signed2>
     WInt(const WInt<NBits2, Signed2>& other)
     {
-        const std::bitset<NBits2>& othdata = other.get_data();
-        for (int i = NBits; i < NBits2; ++i)
+        std::bitset<NBits2> othdata = other.get_data();
+        if constexpr (Signed2)
         {
-            if (othdata[i])
+            if (othdata[NBits2 - 1])
             {
-                throw std::runtime_error("Cannot fit the value into the current bitset.");
+                if constexpr (!Signed)
+                    throw std::runtime_error("Cannot fit the negative value into the positive bitset.");
+                else
+                    othdata = convert(othdata);
             }
+        }
+        if constexpr (NBits2 > NBits)
+        {
+            if ((othdata >> NBits).any())
+                throw std::runtime_error("Cannot fit the value into the current bitset.");
         }
 
         for (int i = 0; i < NBits; i++)
@@ -45,15 +38,15 @@ public:
             data_[i] = (i < NBits2) ? othdata[i] : 0;
         }
 
-        if (Signed && !Signed2)
+        if (other.get_data()[NBits2 - 1])
         {
-            data_[NBits - 1] = 0;
+            data_ = convert(data_);
         }
     }
 
     WInt operator-() const
     {
-        if (!Signed)
+        if constexpr (!Signed)
         {
             throw std::runtime_error("Negation is not supported for unsigned integers.");
         }
@@ -105,7 +98,7 @@ public:
             if (data_[i] == 1)
                 rem = rem | one;
 
-            if (is_greater_than(rem, other.data_, 1))
+            if (compare(rem, other.data_) >= 0)
             {
                 rem = subtract(rem, other.data_);
                 res[i] = 1;
@@ -117,19 +110,19 @@ public:
 
     bool operator<(const WInt& other) const
     {
-        return is_greater_than(other.data_, data_, 0);
+        return compare(data_, other.data_) < 0;
     }
     bool operator>(const WInt& other) const
     {
-        return is_greater_than(data_, other.data_, 0);
+        return compare(data_, other.data_) > 0;
     }
     bool operator<=(const WInt& other) const
     {
-        return is_greater_than(other.data_, data_, 1);
+        return compare(data_, other.data_) <= 0;
     }
     bool operator>=(const WInt& other) const
     {
-        return is_greater_than(data_, other.data_, 1);
+        return compare(data_, other.data_) >= 0;
     }
 
     bool operator==(const WInt& other) const
@@ -146,10 +139,18 @@ public:
         return data_;
     }
     
-    bool is_negate() const
+    bool is_negative() const
     {
-        return (Signed && data_[NBits - 1]) ? true : false;
+        if constexpr (Signed)
+        {
+            return data_[NBits - 1];
+        }
+        else
+        {
+            return false;
+        }
     }
+    
     friend std::ostream& operator<<(std::ostream& oss, const WInt& x)
     {
         auto res = x.to_vector();
@@ -162,7 +163,7 @@ public:
                 return oss << "0";
             }
         }
-        if (x.is_negate())
+        if (x.is_negative())
         {
             oss << "-";
         }
@@ -196,11 +197,12 @@ public:
 private:
     std::bitset<NBits> data_;
 
-    static std::bitset<NBits> sum(const std::bitset<NBits>& s1, const std::bitset<NBits>& s2)
+    static constexpr int n_decimal_digit = (int(NBits * 0.30103)) + 1;
+   
+    template <int NBits2>
+    static std::bitset<NBits2> sum(std::bitset<NBits2> a, std::bitset<NBits2> b)
     {
-        std::bitset<NBits> s;
-        std::bitset<NBits> a(s1);
-        std::bitset<NBits> b(s2);
+        std::bitset<NBits2> s;
         while (b != 0)
         {
             s = a ^ b;
@@ -209,11 +211,9 @@ private:
         }
         return a;
     }
-    static std::bitset<NBits> subtract(const std::bitset<NBits>& s1, const std::bitset<NBits>& s2)
+    static std::bitset<NBits> subtract(std::bitset<NBits> a, std::bitset<NBits> b)
     {
         std::bitset<NBits> s;
-        std::bitset<NBits> a(s1);
-        std::bitset<NBits> b(s2);
         while (b != 0)
         {
             s = a ^ b;
@@ -223,60 +223,77 @@ private:
         return a;
     }
 
-    bool is_greater(const std::bitset<NBits>& a, const std::bitset<NBits>& b, bool need_equal) const
+    int positive_compare(const std::bitset<NBits>& a, const std::bitset<NBits>& b) const 
     {
-        for (int I = NBits - 1; I >= 0; I--)
+        for (int i = NBits - 1; i >= 0; i--)
         {
-            if (a[I] != b[I])
+            if (a[i] != b[i])
             {
-                return a[I] == 1;
+                return a[i] ? 1 : -1;
             }
         }
-        return need_equal;
+        return 0;
     }
 
-    bool is_greater_than(const std::bitset<NBits>& a, const std::bitset<NBits>& b, bool need_equal) const
+    int compare(const std::bitset<NBits>& a, const std::bitset<NBits>& b) const
     {
         if (!Signed || (Signed && !a[NBits - 1] && !b[NBits - 1]))
         {
-            return is_greater(a, b, need_equal);
+            return positive_compare(a, b);
         }
         else if (a[NBits - 1] && b[NBits - 1])
         {
-            return is_greater(b, a, need_equal);
+            return positive_compare(b, a);
         }
-        return !a[NBits - 1];
+        return (!a[NBits - 1]) ? 1 : -1;
     }
 
     std::vector<int> to_vector() const
     {
-        int n = (std::floor(NBits * std::log10(2))) + 1;
-        std::vector<int> result(n, 0);
-        std::vector<int> pow_of2(n, 0);
+        std::vector<int> result(n_decimal_digit, 0);
+        std::vector<int> pow_of2(n_decimal_digit, 0);
         pow_of2[0] = 1;
 
-        auto data = data_;
-        if (Signed && data_[NBits - 1])
+        std::bitset<NBits> data(data_);
+        if constexpr (Signed)
         {
-            data = sum(~data, std::bitset<NBits>(1));
+            if (data[NBits - 1])
+                data = convert(data_);
         }
         for (int i = 0; i < NBits; ++i)
         {
             if (data[i])
             {
-                for (int j = 0; j < pow_of2.size(); ++j)
-                {
-                    result[j] += pow_of2[j];
-                    while (result[j] > 9)
-                    {
-                        result[j] -= 10;
-                        result[j + 1] += 1;
-                    }
-                }
+                result = vec_sum(result, pow_of2);
             }
-            pow_of2 = double_vec(pow_of2);
+            pow_of2 = vec_sum(pow_of2, pow_of2);
         }
         return result;
+    }
+
+    static std::vector<int> vec_sum(const std::vector<int>& a, const std::vector<int>& b)
+    {
+        std::vector<int> res(a);
+        for (int j = 0; j < b.size(); ++j)
+        {
+            if (j == res.size()) res.push_back(0);
+            res[j] += b[j];
+            while (res[j] > 9)
+            {
+                if (j + 1 == res.size()) res.push_back(0);
+                res[j] -= 10;
+                res[j + 1] += 1;
+            }
+        }
+        return res;
+    }
+
+    template <int NBits2>
+    static std::bitset<NBits2> convert(const std::bitset<NBits2>& x)
+    {
+        std::bitset<NBits2> data(x);
+        data = sum(~data, std::bitset<NBits2>(1));
+        return data;
     }
 };
 
