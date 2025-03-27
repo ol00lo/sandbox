@@ -17,14 +17,20 @@ public:
     WInt(const WInt<NBits2, Signed2>& other)
     {
         std::bitset<NBits2> othdata = other.get_data();
+        bool need_sign_change = false;
         if constexpr (Signed2)
         {
             if (othdata[NBits2 - 1])
             {
                 if constexpr (!Signed)
+                {
                     throw std::runtime_error("Cannot fit the negative value into the positive bitset.");
+                }
                 else
-                    othdata = convert(othdata);
+                {
+                    othdata = sign_change<NBits2>(othdata);
+                    need_sign_change = true;
+                }
             }
         }
         if constexpr (NBits2 > NBits)
@@ -38,9 +44,9 @@ public:
             data_[i] = (i < NBits2) ? othdata[i] : 0;
         }
 
-        if (other.get_data()[NBits2 - 1])
+        if (need_sign_change)
         {
-            data_ = convert(data_);
+            data_ = sign_change<NBits>(data_);
         }
     }
 
@@ -50,17 +56,17 @@ public:
         {
             throw std::runtime_error("Negation is not supported for unsigned integers.");
         }
-        return WInt(sum(~data_, std::bitset<NBits>(1)));
+        return sign_change<NBits>(data_);
     }
 
     WInt& operator+=(const WInt& other)
     {
-        data_ = sum(data_, other.data_);
+        data_ = sum<NBits>(data_, other.get_data());
         return *this;
     }
     WInt& operator-=(const WInt& other)
     {
-        data_ = subtract(data_, other.data_);
+        data_ = subtract(data_, other.get_data());
         return *this;
     }
 
@@ -68,12 +74,13 @@ public:
     {
         std::bitset<NBits> result(0);
         std::bitset<NBits> temp = data_;
+        std::bitset<NBits> otherdata = other.get_data();
 
         for (size_t i = 0; i < NBits; ++i)
         {
-            if (other.data_[i])
+            if (otherdata[i])
             {
-                result = sum(result, temp << i);
+                result = sum<NBits>(result, temp << i);
             }
         }
 
@@ -83,7 +90,8 @@ public:
 
     WInt& operator/=(const WInt& other)
     {
-        if (other.data_ == 0)
+        std::bitset<NBits> otherdata = other.get_data();
+        if (otherdata == 0)
         {
             throw std::runtime_error("Division by zero");
         }
@@ -98,9 +106,9 @@ public:
             if (data_[i] == 1)
                 rem = rem | one;
 
-            if (compare(rem, other.data_) >= 0)
+            if (compare(rem, otherdata) >= 0)
             {
-                rem = subtract(rem, other.data_);
+                rem = subtract(rem, otherdata);
                 res[i] = 1;
             }
         }
@@ -110,7 +118,7 @@ public:
 
     bool operator<(const WInt& other) const
     {
-        return compare(data_, other.data_) < 0;
+        return compare(data_, other.get_data()) < 0;
     }
     bool operator>(const WInt& other) const
     {
@@ -223,7 +231,7 @@ private:
         return a;
     }
 
-    int positive_compare(const std::bitset<NBits>& a, const std::bitset<NBits>& b) const 
+    int positive_compare(const std::bitset<NBits>& a, const std::bitset<NBits>& b) const
     {
         for (int i = NBits - 1; i >= 0; i--)
         {
@@ -255,10 +263,9 @@ private:
         pow_of2[0] = 1;
 
         std::bitset<NBits> data(data_);
-        if constexpr (Signed)
+        if (is_negative())
         {
-            if (data[NBits - 1])
-                data = convert(data_);
+            data = sign_change<NBits>(data_);
         }
         for (int i = 0; i < NBits; ++i)
         {
@@ -289,10 +296,10 @@ private:
     }
 
     template <int NBits2>
-    static std::bitset<NBits2> convert(const std::bitset<NBits2>& x)
+    static std::bitset<NBits2> sign_change(const std::bitset<NBits2>& x)
     {
         std::bitset<NBits2> data(x);
-        data = sum(~data, std::bitset<NBits2>(1));
+        data = sum<NBits2>(~data, std::bitset<NBits2>(1));
         return data;
     }
 };
