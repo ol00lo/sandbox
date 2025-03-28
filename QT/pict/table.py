@@ -9,7 +9,7 @@ class ImageInfo:
         self.size = size  
         self.area = (width * height) / 1_000_000  
 
-class ImageModel(QtCore.QAbstractTableModel):
+class TableModel(QtCore.QAbstractTableModel):
     columns = ["Name", "File Size", "Width", "Height", "Area"]
 
     def __init__(self, images, dir_path=None, parent=None):
@@ -81,7 +81,7 @@ class ImageModel(QtCore.QAbstractTableModel):
         self.images = [img for img in self.original_images if filter_text.lower() in img.name.lower()]
         self.endResetModel()
 
-class ImageProxyModel(QtCore.QSortFilterProxyModel):
+class TableProxyModel(QtCore.QSortFilterProxyModel):
     def __init__(self, parent=None):
         super().__init__(parent)
 
