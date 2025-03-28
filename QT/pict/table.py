@@ -76,28 +76,11 @@ class TableModel(QtCore.QAbstractTableModel):
         ret |= QtCore.Qt.ItemFlag.ItemIsSelectable
         return ret
 
-    def filterImages(self, filter_text):
-        self.beginResetModel()
-        self.images = [img for img in self.original_images if filter_text.lower() in img.name.lower()]
-        self.endResetModel()
-
 class TableProxyModel(QtCore.QSortFilterProxyModel):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-    def lessThan(self, left, right):
-        left_data = self.sourceModel().data(left, QtCore.Qt.ItemDataRole.DisplayRole)
-        right_data = self.sourceModel().data(right, QtCore.Qt.ItemDataRole.DisplayRole)
-
-        if left.column() == 0:
-            return left_data < right_data
-        elif left.column() == 1:
-            return int(left_data) < int(right_data)
-        elif left.column() == 2:
-            return int(left_data) < int(right_data)
-        elif left.column() == 3:
-            return int(left_data) < int(right_data)
-        elif left.column() == 4:
-            return float(left_data) < float(right_data)
-        else:
-            return left_data < right_data
+    def filterImages(self, filter_text):
+        self.beginResetModel()
+        self.images = [img for img in self.original_images if filter_text.lower() in img.name.lower()]
+        self.endResetModel()

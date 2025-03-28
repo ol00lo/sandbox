@@ -1,7 +1,8 @@
 from PyQt6 import QtCore, QtGui, QtWidgets
 import os
-import cv2
+from PIL import Image
 from table import TableModel, TableProxyModel, ImageInfo
+from qt_common import show_message
 
 class TableActions(QtCore.QObject):
     def __init__(self, parent):
@@ -9,6 +10,8 @@ class TableActions(QtCore.QObject):
         self.table_view = parent.table_view
         self.parent = parent
         self.parent.image_selected.emit("")
+        self.table_view.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
+        self.table_view.customContextMenuRequested.connect(self.show_context_menu)
 
     def on_filter_text_changed(self, text):
         print("Filter text changed:", text)
@@ -23,10 +26,9 @@ class TableActions(QtCore.QObject):
             for filename in os.listdir(folder):
                 if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.gif')):
                     image_path = os.path.join(folder, filename)
-
-                    image = cv2.imread(image_path)
-                    size = image.size
-                    height, width, _ = image.shape
+                    size = os.path.getsize(image_path)
+                    image = Image.open(image_path)
+                    width, height = image.size
                     images.append(ImageInfo(filename, size, width, height))
             if images:
                 self.image_model = TableModel(images, dir_path=folder)
@@ -36,10 +38,10 @@ class TableActions(QtCore.QObject):
                 self.table_view.setModel(self.image_proxy_model)
                 self.table_view.selectionModel().selectionChanged.connect(self.on_selection_changed)
 
+                self.table_view.setSortingEnabled(True)
                 for column_index in range(len(self.image_model.columns)):
                     self.table_view.horizontalHeader().setSectionResizeMode(column_index, QtWidgets.QHeaderView.ResizeMode.Stretch)
 
-                self.table_view.horizontalHeader().sectionDoubleClicked.connect(self.sort_table)
 
     def delete_all_images(self):
         if self.image_model and self.image_model.dir_path:
@@ -63,34 +65,42 @@ class TableActions(QtCore.QObject):
                     self.parent.filter_line_edit.clear()
                     self.image_model.dir_path = ""
 
-                    self.show_message("Success", "All images have been deleted.", is_error=False)
+                    show_message(self.parent, "Success", "All images have been deleted.", is_error=False)
                 except Exception as e:
-                    self.show_message("Error", f"Error while deleting images: {str(e)}", is_error=True)
+                    show_message(self.parent, "Error", f"Error while deleting images: {str(e)}", is_error=True)
         else:
-            self.show_message("Error", "No directory selected.", is_error=True)
-
-    def show_message(self, title, message, is_error=False):
-        dialog = QtWidgets.QMessageBox(self.parent)
-        dialog.setWindowTitle(title)
-        dialog.setText(message)
-
-        if is_error:
-            dialog.setWindowIcon(QtGui.QIcon(":/error"))
-        else:
-            dialog.setWindowIcon(QtGui.QIcon(":/right"))
-
-        dialog.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-        dialog.exec()
+            show_message(self.parent, "Error", "No directory selected.", is_error=True)
 
     def on_selection_changed(self, selected, deselected):
-        index = self.parent.table_view.selectionModel().currentIndex()
-        if index.isValid() and index.column() == 0:
-            image_info = self.image_model.images[index.row()]
-            self.display_image(image_info.name)
-
-    def sort_table(self, index):
-        self.image_proxy_model.sort(index)
+        for index in selected.indexes():
+            if index.isValid() and index.column() == 0:
+                source_index = self.image_proxy_model.mapToSource(index)
+                if source_index.isValid():
+                    image_info = self.image_model.images[source_index.row()]
+                    self.display_image(image_info.name)
 
     def display_image(self, image_name):
         image_path = os.path.join(self.image_model.dir_path, image_name)
         self.parent.image_selected.emit(image_path)
+
+    def show_context_menu(self, position):
+        index = self.table_view.indexAt(position)
+        if index.isValid():
+            context_menu = QtWidgets.QMenu(self.table_view)
+            delete_action = context_menu.addAction("Delete Image")
+            delete_action.triggered.connect(lambda: self.delete_image(index))
+
+            context_menu.exec(self.table_view.viewport().mapToGlobal(position))
+
+    def delete_image(self, index):
+        source_index = self.image_proxy_model.mapToSource(index)
+        if source_index.isValid():
+            image_info = self.image_model.images[source_index.row()]
+            image_path = os.path.join(self.image_model.dir_path, image_info.name)
+
+            try:
+                os.remove(image_path)
+                self.image_model.images.pop(source_index.row())
+                self.image_model.layoutChanged.emit()
+            except Exception as e:
+                show_message(self.parent, "Error", f"Error while deleting image: {str(e)}", is_error=True)

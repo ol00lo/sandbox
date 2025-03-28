@@ -1,5 +1,5 @@
 from PyQt6 import QtWidgets, QtGui, QtCore
-import cv2
+from PIL import Image
 
 class ImageScene(QtWidgets.QGraphicsScene):
     def __init__(self, parent=None):
@@ -17,9 +17,9 @@ class ImageScene(QtWidgets.QGraphicsScene):
         self.setSceneRect(pixmap_item.boundingRect())
 
     def cur_size(self):
-        image = cv2.imread(self.current_image_path)
-        height, width, _ = image.shape
-        return width, height
+        with Image.open(self.current_image_path) as image:
+            width, height = image.size
+            return width, height
 
 class ImageModel(QtWidgets.QGraphicsView):
     def __init__(self, parent):
@@ -46,7 +46,6 @@ class ImageModel(QtWidgets.QGraphicsView):
         current_image_item = self.image_scene.items()
         if current_image_item:
             pixmap_item = current_image_item[0]
-            pixmap = pixmap_item.pixmap()
 
             original_width = self.original_pixmap[0]
             original_height = self.original_pixmap[1]
