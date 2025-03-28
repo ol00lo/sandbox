@@ -2,7 +2,9 @@ from PyQt6 import QtWidgets, QtCore
 import os
 
 class ImageInfo:
-    def __init__(self, name, size, width, height):
+    def __init__(self, name = "", size = 0, width = 0, height = 0):
+        self.set_properties(name, size, width, height)
+    def set_properties(self, name, size, width, height):
         self.name = name
         self.width = width
         self.height = height
@@ -12,11 +14,16 @@ class ImageInfo:
 class TableModel(QtCore.QAbstractTableModel):
     columns = ["Name", "File Size", "Width", "Height", "Area"]
 
-    def __init__(self, images, dir_path=None, parent=None):
+    def __init__(self, images=[], dir_path=None, parent=None):
         super().__init__(parent)
-        self.images = images
-        self.original_images = images.copy()  
-        self.dir_path = dir_path
+        self.images = []
+        self.add_data(images, dir_path)
+
+    def add_data(self, images, dir_path=None):
+         self.images = images
+         self.original_images = images
+         if dir_path:
+             self.dir_path = dir_path
 
     def rowCount(self, parent):
         return len(self.images)

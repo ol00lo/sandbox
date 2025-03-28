@@ -17,9 +17,12 @@ class ImageScene(QtWidgets.QGraphicsScene):
         self.setSceneRect(pixmap_item.boundingRect())
 
     def cur_size(self):
-        with Image.open(self.current_image_path) as image:
-            width, height = image.size
-            return width, height
+        try:
+            with Image.open(self.current_image_path) as image:
+                width, height = image.size
+                return width, height
+        except Exception as e:
+            return 0, 0
 
 class ImageModel(QtWidgets.QGraphicsView):
     def __init__(self, parent):

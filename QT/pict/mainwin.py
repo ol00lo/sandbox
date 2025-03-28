@@ -1,6 +1,7 @@
 from PyQt6 import QtWidgets, QtGui, QtCore
 from imageviewer import ImageViewer
 from tableviewer import TableViewer
+from actions import LoadImagesAction, DeleteAllImagesAction
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -31,8 +32,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.table_viewer.image_selected.connect(self.image_model_viewer.display_image)
         self.image_model_viewer.coordinates_clicked.connect(self.status_bar.showMessage)
+        self.create_toolbar()
 
-        self.create_menu()
-
-    def create_menu(self):
-        pass
+    def create_toolbar(self):
+        toolbar = self.addToolBar("Main Toolbar")
+        
+        toolbar.addAction(LoadImagesAction(self))
+        toolbar.addAction(DeleteAllImagesAction(self))
