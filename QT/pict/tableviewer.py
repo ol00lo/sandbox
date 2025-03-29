@@ -1,5 +1,5 @@
 from PyQt6 import QtCore, QtWidgets
-from actions import LoadImagesAction, DeleteAllImagesAction
+from actions import LoadImagesAction, DeleteAllImagesAction, RenameFileAction
 from table import TableModel, TableProxyModel
 import os
 from qt_common import show_message
@@ -50,6 +50,9 @@ class TableViewer (QtWidgets.QWidget):
             context_menu = QtWidgets.QMenu(self.table_view)
             delete_action = context_menu.addAction("Delete Image")
             delete_action.triggered.connect(lambda: self.delete_image(index))
+
+            rename_action = context_menu.addAction("Rename Image")
+            rename_action.triggered.connect(lambda: RenameFileAction(self.image_model, index).do())
 
             context_menu.exec(self.table_view.viewport().mapToGlobal(position))
 

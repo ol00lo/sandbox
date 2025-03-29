@@ -1,7 +1,7 @@
 from PyQt6 import QtWidgets, QtGui, QtCore
 from imageviewer import ImageViewer
 from tableviewer import TableViewer
-from actions import LoadImagesAction, DeleteAllImagesAction
+from actions import LoadImagesAction, DeleteAllImagesAction, AddImageAction
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -38,4 +38,7 @@ class MainWindow(QtWidgets.QMainWindow):
         toolbar = self.addToolBar("Main Toolbar")
         
         toolbar.addAction(LoadImagesAction(self))
-        toolbar.addAction(DeleteAllImagesAction(self))
+        toolbar.addAction(DeleteAllImagesAction(self.table_viewer))
+        toolbar.addAction(AddImageAction(self.table_viewer.image_model, self))
+
+        toolbar.addSeparator()

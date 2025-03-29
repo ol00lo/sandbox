@@ -1,6 +1,8 @@
 from PyQt6 import QtWidgets, QtCore
 import os
 
+import shutil
+from actions import RenameFileAction
 class ImageInfo:
     def __init__(self, name = "", size = 0, width = 0, height = 0):
         self.set_properties(name, size, width, height)
@@ -17,13 +19,33 @@ class TableModel(QtCore.QAbstractTableModel):
     def __init__(self, images=[], dir_path=None, parent=None):
         super().__init__(parent)
         self.images = []
-        self.add_data(images, dir_path)
+        self.original_images = images
+        self.dir_path = dir_path
 
     def add_data(self, images, dir_path=None):
          self.images = images
          self.original_images = images
          if dir_path:
              self.dir_path = dir_path
+
+    def add_image(self, image_info, source_path):
+        destination_path = os.path.join(self.dir_path, image_info.name)
+
+        if os.path.exists(destination_path):
+            QtWidgets.QMessageBox.critical(None, "Error", "File with this name already exists.")
+            return False
+        try:
+            shutil.copy2(source_path, destination_path)
+            self.images.append(image_info)
+
+            self.beginInsertRows(QtCore.QModelIndex(), len(self.images) - 1, len(self.images) - 1)
+            self.endInsertRows()
+
+            self.dataChanged.emit(self.index(len(self.images) - 1, 0), self.index(len(self.images) - 1, 0))
+            return True
+        except Exception as e:
+            QtWidgets.QMessageBox.warning(None, "Error", f"Could not copy file: {e}")
+            return False
 
     def rowCount(self, parent):
         return len(self.images)

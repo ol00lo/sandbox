@@ -56,6 +56,8 @@ class ImageModel(QtWidgets.QGraphicsView):
             scaled_width = pixmap_item.boundingRect().width()
             scaled_height = pixmap_item.boundingRect().height()
 
+            if scaled_width == 0 or scaled_height == 0:
+                return
             x_scale = original_width / scaled_width
             y_scale = original_height / scaled_height
 

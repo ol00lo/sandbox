@@ -92,11 +92,11 @@ class DeleteAllImagesAction(QtGui.QAction):
         else:
             show_message(self.parent, "Error", "No directory selected.", is_error=True)
 
-class RenameImageAction(QtGui.QAction):
-    def __init__(self, parent):
-        super().__init__("Rename Image", parent)
+class AddImageAction(QtGui.QAction):
+    def __init__(self, model, parent=None):
+        super().__init__("Add Image", parent)
+        self.model = model
         self.triggered.connect(self.do)
-        self.parent = parent
 
     def do(self):
         try:
@@ -105,3 +105,60 @@ class RenameImageAction(QtGui.QAction):
             QtWidgets.QMessageBox.critical(None, "ERROR", str(e))
 
     def do_impl(self):
+        if self.model.dir_path is None:
+            QtWidgets.QMessageBox.warning(None, "Error", "Please select a directory first.")
+            return
+        options = QtWidgets.QFileDialog.Option.DontUseNativeDialog
+        file_name, _ = QtWidgets.QFileDialog.getOpenFileName(
+            None,
+            "Select Image",
+            "",
+            "Images (*.png *.jpg *.jpeg *.bmp *.gif);;All Files (*)",
+            options=options
+        )
+
+        if file_name:
+            image_name = os.path.basename(file_name)
+            image_size = os.path.getsize(file_name)
+            with Image.open(file_name) as img:
+                width, height = img.size
+
+            new_image_info = ImageInfo(name=image_name, size=image_size, width=width, height=height)
+            if not self.model.add_image(new_image_info, file_name):
+                QtWidgets.QMessageBox.critical(None, "Error", "Failed to add image.")
+
+class RenameFileAction(QtGui.QAction):
+    def __init__(self, model, index, parent=None):
+        super().__init__("Rename File", parent)
+        self.model = model
+        self.index = index
+        self.triggered.connect(self.do)
+
+    def do(self):
+        try:
+            self.do_impl()
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(None, "ERROR", str(e))
+
+    def do_impl(self):
+        index = self.index
+        if index.isValid():
+            old_name = self.model.images[index.row()].name
+            new_name, ok = QtWidgets.QInputDialog.getText(None, "Rename File", "Enter new name:", text=old_name)
+
+            if ok and new_name.strip():
+                new_name = new_name.strip()
+                if new_name != old_name:
+                    old_path = os.path.join(self.model.dir_path, old_name)
+                    new_path = os.path.join(self.model.dir_path, new_name)
+
+                    if os.path.exists(new_path):
+                        QtWidgets.QMessageBox.warning(None, "Error", "File with this name already exists.")
+                        return
+
+                    try:
+                        os.rename(old_path, new_path)
+                        self.model.images[index.row()].name = new_name
+                        self.model.dataChanged.emit(index, index, [QtCore.Qt.ItemDataRole.DisplayRole])
+                    except Exception as e:
+                        QtWidgets.QMessageBox.warning(None, "Error", f"Could not rename file: {e}")
