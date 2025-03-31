@@ -16,7 +16,7 @@ public:
 
     void add_value_callback(callback_t cb);
     void add_gradient_callback(callback_t cb);
-    Tensor get_value() override;
+    Tensor value() override;
     Shape output_shape() const override;
     virtual ~IFunctionalNode() {};
 
@@ -42,7 +42,7 @@ private:
 
     Tensor notself_derivative(const INode* arg) override;
     Tensor compute_notself_derivative(const INode* arg);
-    virtual std::vector<Tensor> get_gradient() = 0;
+    virtual std::vector<Tensor> gradient() = 0;
 };
 
 } // namespace g

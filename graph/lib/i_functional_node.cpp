@@ -12,7 +12,7 @@ void IFunctionalNode::add_gradient_callback(callback_t cb)
     gradient_callbacks_.push_back(cb);
 }
 
-Tensor IFunctionalNode::get_value()
+Tensor IFunctionalNode::value()
 {
     if (!has_value_)
     {
@@ -69,13 +69,13 @@ Tensor IFunctionalNode::compute_notself_derivative(const INode* arg)
     if (!has_gradient_)
     {
         before_gradient_compute();
-        gradient_ = get_gradient();
+        gradient_ = gradient();
         has_gradient_ = true;
     }
     for (int i = 0; i < prev_nodes_.size(); i++)
     {
-        auto pr_der = prev_nodes_[i]->get_derivative(arg);
-        if (gradient_[i].get_shape() == pr_der.get_shape())
+        auto pr_der = prev_nodes_[i]->derivative(arg);
+        if (gradient_[i].shape() == pr_der.shape())
             res.add(mult(gradient_[i], pr_der));
         else
             _THROW_NOT_IMP_

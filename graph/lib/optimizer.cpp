@@ -13,7 +13,7 @@ void SGDOptimizer::apply(const std::vector<Tensor>& gradients)
     {
 
         Tensor delt = g::scalar_mult(learning_rate_, gradients[i]);
-        Tensor old_value = params_[i]->get_value();
+        Tensor old_value = params_[i]->value();
         Tensor res = g::sub(old_value, delt);
         params_[i]->set_value(res);
     }

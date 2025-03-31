@@ -26,9 +26,9 @@ TEST_CASE("train test", "[tt]")
     CHECK(loss == 36);
     loss = wrk.train({Tensor({2})}, {Tensor({6})});
     CHECK(loss == Approx(74.65));
-    CHECK(K->get_value() == Tensor({5}));
+    CHECK(K->value() == Tensor({5}));
     wrk.commit();
-    CHECK(K->get_value()[0] != 5);
+    CHECK(K->value()[0] != 5);
 }
 
 namespace
@@ -57,7 +57,7 @@ TEST_CASE("sin test", "[st]")
     //==================================================
     // A*sin(B*x + C) + D*x + E = out
     //==================================================
-    g::get_logger()->set_level(spdlog::level::off);
+    g::logger()->set_level(spdlog::level::off);
 
     std::shared_ptr<DataNode> x = std::make_shared<DataNode>("x");
     std::shared_ptr<DataNode> A = std::make_shared<DataNode>("A");
@@ -152,11 +152,11 @@ TEST_CASE("sin test", "[st]")
         if (sum_loss_val <= 0.001)
             break;
     }
-    CHECK(A->get_value()[0] == Approx(a).epsilon(0.02));
-    CHECK(B->get_value()[0] == Approx(b).epsilon(0.01));
-    //CHECK(C->get_value()[0] == Approx(c).epsilon(0.1));
-    CHECK(D->get_value()[0] == Approx(d).epsilon(0.01));
-    CHECK(E->get_value()[0] == Approx(e).epsilon(0.01));
+    CHECK(A->value()[0] == Approx(a).epsilon(0.02));
+    CHECK(B->value()[0] == Approx(b).epsilon(0.01));
+    //CHECK(C->value()[0] == Approx(c).epsilon(0.1));
+    CHECK(D->value()[0] == Approx(d).epsilon(0.01));
+    CHECK(E->value()[0] == Approx(e).epsilon(0.01));
 }
 
 TEST_CASE("simmple test 1", "[st1]")
@@ -164,7 +164,7 @@ TEST_CASE("simmple test 1", "[st1]")
     //==================================================
     // L*y + K = out
     //==================================================
-    g::get_logger()->set_level(spdlog::level::off);
+    g::logger()->set_level(spdlog::level::off);
 
     std::shared_ptr<DataNode> y = std::make_shared<DataNode>("");
     std::shared_ptr<DataNode> L = std::make_shared<DataNode>("");
@@ -237,6 +237,6 @@ TEST_CASE("simmple test 1", "[st1]")
         if (sum_loss_val <= 0.001)
             break;
     }
-    CHECK(K->get_value()[0] == Approx(2).epsilon(0.03));
-    CHECK(L->get_value()[0] == Approx(2).epsilon(0.01));
+    CHECK(K->value()[0] == Approx(2).epsilon(0.03));
+    CHECK(L->value()[0] == Approx(2).epsilon(0.01));
 }

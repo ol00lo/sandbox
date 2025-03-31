@@ -2,7 +2,7 @@
 
 using namespace g;
 
-Tensor DataNode::get_value()
+Tensor DataNode::value()
 {
     return value_;
 }
@@ -40,5 +40,5 @@ std::string DataNode::classname() const
 
 Shape DataNode::output_shape() const
 {
-    return value_.get_shape();
+    return value_.shape();
 }

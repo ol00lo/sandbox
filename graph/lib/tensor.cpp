@@ -81,7 +81,7 @@ bool Tensor::operator==(const Tensor& other) const
 
     return data_ == other.data_;
 }
-Shape Tensor::get_shape() const
+Shape Tensor::shape() const
 {
     return shape_;
 }
@@ -125,7 +125,7 @@ void Tensor::write(std::ostream& os) const
 
 Tensor g::add(const Tensor& t1, const Tensor& t2)
 {
-    if (t1.get_shape() != t2.get_shape())
+    if (t1.shape() != t2.shape())
     {
         throw std::runtime_error("Incorrect shapes");
     }
@@ -135,7 +135,7 @@ Tensor g::add(const Tensor& t1, const Tensor& t2)
 }
 Tensor g::mult(const Tensor& t1, const Tensor& t2)
 {
-    if (t1.get_shape() != t2.get_shape())
+    if (t1.shape() != t2.shape())
     {
         throw std::runtime_error("Incorrect shapes");
     }
@@ -152,7 +152,7 @@ Tensor g::scalar_mult(double a, const Tensor& t)
 
 Tensor g::sub(const Tensor& t1, const Tensor& t2)
 {
-    if (t1.get_shape() != t2.get_shape())
+    if (t1.shape() != t2.shape())
     {
         throw std::runtime_error("Incorrect shapes");
     }
@@ -162,7 +162,7 @@ Tensor g::sub(const Tensor& t1, const Tensor& t2)
 }
 Tensor g::div(const Tensor& t1, const Tensor& t2)
 {
-    if (t1.get_shape() != t2.get_shape())
+    if (t1.shape() != t2.shape())
     {
         throw std::runtime_error("Incorrect shapes");
     }

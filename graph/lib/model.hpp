@@ -14,11 +14,11 @@ public:
     void save(const std::string& filename);
     static Model load(const std::string& filename);
     std::vector<Tensor> compute(const std::vector<Tensor>& input_values);
-    const std::vector<INode::ptr_t> get_input_nodes() const;
-    const std::vector<INode::ptr_t> get_inter_nodes() const;
-    const std::vector<INode::ptr_t> get_output_nodes() const;
-    std::vector<std::shared_ptr<DataNode>> get_param_nodes() const;
-    void set_param(const std::vector<std::shared_ptr<DataNode>>& p);
+    const std::vector<INode::ptr_t> input_nodes() const;
+    const std::vector<INode::ptr_t> inter_nodes() const;
+    const std::vector<INode::ptr_t> output_nodes() const;
+    std::vector<std::shared_ptr<DataNode>> param_nodes() const;
+    void set_param_nodes(const std::vector<std::shared_ptr<DataNode>>& p);
 
 protected:
     std::vector<std::shared_ptr<DataNode>> param_nodes_;
@@ -37,16 +37,16 @@ struct adl_serializer<g::Model>
 {
     static void to_json(json& j, const g::Model& model)
     {
-        for (const auto& input : model.get_input_nodes())
+        for (const auto& input : model.input_nodes())
         {
             j["nodes"].push_back(input);
             j["io"]["input_nodes"].push_back(input->nodename());
         }
-        for (const auto& inter : model.get_inter_nodes())
+        for (const auto& inter : model.inter_nodes())
         {
             j["nodes"].push_back(inter);
         }
-        for (const auto& output : model.get_output_nodes())
+        for (const auto& output : model.output_nodes())
         {
             j["io"]["output_nodes"].push_back(output->nodename());
         }

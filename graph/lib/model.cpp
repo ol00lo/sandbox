@@ -47,31 +47,31 @@ std::vector<Tensor> Model::compute(const std::vector<Tensor>& input_values)
     std::vector<Tensor> results;
     for (const auto& output : output_nodes_)
     {
-        results.push_back(output->get_value());
+        results.push_back(output->value());
     }
     return results;
 }
-const std::vector<pnode_t> Model::get_input_nodes() const
+const std::vector<pnode_t> Model::input_nodes() const
 {
     return input_nodes_;
 }
-const std::vector<pnode_t> Model::get_inter_nodes() const
+const std::vector<pnode_t> Model::inter_nodes() const
 {
     return inter_nodes_;
 }
-const std::vector<pnode_t> Model::get_output_nodes() const
+const std::vector<pnode_t> Model::output_nodes() const
 {
     return output_nodes_;
 }
-std::vector<std::shared_ptr<DataNode>> Model::get_param_nodes() const
+std::vector<std::shared_ptr<DataNode>> Model::param_nodes() const
 {
     return param_nodes_;
 }
-void Model::set_param(const std::vector<std::shared_ptr<DataNode>>& p)
+void Model::set_param_nodes(const std::vector<std::shared_ptr<DataNode>>& p)
 {
     for (int i = 0; i < param_nodes_.size(); i++)
     {
-        param_nodes_[i]->set_value(p[i]->get_value());
+        param_nodes_[i]->set_value(p[i]->value());
     }
 }
 void Model::add_into_inter(pnode_t node)
@@ -91,7 +91,7 @@ void Model::add_into_inter(pnode_t node)
             param_nodes_.push_back(dataNode);
         }
     }
-    for (const auto& prev : node->get_prev())
+    for (const auto& prev : node->prev_nodes())
     {
         add_into_inter(prev);
     }

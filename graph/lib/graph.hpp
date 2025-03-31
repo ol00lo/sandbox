@@ -10,7 +10,7 @@ namespace g
 {
 int graph_ping();
 spdlog::logger& log();
-std::shared_ptr<spdlog::logger> get_logger();
+std::shared_ptr<spdlog::logger> logger();
 }
 
 #endif

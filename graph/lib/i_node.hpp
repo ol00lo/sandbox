@@ -29,12 +29,12 @@ public:
     static ptr_t factory(std::string classname, std::string nodename = "");
     void add_prev(std::shared_ptr<INode> a);
     void add_next(std::shared_ptr<INode> a);
-    virtual Tensor get_value() = 0;
+    virtual Tensor value() = 0;
     std::string nodename() const;
-    Tensor get_derivative(const INode* argument);
-    Tensor get_derivative(std::shared_ptr<INode>);
-    std::vector<std::shared_ptr<INode>> get_prev() const;
-    std::vector<std::shared_ptr<INode>> get_next();
+    Tensor derivative(const INode* argument);
+    Tensor derivative(std::shared_ptr<INode>);
+    std::vector<std::shared_ptr<INode>> prev_nodes() const;
+    std::vector<std::shared_ptr<INode>> next_nodes();
     void clear_prev();
     virtual std::string classname() const = 0;
     void set_dep(const nlohmann::json&, const std::unordered_map<std::string, std::shared_ptr<INode>>&,
@@ -73,14 +73,14 @@ struct adl_serializer<std::shared_ptr<T>, std::enable_if_t<std::is_base_of<g::IN
     static void to_json(json& j, const g::INode::ptr_t& node)
     {
         std::vector<std::string> prev;
-        for (auto& a : node->get_prev())
+        for (auto& a : node->prev_nodes())
         {
             prev.push_back(a->nodename());
         }
         j = json{{"classname", node->classname()},
                  {"nodename", node->nodename()},
                  {"prev_nodes", prev},
-                 {"value", node->get_value()}};
+                 {"value", node->value()}};
         node->serialize_spec(j);
     }
 

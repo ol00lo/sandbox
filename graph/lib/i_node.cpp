@@ -108,7 +108,7 @@ void INode::clear_forward_cache()
     }
 }
 
-Tensor INode::get_derivative(const INode* argument)
+Tensor INode::derivative(const INode* argument)
 {
     if (argument->nodename() == this->nodename())
     {
@@ -118,17 +118,17 @@ Tensor INode::get_derivative(const INode* argument)
         return notself_derivative(argument);
 }
 
-Tensor INode::get_derivative(std::shared_ptr<INode> argument)
+Tensor INode::derivative(std::shared_ptr<INode> argument)
 {
-    return get_derivative(argument.get());
+    return derivative(argument.get());
 }
 
-std::vector<std::shared_ptr<INode>> INode::get_prev() const
+std::vector<std::shared_ptr<INode>> INode::prev_nodes() const
 {
     return prev_nodes_;
 }
 
-std::vector<std::shared_ptr<INode>> INode::get_next()
+std::vector<std::shared_ptr<INode>> INode::next_nodes()
 {
     return next_nodes_;
 }

@@ -41,13 +41,13 @@ TrainingGraph::TrainingGraph(const Model& target_model, LossType loss_type) : ta
 
 void TrainingGraph::copy_to_target()
 {
-    target_model_.set_param(param_nodes_);
+    target_model_.set_param_nodes(param_nodes_);
 }
 
-std::vector<Tensor> TrainingGraph::get_gradients() const
+std::vector<Tensor> TrainingGraph::gradients() const
 {
     std::vector<Tensor> res;
     for (int i = 0; i < param_nodes_.size(); i++)
-        res.push_back(output_nodes_[0]->get_derivative(param_nodes_[i]));
+        res.push_back(output_nodes_[0]->derivative(param_nodes_[i]));
     return res;
 }

@@ -11,7 +11,7 @@ public:
 protected:
     Tensor compute_value() override;
     std::string classname() const override;
-    std::vector<Tensor> get_gradient() override;
+    std::vector<Tensor> gradient() override;
 
 private:
     REGISTER_INODE_CHILD(MultNode);
@@ -25,7 +25,7 @@ public:
 protected:
     Tensor compute_value() override;
     std::string classname() const override;
-    std::vector<Tensor> get_gradient() override;
+    std::vector<Tensor> gradient() override;
 
 private:
     REGISTER_INODE_CHILD(PlusNode);
@@ -39,7 +39,7 @@ public:
 protected:
     Tensor compute_value() override;
     std::string classname() const override;
-    std::vector<Tensor> get_gradient() override;
+    std::vector<Tensor> gradient() override;
 
 private:
     REGISTER_INODE_CHILD(MinusNode);

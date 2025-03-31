@@ -5,13 +5,13 @@ using namespace g;
 void OptimizationWorker::set_optimizer(const std::shared_ptr<IOptimizer> optimizer)
 {
     optimizer_ = optimizer;
-    optimizer_->set_param_nodes(graph_.get_param_nodes());
+    optimizer_->set_param_nodes(graph_.param_nodes());
 }
 
 double OptimizationWorker::train(const std::vector<Tensor>& inputs, const std::vector<Tensor>& gt)
 {
     double res = compute_loss(inputs, gt);
-    auto grads = graph_.get_gradients();
+    auto grads = graph_.gradients();
     optimizer_->apply(grads);
     return res;
 }
