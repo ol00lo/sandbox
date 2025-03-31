@@ -12,10 +12,10 @@ namespace g
 class Tensor
 {
 public:
-    Tensor() : _shape(1), _data(0) {};
-    Tensor(const Tensor& t) : _data(t._data), _shape(t._shape) {};
-    Tensor(Tensor&& t) : _data(std::move(t._data)), _shape(std::move(t._shape)) {};
-    Tensor(const std::vector<double>& data) : _data(data), _shape(data.size()) {};
+    Tensor() : shape_(1), data_(0) {};
+    Tensor(const Tensor& t) : data_(t.data_), shape_(t.shape_) {};
+    Tensor(Tensor&& t) : data_(std::move(t.data_)), shape_(std::move(t.shape_)) {};
+    Tensor(const std::vector<double>& data) : data_(data), shape_(data.size()) {};
     Tensor(Shape shape, const std::vector<double>& data);
     Tensor(Shape shape, double a);
     void set_zero();
@@ -38,15 +38,15 @@ public:
     template <class Oper>
     void apply_oper(Oper&& op)
     {
-        for (auto& x : _data)
+        for (auto& x : data_)
         {
             x = op(x);
         }
     }
 
 private:
-    std::vector<double> _data;
-    Shape _shape;
+    std::vector<double> data_;
+    Shape shape_;
 };
 Tensor add(const Tensor& t1, const Tensor& t2);
 Tensor mult(const Tensor& t1, const Tensor& t2);

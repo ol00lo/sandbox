@@ -44,17 +44,17 @@ public:
     virtual Shape output_shape() const = 0;
     virtual ~INode()
     {
-        _existing_names.erase(_nodename);
+        existing_names_.erase(nodename_);
     };
 
-    static inline std::unordered_set<std::string> _existing_names;
+    static inline std::unordered_set<std::string> existing_names_;
 
 protected:
-    const std::string _nodename;
-    static inline std::map<std::string, node_builder_t> _registered_classes;
+    const std::string nodename_;
+    static inline std::map<std::string, node_builder_t> registered_classes_;
     static bool register_class(std::string classname, node_builder_t builder);
-    std::vector<std::shared_ptr<INode>> _prev_nodes;
-    std::vector<std::shared_ptr<INode>> _next_nodes;
+    std::vector<std::shared_ptr<INode>> prev_nodes_;
+    std::vector<std::shared_ptr<INode>> next_nodes_;
     virtual void clear_cache() {};
     void clear_backward_cache();
     void clear_forward_cache();

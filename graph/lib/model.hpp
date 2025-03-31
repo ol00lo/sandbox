@@ -21,10 +21,10 @@ public:
     void set_param(const std::vector<std::shared_ptr<DataNode>>& p);
 
 protected:
-    std::vector<std::shared_ptr<DataNode>> _param_nodes;
-    std::vector<INode::ptr_t> _input_nodes;
-    std::vector<INode::ptr_t> _output_nodes;
-    std::vector<INode::ptr_t> _inter_nodes;
+    std::vector<std::shared_ptr<DataNode>> param_nodes_;
+    std::vector<INode::ptr_t> input_nodes_;
+    std::vector<INode::ptr_t> output_nodes_;
+    std::vector<INode::ptr_t> inter_nodes_;
     void add_into_inter(INode::ptr_t node);
 };
 

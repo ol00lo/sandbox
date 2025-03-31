@@ -9,7 +9,7 @@ namespace g
 class IFunctionalNode : public INode
 {
 public:
-    IFunctionalNode(std::string nodename = "") : INode(nodename), _value({0})
+    IFunctionalNode(std::string nodename = "") : INode(nodename), value_({0})
     {
     }
     using callback_t = std::function<void(IFunctionalNode*)>;
@@ -24,13 +24,13 @@ protected:
     void clear_cache() override;
 
 private:
-    bool _has_value = false;
-    bool _has_gradient = false;
-    std::vector<Tensor> _gradient;
-    Tensor _value;
+    bool has_value_ = false;
+    bool has_gradient_ = false;
+    std::vector<Tensor> gradient_;
+    Tensor value_;
 
-    std::vector<callback_t> _value_callbacks;
-    std::vector<callback_t> _gradient_callbacks;
+    std::vector<callback_t> value_callbacks_;
+    std::vector<callback_t> gradient_callbacks_;
     void log_cache()
     {
         log().debug(classname() + " cleaned");
@@ -38,7 +38,7 @@ private:
     void before_value_compute();
     void before_gradient_compute();
     virtual Tensor compute_value() = 0;
-    std::map<const INode*, Tensor> _derivative_cache;
+    std::map<const INode*, Tensor> derivative_cache_;
 
     Tensor notself_derivative(const INode* arg) override;
     Tensor compute_notself_derivative(const INode* arg);

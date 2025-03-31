@@ -43,14 +43,14 @@ std::string set_nodename(std::string nodename, std::unordered_set<std::string>& 
     return nodename;
 }
 } // namespace
-INode::INode(std::string nodename) : _nodename(set_nodename(nodename, _existing_names))
+INode::INode(std::string nodename) : nodename_(set_nodename(nodename, existing_names_))
 {
-    _existing_names.insert(_nodename);
+    existing_names_.insert(nodename_);
 }
 INode::ptr_t INode::factory(std::string classname, std::string nodename)
 {
-    auto fnd = _registered_classes.find(classname);
-    if (fnd == _registered_classes.end())
+    auto fnd = registered_classes_.find(classname);
+    if (fnd == registered_classes_.end())
     {
         throw std::runtime_error("Invalid classname: " + classname);
     }
@@ -58,11 +58,11 @@ INode::ptr_t INode::factory(std::string classname, std::string nodename)
 }
 void INode::add_prev(const std::shared_ptr<INode> a)
 {
-    _prev_nodes.push_back(a);
+    prev_nodes_.push_back(a);
 }
 void INode::add_next(const std::shared_ptr<INode> a)
 {
-    _next_nodes.push_back(a);
+    next_nodes_.push_back(a);
 }
 
 void INode::set_dep(const nlohmann::json& node_json,
@@ -74,26 +74,26 @@ void INode::set_dep(const nlohmann::json& node_json,
         {
             auto prev_node = all_nodes.find(prev_node_name.get<std::string>() + copy_word);
             add_prev(prev_node->second);
-            auto this_node = all_nodes.find(_nodename);
+            auto this_node = all_nodes.find(nodename_);
             prev_node->second->add_next(this_node->second);
         }
     }
 
-    log().debug("Set dependencies for node {} of the {} class", _nodename, classname());
+    log().debug("Set dependencies for node {} of the {} class", nodename_, classname());
 }
 std::string INode::nodename() const
 {
-    return _nodename;
+    return nodename_;
 }
 bool INode::register_class(std::string classname, node_builder_t builder)
 {
-    _registered_classes[classname] = builder;
+    registered_classes_[classname] = builder;
     return true;
 }
 void INode::clear_backward_cache()
 {
     clear_cache();
-    for (auto& n : _prev_nodes)
+    for (auto& n : prev_nodes_)
     {
         n->clear_backward_cache();
     }
@@ -102,7 +102,7 @@ void INode::clear_backward_cache()
 void INode::clear_forward_cache()
 {
     clear_cache();
-    for (auto& n : _next_nodes)
+    for (auto& n : next_nodes_)
     {
         n->clear_forward_cache();
     }
@@ -125,16 +125,16 @@ Tensor INode::get_derivative(std::shared_ptr<INode> argument)
 
 std::vector<std::shared_ptr<INode>> INode::get_prev() const
 {
-    return _prev_nodes;
+    return prev_nodes_;
 }
 
 std::vector<std::shared_ptr<INode>> INode::get_next()
 {
-    return _next_nodes;
+    return next_nodes_;
 }
 void INode::clear_prev()
 {
-    _prev_nodes.clear();
+    prev_nodes_.clear();
 }
 
 void g::set_dep(std::shared_ptr<INode> node, std::initializer_list<std::shared_ptr<INode>> prevs)

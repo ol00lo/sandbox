@@ -16,7 +16,7 @@ public:
     std::vector<Tensor> get_gradients() const;
 
 private:
-    Model _target_model;
+    Model target_model_;
 };
 } // namespace g
 

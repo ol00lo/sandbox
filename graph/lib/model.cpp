@@ -21,9 +21,9 @@ pnode_t find_node_by_name(std::unordered_map<std::string, pnode_t> all_nodes, co
 }
 } // namespace
 
-Model::Model(std::vector<pnode_t> inputs, std::vector<pnode_t> outputs) : _input_nodes(inputs), _output_nodes(outputs)
+Model::Model(std::vector<pnode_t> inputs, std::vector<pnode_t> outputs) : input_nodes_(inputs), output_nodes_(outputs)
 {
-    for (const auto& output : _output_nodes)
+    for (const auto& output : output_nodes_)
     {
         add_into_inter(output);
     }
@@ -31,13 +31,13 @@ Model::Model(std::vector<pnode_t> inputs, std::vector<pnode_t> outputs) : _input
 
 std::vector<Tensor> Model::compute(const std::vector<Tensor>& input_values)
 {
-    if (input_values.size() > _input_nodes.size())
+    if (input_values.size() > input_nodes_.size())
     {
         throw std::runtime_error("Size of input values does not match the number of input nodes.");
     }
     for (size_t i = 0; i < input_values.size(); ++i)
     {
-        INode* get_node = _input_nodes[i].get();
+        INode* get_node = input_nodes_[i].get();
         if (DataNode* dataNode = dynamic_cast<DataNode*>(get_node))
         {
             dataNode->set_value(input_values[i]);
@@ -45,7 +45,7 @@ std::vector<Tensor> Model::compute(const std::vector<Tensor>& input_values)
     }
 
     std::vector<Tensor> results;
-    for (const auto& output : _output_nodes)
+    for (const auto& output : output_nodes_)
     {
         results.push_back(output->get_value());
     }
@@ -53,42 +53,42 @@ std::vector<Tensor> Model::compute(const std::vector<Tensor>& input_values)
 }
 const std::vector<pnode_t> Model::get_input_nodes() const
 {
-    return _input_nodes;
+    return input_nodes_;
 }
 const std::vector<pnode_t> Model::get_inter_nodes() const
 {
-    return _inter_nodes;
+    return inter_nodes_;
 }
 const std::vector<pnode_t> Model::get_output_nodes() const
 {
-    return _output_nodes;
+    return output_nodes_;
 }
 std::vector<std::shared_ptr<DataNode>> Model::get_param_nodes() const
 {
-    return _param_nodes;
+    return param_nodes_;
 }
 void Model::set_param(const std::vector<std::shared_ptr<DataNode>>& p)
 {
-    for (int i = 0; i < _param_nodes.size(); i++)
+    for (int i = 0; i < param_nodes_.size(); i++)
     {
-        _param_nodes[i]->set_value(p[i]->get_value());
+        param_nodes_[i]->set_value(p[i]->get_value());
     }
 }
 void Model::add_into_inter(pnode_t node)
 {
-    auto is_in_input = std::find(_input_nodes.begin(), _input_nodes.end(), node) != _input_nodes.end();
+    auto is_in_input = std::find(input_nodes_.begin(), input_nodes_.end(), node) != input_nodes_.end();
     if (is_in_input)
     {
         return;
     }
-    bool not_in_inter = std::find(_inter_nodes.begin(), _inter_nodes.end(), node) == _inter_nodes.end();
+    bool not_in_inter = std::find(inter_nodes_.begin(), inter_nodes_.end(), node) == inter_nodes_.end();
     if (not_in_inter)
     {
-        _inter_nodes.push_back(node);
+        inter_nodes_.push_back(node);
         auto dataNode = std::dynamic_pointer_cast<DataNode>(node);
         if (dataNode != nullptr)
         {
-            _param_nodes.push_back(dataNode);
+            param_nodes_.push_back(dataNode);
         }
     }
     for (const auto& prev : node->get_prev())

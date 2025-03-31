@@ -4,19 +4,19 @@ using namespace g;
 
 Tensor DataNode::get_value()
 {
-    return _value;
+    return value_;
 }
 
 void DataNode::set_value(Tensor val)
 {
-    _value = val;
+    value_ = val;
     log().info("Data node \"{}\" value changed", nodename());
     clear_forward_cache();
 }
 
 void DataNode::serialize_spec(nlohmann::json& js) const
 {
-    js["value"] = _value;
+    js["value"] = value_;
 }
 
 void DataNode::deserialize_spec(const nlohmann::json& node_json, std::string copy_word)
@@ -40,5 +40,5 @@ std::string DataNode::classname() const
 
 Shape DataNode::output_shape() const
 {
-    return _value.get_shape();
+    return value_.get_shape();
 }
