@@ -110,15 +110,15 @@ void Tensor::write(std::ostream& os) const
                 }
                 os << "]";
                 if (j != shape_[2] - 1)
-                    os << "\n";
+                    os << ", ";
             }
             os << "]";
             if (i != shape_[1] - 1)
-                os << "\n";
+                os << ", ";
         }
         os << "]";
         if (b != shape_[0] - 1)
-            os << "\n";
+            os << ", ";
     }
     os << ",  shape = (" << shape_[0] << ", " << shape_[1] << ", " << shape_[2] << ", " << shape_[3] << ")" << std::endl;
 }

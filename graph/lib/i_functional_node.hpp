@@ -9,7 +9,7 @@ namespace g
 class IFunctionalNode : public INode
 {
 public:
-    IFunctionalNode(std::string nodename = "") : INode(nodename), value_({0})
+    IFunctionalNode(std::string classname, std::string nodename = "") : INode(classname, nodename), value_({0})
     {
     }
     using callback_t = std::function<void(IFunctionalNode*)>;

@@ -5,9 +5,9 @@ using namespace g;
 namespace
 {
 std::mt19937 rnd;
-std::string build_random_string(int length)
+std::string build_random_string(int length, std::string classname)
 {
-    std::string res;
+    std::string res = classname + "_";
     static const char alphanum[] = "0123456789"
                                    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                                    "abcdefghijklmnopqrstuvwxyz";
@@ -20,13 +20,13 @@ std::string build_random_string(int length)
     return res;
 }
 
-std::string set_nodename(std::string nodename)
+std::string set_nodename(std::string classname, std::string nodename)
 {
-    return (nodename.empty()) ? build_random_string(8) : nodename;
+    return (nodename.empty()) ? build_random_string(8, classname) : nodename;
 }
 } // namespace
 
-INode::INode(std::string nodename) : nodename_(set_nodename(nodename)) {}
+INode::INode(std::string classname, std::string nodename) : nodename_(set_nodename(classname, nodename)) {}
 INode::ptr_t INode::factory(std::string classname, std::string nodename)
 {
     auto fnd = registered_classes_.find(classname);

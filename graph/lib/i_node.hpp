@@ -21,7 +21,7 @@ class INode
 public:
     using ptr_t = std::shared_ptr<INode>;
     using node_builder_t = std::function<ptr_t(std::string nodename)>;
-    explicit INode(std::string nodename = "");
+    explicit INode(std::string classname = "", std::string nodename = "");
     INode() = delete;
     INode(const INode&) = delete;
     INode& operator=(const INode&) = delete;

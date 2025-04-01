@@ -7,7 +7,7 @@ namespace g
 class SinNode : public IFunctionalNode
 {
 public:
-    SinNode(std::string nodename = "") : IFunctionalNode(nodename) {};
+    SinNode(std::string nodename = "") : IFunctionalNode("SinNode", nodename) {};
 
 protected:
     Tensor compute_value() override;
@@ -21,7 +21,7 @@ private:
 class CosNode : public IFunctionalNode
 {
 public:
-    CosNode(std::string nodename = "") : IFunctionalNode(nodename) {};
+    CosNode(std::string nodename = "") : IFunctionalNode("CosNode", nodename) {};
 
 protected:
     Tensor compute_value() override;
