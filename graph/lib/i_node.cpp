@@ -20,33 +20,13 @@ std::string build_random_string(int length)
     return res;
 }
 
-std::string set_nodename(std::string nodename, std::unordered_set<std::string>& existing_names)
+std::string set_nodename(std::string nodename)
 {
-    if (!nodename.empty() && existing_names.find(nodename) != existing_names.end())
-    {
-        throw std::runtime_error("Node name must be unique: " + nodename);
-    }
-    if (nodename.empty())
-    {
-        nodename = build_random_string(8);
-    }
-    int trycount = 0;
-    while (existing_names.find(nodename) != existing_names.end())
-    {
-        trycount++;
-        if (trycount > 10)
-        {
-            throw std::runtime_error("Failed to generate unique name.");
-        }
-        nodename = build_random_string(8);
-    }
-    return nodename;
+    return (nodename.empty()) ? build_random_string(8) : nodename;
 }
 } // namespace
-INode::INode(std::string nodename) : nodename_(set_nodename(nodename, existing_names_))
-{
-    existing_names_.insert(nodename_);
-}
+
+INode::INode(std::string nodename) : nodename_(set_nodename(nodename)) {}
 INode::ptr_t INode::factory(std::string classname, std::string nodename)
 {
     auto fnd = registered_classes_.find(classname);
@@ -66,13 +46,13 @@ void INode::add_next(const std::shared_ptr<INode> a)
 }
 
 void INode::set_dep(const nlohmann::json& node_json,
-                    const std::unordered_map<std::string, std::shared_ptr<INode>>& all_nodes, std::string copy_word)
+                    const std::unordered_map<std::string, std::shared_ptr<INode>>& all_nodes)
 {
     if (!node_json.at("prev_nodes").empty())
     {
         for (const auto& prev_node_name : node_json.at("prev_nodes"))
         {
-            auto prev_node = all_nodes.find(prev_node_name.get<std::string>() + copy_word);
+            auto prev_node = all_nodes.find(prev_node_name.get<std::string>());
             add_prev(prev_node->second);
             auto this_node = all_nodes.find(nodename_);
             prev_node->second->add_next(this_node->second);
@@ -144,4 +124,9 @@ void g::set_dep(std::shared_ptr<INode> node, std::initializer_list<std::shared_p
         node->add_prev(prev_node);
         prev_node->add_next(node);
     }
+}
+
+void INode::rename()
+{
+    throw std::runtime_error("Not implemented");
 }

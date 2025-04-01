@@ -9,7 +9,6 @@
 using namespace g;
 namespace
 {
-using pnode_t = INode::ptr_t;
 pnode_t find_node_by_name(std::unordered_map<std::string, pnode_t> all_nodes, const std::string& name)
 {
     auto it = all_nodes.find(name);
@@ -23,6 +22,10 @@ pnode_t find_node_by_name(std::unordered_map<std::string, pnode_t> all_nodes, co
 
 Model::Model(std::vector<pnode_t> inputs, std::vector<pnode_t> outputs) : input_nodes_(inputs), output_nodes_(outputs)
 {
+    for (const auto& node : input_nodes_)
+	{
+        save_name(node);
+	}
     for (const auto& output : output_nodes_)
     {
         add_into_inter(output);
@@ -84,6 +87,7 @@ void Model::add_into_inter(pnode_t node)
     bool not_in_inter = std::find(inter_nodes_.begin(), inter_nodes_.end(), node) == inter_nodes_.end();
     if (not_in_inter)
     {
+        save_name(node);
         inter_nodes_.push_back(node);
         auto dataNode = std::dynamic_pointer_cast<DataNode>(node);
         if (dataNode != nullptr)
@@ -120,4 +124,13 @@ Model Model::load(const std::string& filename)
     nlohmann::json j;
     file >> j;
     return j.get<Model>();
+}
+
+void Model::save_name(pnode_t node)
+{
+    std::string nodename = node->nodename();
+    if (names_.find(nodename) == names_.end())
+        names_.insert(nodename);
+    else
+        node->rename();
 }

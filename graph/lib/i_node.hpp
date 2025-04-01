@@ -8,7 +8,6 @@
 #include <memory>
 #include <vector>
 #include <map>
-#include <unordered_set>
 
 #define REGISTER_INODE_CHILD(classname)                                                                                \
     static inline const bool __registered = INode::register_class(#classname, [](std::string nodename) {               \
@@ -37,17 +36,12 @@ public:
     std::vector<std::shared_ptr<INode>> next_nodes();
     void clear_prev();
     virtual std::string classname() const = 0;
-    void set_dep(const nlohmann::json&, const std::unordered_map<std::string, std::shared_ptr<INode>>&,
-                 std::string copy_word = "_copy");
+    void set_dep(const nlohmann::json&, const std::unordered_map<std::string, std::shared_ptr<INode>>&);
+    void rename();
     virtual void serialize_spec(nlohmann::json& js) const {};
-    virtual void deserialize_spec(const nlohmann::json&, std::string copy_word = "_copy") {};
+    virtual void deserialize_spec(const nlohmann::json&) {};
     virtual Shape output_shape() const = 0;
-    virtual ~INode()
-    {
-        existing_names_.erase(nodename_);
-    };
-
-    static inline std::unordered_set<std::string> existing_names_;
+    virtual ~INode() {};
 
 protected:
     const std::string nodename_;
@@ -87,7 +81,7 @@ struct adl_serializer<std::shared_ptr<T>, std::enable_if_t<std::is_base_of<g::IN
     static void from_json(const json& node_json, g::INode::ptr_t& node)
     {
         std::string classname = node_json.at("classname").get<std::string>();
-        std::string nodename = node_json.at("nodename").get<std::string>() + "_copy";
+        std::string nodename = node_json.at("nodename").get<std::string>();
         node = g::INode::factory(classname, nodename);
         node->deserialize_spec(node_json);
     }

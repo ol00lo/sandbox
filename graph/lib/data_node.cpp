@@ -19,9 +19,9 @@ void DataNode::serialize_spec(nlohmann::json& js) const
     js["value"] = value_;
 }
 
-void DataNode::deserialize_spec(const nlohmann::json& node_json, std::string copy_word)
+void DataNode::deserialize_spec(const nlohmann::json& node_json)
 {
-    std::string nname = node_json["nodename"].get<std::string>() + copy_word;
+    std::string nname = node_json["nodename"].get<std::string>();
     std::vector<double> x = node_json["value"]["value"].get<std::vector<double>>();
     Shape shape = node_json["value"]["shape"].get<Arr4>();
     Tensor val(shape, x);
