@@ -2,17 +2,25 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 import os
 import sys
 import traceback
-from PIL import Image
 from qt_common import show_message, SUPPORTED_IMAGE_EXTENSIONS
 from table import ImageInfo
+from state import State
 
 class BaseAction(QtGui.QAction):
     def __init__(self, name, parent, shortcut=None):
         super().__init__(name, parent)
-        self.triggered.connect(self.do)
+        self._current_index = None
+        self.triggered.connect(self._execute)
         if shortcut:
-            self.setShortcut(QtGui.QKeySequence(shortcut))
+            self.setShortcut(shortcut)
         self.parent = parent
+
+    def set_current_index(self, index):
+        self._current_index = index
+
+    def _execute(self):
+        if self._current_index is not None:
+            self.do()
 
     def do(self):
         try:
@@ -43,8 +51,9 @@ class LoadImagesAction(BaseAction):
                 if source_index.isValid():
                     image_info = self.parent.image_model.images[source_index.row()]
                     image_name = image_info.name
-                    image_path = os.path.join(self.parent.image_model.dir_path, image_name)
-                    self.parent.image_selected.emit(image_path)
+                    State().selected_image = image_name
+                    State().current_dir = self.parent.image_model.dir_path
+                    self.parent.image_selected.emit(State().get_path())
 
     def do_impl(self):
         folder = QtWidgets.QFileDialog.getExistingDirectory(self.parent, "Select Folder")
@@ -53,13 +62,7 @@ class LoadImagesAction(BaseAction):
             for filename in os.listdir(folder):
                 if filename.lower().endswith(SUPPORTED_IMAGE_EXTENSIONS):
                     image_path = os.path.join(folder, filename)
-                    try:
-                        size = os.path.getsize(image_path)
-                        image = Image.open(image_path)
-                        width, height = image.size
-                        images.append(ImageInfo(filename, size, width, height))
-                    except Exception as e:
-                        print(f"Error loading image {filename}: {str(e)}")
+                    images.append(ImageInfo(image_path))
 
             if images:
                 self.parent.image_model.set_data(images, dir_path=folder)
@@ -97,7 +100,8 @@ class DeleteAllImagesAction(BaseAction):
                     self.parent.image_model.dir_path = ""
                     self.parent.image_model.endResetModel()
 
-                    self.parent.image_selected.emit("")
+                    State().cleanup()
+                    self.parent.image_selected.emit(State().get_path())
                     self.parent.filter_line_edit.clear()
                     show_message(self.parent, "Success", f"Deleted {deleted_files} images.", is_error=False)
         else:
@@ -124,22 +128,16 @@ class AddImageAction(BaseAction):
         )
 
         if file_name:
-            image_name = os.path.basename(file_name)
-            image_size = os.path.getsize(file_name)
-            with Image.open(file_name) as img:
-                width, height = img.size
-
-            new_image_info = ImageInfo(name=image_name, size=image_size, width=width, height=height)
+            new_image_info = ImageInfo(file_name)
             self.model.add_image(new_image_info, file_name)
 
 class RenameFileAction(BaseAction):
-    def __init__(self, model, index, parent=None):
+    def __init__(self, model, parent=None):
         super().__init__("Rename File", parent)
         self.model = model
-        self.index = index
 
     def do_impl(self):
-        index = self.index
+        index = self._current_index
         if index.isValid():
             old_name = self.model.images[index.row()].name
             new_name, ok = QtWidgets.QInputDialog.getText(None, "Rename File", "Enter new name:", text=old_name)
@@ -157,3 +155,57 @@ class RenameFileAction(BaseAction):
                     os.rename(old_path, new_path)
                     self.model.images[index.row()].name = new_name
                     self.model.dataChanged.emit(index, index, [QtCore.Qt.ItemDataRole.DisplayRole])
+
+class DeleteImageAction(BaseAction):
+    def __init__(self, table_viewer):
+        super().__init__("Delete Image", table_viewer, "Delete")
+        self.table_viewer = table_viewer
+
+    def do_impl(self):
+        selected = self.table_viewer.table_view.selectionModel().selectedRows()
+        if not selected:
+            show_message("No selection", "Please select images to delete", is_error=True)
+            return
+
+        for index in sorted(selected, key=lambda x: x.row(), reverse=True):
+            self.delete(index)
+
+    def delete(self, index):
+        table_viewer = self.table_viewer
+        image_model = table_viewer.image_model
+        if not index.isValid():
+            return
+        source_index = table_viewer.image_proxy_model.mapToSource(index)
+        if not source_index.isValid():
+            return
+        current_row = source_index.row()
+        if current_row >= len(image_model.images) or current_row < 0:
+            return
+
+        image_info = image_model.images[current_row]
+        image_path = os.path.join(image_model.dir_path, image_info.name)
+
+        if os.path.exists(image_path):
+            os.remove(image_path)
+
+        image_model.beginRemoveRows(QtCore.QModelIndex(), current_row, current_row)
+        image_model.images.pop(current_row)
+        image_model.endRemoveRows()
+
+        next_image_path = ""
+        if image_model.images:
+            next_row = min(current_row, len(image_model.images) - 1)
+            next_image_info = image_model.images[next_row]
+            next_image_path = os.path.join(image_model.dir_path, next_image_info.name)
+
+            new_index = table_viewer.image_proxy_model.mapFromSource(
+                image_model.index(next_row, 0)
+            )
+            table_viewer.table_view.selectionModel().select(
+                new_index,
+                QtCore.QItemSelectionModel.SelectionFlag.ClearAndSelect |
+                QtCore.QItemSelectionModel.SelectionFlag.Rows
+            )
+
+        State().selected_image = next_image_path
+        self.table_viewer.image_selected.emit(next_image_path)

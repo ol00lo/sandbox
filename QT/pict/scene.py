@@ -1,5 +1,4 @@
 from PyQt6 import QtWidgets, QtGui
-from PIL import Image
 
 class ImageModel(QtWidgets.QGraphicsScene):
     def __init__(self, parent=None):
@@ -13,10 +12,3 @@ class ImageModel(QtWidgets.QGraphicsScene):
         pixmap_item = self.addPixmap(pixmap)
         self.setSceneRect(pixmap_item.boundingRect())
 
-    def cur_size(self):
-        try:
-            with Image.open(self.current_image_path) as image:
-                width, height = image.size
-                return width, height
-        except Exception as e:
-            return 0, 0

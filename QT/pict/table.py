@@ -1,17 +1,19 @@
-from PyQt6 import QtWidgets, QtCore
+from PyQt6 import QtCore
 import os
 import shutil
+import imagesize
 
 class ImageInfo:
-    def __init__(self, name = "", size = 0, width = 0, height = 0):
-        self.set_properties(name, size, width, height)
+    def __init__(self, path):
+        self.set_properties(path)
 
-    def set_properties(self, name, size, width, height):
-        self.name = name
-        self.width = width
-        self.height = height
-        self.size = size  
-        self.area = (width * height) / 1_000_000  
+    def set_properties(self, path):
+        if not os.path.exists(path):
+            raise Exception("File does not exist.")
+        self.name = os.path.basename(path)
+        self.width, self.height = imagesize.get(path)
+        self.size = os.path.getsize(path)
+        self.area = (self.width * self.height) / 1_000_000  
 
 class TableModel(QtCore.QAbstractTableModel):
     columns = ["Name", "File Size", "Width", "Height", "Area"]

@@ -1,8 +1,6 @@
-from PyQt6 import QtCore, QtWidgets
-from actions import LoadImagesAction, DeleteAllImagesAction, RenameFileAction
-from table import TableModel
-import os
-from qt_common import show_message
+from PyQt6 import QtCore, QtWidgets, QtGui
+from actions import LoadImagesAction, DeleteAllImagesAction, RenameFileAction, DeleteImageAction
+from state import State
 
 class TableViewer (QtWidgets.QWidget):
     image_selected = QtCore.pyqtSignal(str)
@@ -18,7 +16,7 @@ class TableViewer (QtWidgets.QWidget):
         self.table_view.setMouseTracking(True)
         self.table_view.viewport().installEventFilter(self)
 
-        self.image_model = TableModel(self)
+        self.image_model = State().get_model()
         self.image_proxy_model = QtCore.QSortFilterProxyModel(self)
         self.image_proxy_model.setSourceModel(self.image_model)
 
@@ -42,6 +40,10 @@ class TableViewer (QtWidgets.QWidget):
         table_widget.setMaximumWidth(400)
         table_widget.setLayout(main_layout)
         self.setLayout(main_layout)
+        self.delete_action = DeleteImageAction(self)
+        self.rename_action = RenameFileAction(self.image_model, self)
+        State().register_action('delete', DeleteImageAction(self))
+        State().register_action('rename', RenameFileAction(self.image_model))
 
     def on_filter_text_changed(self, text):
         if self.image_model:
@@ -51,26 +53,20 @@ class TableViewer (QtWidgets.QWidget):
         index = self.table_view.indexAt(position)
         if index.isValid():
             context_menu = QtWidgets.QMenu(self.table_view)
-            delete_action = context_menu.addAction("Delete Image")
-            delete_action.triggered.connect(lambda: self.delete_image(index))
 
-            rename_action = context_menu.addAction("Rename Image")
-            rename_action.triggered.connect(lambda: RenameFileAction(self.image_model, index).do())
+            context_menu.addAction(self.delete_action)
+            context_menu.addAction(self.rename_action)
+
+            self.delete_action.set_current_index(index)
+            self.rename_action.set_current_index(index)
 
             context_menu.exec(self.table_view.viewport().mapToGlobal(position))
 
-    def delete_image(self, index):
-        source_index = self.image_proxy_model.mapToSource(index)
-        if source_index.isValid():
-            image_info = self.image_model.images[source_index.row()]
-            image_path = os.path.join(self.image_model.dir_path, image_info.name)
-
-            try:
-                os.remove(image_path)
-                self.image_model.images.pop(source_index.row())
-                self.image_model.layoutChanged.emit()
-
-                self.image_selected.emit("")
-                self.filter_line_edit.clear()
-            except Exception as e:
-                show_message(self.parent, "Error", f"Error while deleting image: {str(e)}", is_error=True)
+    def keyPressEvent(self, event):
+        if event.key() == QtCore.Qt.Key.Key_Delete:
+            index = self.table_view.currentIndex()
+            if index.isValid():
+                self.delete_action.set_current_index(index)
+                self.delete_action.trigger()
+        else:
+            super().keyPressEvent(event)
