@@ -1,6 +1,6 @@
 from PyQt6 import QtCore, QtWidgets
 from actions import LoadImagesAction, DeleteAllImagesAction, RenameFileAction
-from table import TableModel, TableProxyModel
+from table import TableModel
 import os
 from qt_common import show_message
 
@@ -15,10 +15,13 @@ class TableViewer (QtWidgets.QWidget):
         self.table_view.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
         self.table_view.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
         self.table_view.customContextMenuRequested.connect(self.show_context_menu)
+        self.table_view.setMouseTracking(True)
+        self.table_view.viewport().installEventFilter(self)
 
         self.image_model = TableModel(self)
-        self.image_proxy_model = TableProxyModel(self)
-        
+        self.image_proxy_model = QtCore.QSortFilterProxyModel(self)
+        self.image_proxy_model.setSourceModel(self.image_model)
+
         self.filter_line_edit = QtWidgets.QLineEdit()
         self.filter_line_edit.setPlaceholderText("Filter by name...")
         self.filter_line_edit.textChanged.connect(self.on_filter_text_changed)

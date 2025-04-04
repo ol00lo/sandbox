@@ -1,7 +1,9 @@
 from PyQt6 import QtCore, QtGui, QtWidgets
 import os
+import sys
+import traceback
 from PIL import Image
-from qt_common import show_message
+from qt_common import show_message, SUPPORTED_IMAGE_EXTENSIONS
 from table import ImageInfo
 
 class BaseAction(QtGui.QAction):
@@ -19,6 +21,11 @@ class BaseAction(QtGui.QAction):
             self.errors(e)
 
     def errors(self, error):
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        tb_str = ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+        print("\n=== ERROR TRACEBACK ===")
+        print(tb_str)
+        print("======================\n")
         parent = self.parent if hasattr(self, 'parent') and self.parent else None
         QtWidgets.QMessageBox.critical(parent, "ERROR", str(error))
     
@@ -44,7 +51,7 @@ class LoadImagesAction(BaseAction):
         if folder:
             images = []
             for filename in os.listdir(folder):
-                if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp')):
+                if filename.lower().endswith(SUPPORTED_IMAGE_EXTENSIONS):
                     image_path = os.path.join(folder, filename)
                     try:
                         size = os.path.getsize(image_path)
@@ -55,8 +62,7 @@ class LoadImagesAction(BaseAction):
                         print(f"Error loading image {filename}: {str(e)}")
 
             if images:
-                self.parent.image_model.add_data(images, dir_path=folder)
-                self.parent.image_proxy_model.setSourceModel(self.parent.image_model)
+                self.parent.image_model.set_data(images, dir_path=folder)
                 self.parent.table_view.setModel(self.parent.image_proxy_model)
                 self.parent.table_view.selectionModel().selectionChanged.connect(self.on_selection_changed)
                 self.parent.table_view.setSortingEnabled(True)
@@ -78,19 +84,26 @@ class DeleteAllImagesAction(BaseAction):
             )
 
             if reply == QtWidgets.QMessageBox.StandardButton.Yes:
-                    for filename in os.listdir(self.parent.image_model.dir_path):
-                        file_path = os.path.join(self.parent.image_model.dir_path, filename)
-                        if os.path.isfile(file_path) and filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp')):
-                            os.remove(file_path)
+                deleted_files = 0
+                for filename in os.listdir(self.parent.image_model.dir_path):
+                    file_path = os.path.join(self.parent.image_model.dir_path, filename)
+                    if os.path.isfile(file_path) and filename.lower().endswith(SUPPORTED_IMAGE_EXTENSIONS):
+                        os.remove(file_path)
+                        deleted_files += 1
 
-                    self.parent.table_view.setModel(None)
+                if deleted_files > 0:
+                    self.parent.image_model.beginResetModel()
+                    self.parent.image_model.images.clear()
+                    self.parent.image_model.dir_path = ""
+                    self.parent.image_model.endResetModel()
+
                     self.parent.image_selected.emit("")
                     self.parent.filter_line_edit.clear()
-                    self.parent.image_model.dir_path = ""
-
-                    show_message(self.parent, "Success", "All images have been deleted.", is_error=False)
+                    show_message(self.parent, "Success", f"Deleted {deleted_files} images.", is_error=False)
         else:
             show_message(self.parent, "Error", "No directory selected.", is_error=True)
+            return
+
 
 class AddImageAction(BaseAction):
     def __init__(self, model, parent=None):
@@ -106,7 +119,7 @@ class AddImageAction(BaseAction):
             None,
             "Select Image",
             "",
-            "Images (*.png *.jpg *.jpeg *.bmp *.gif);;All Files (*)",
+            "Images (*.png *.jpg *.jpeg *.bmp);;All Files (*)",
             options=options
         )
 
@@ -117,8 +130,7 @@ class AddImageAction(BaseAction):
                 width, height = img.size
 
             new_image_info = ImageInfo(name=image_name, size=image_size, width=width, height=height)
-            if not self.model.add_image(new_image_info, file_name):
-                QtWidgets.QMessageBox.critical(None, "Error", "Failed to add image.")
+            self.model.add_image(new_image_info, file_name)
 
 class RenameFileAction(BaseAction):
     def __init__(self, model, index, parent=None):
