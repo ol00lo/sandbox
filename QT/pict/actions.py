@@ -4,18 +4,30 @@ from PIL import Image
 from qt_common import show_message
 from table import ImageInfo
 
-class LoadImagesAction(QtGui.QAction):
-    def __init__(self, parent):
-        super().__init__("Load Images", parent)
+class BaseAction(QtGui.QAction):
+    def __init__(self, name, parent, shortcut=None):
+        super().__init__(name, parent)
         self.triggered.connect(self.do)
-        self.setShortcut(QtGui.QKeySequence("Ctrl+L"))
+        if shortcut:
+            self.setShortcut(QtGui.QKeySequence(shortcut))
         self.parent = parent
 
     def do(self):
         try:
             self.do_impl()
         except Exception as e:
-            QtWidgets.QMessageBox.critical(self.parent, "ERROR", str(e))
+            self.errors(e)
+
+    def errors(self, error):
+        parent = self.parent if hasattr(self, 'parent') and self.parent else None
+        QtWidgets.QMessageBox.critical(parent, "ERROR", str(error))
+    
+    def do_impl(self):
+        raise NotImplementedError("Subclasses must implement do_impl()")
+
+class LoadImagesAction(BaseAction):
+    def __init__(self, parent):
+        super().__init__("Load Images", parent, "Ctrl+L")
 
     def on_selection_changed(self, selected, deselected):
         for index in selected.indexes():
@@ -51,18 +63,9 @@ class LoadImagesAction(QtGui.QAction):
                 for column_index in range(len(self.parent.image_model.columns)):
                     self.parent.table_view.horizontalHeader().setSectionResizeMode(column_index, QtWidgets.QHeaderView.ResizeMode.Stretch)
 
-class DeleteAllImagesAction(QtGui.QAction):
+class DeleteAllImagesAction(BaseAction):
     def __init__(self, parent):
-        super().__init__("Delete All Images", parent)
-        self.triggered.connect(self.do)
-        self.setShortcut(QtGui.QKeySequence("Ctrl+D"))
-        self.parent = parent
-
-    def do(self):
-        try:
-            self.do_impl()
-        except Exception as e:
-            QtWidgets.QMessageBox.critical(None, "ERROR", str(e))
+        super().__init__("Delete All Images", parent, "Ctrl+D")
 
     def do_impl(self):
         if self.parent.image_model and self.parent.image_model.dir_path:
@@ -75,7 +78,6 @@ class DeleteAllImagesAction(QtGui.QAction):
             )
 
             if reply == QtWidgets.QMessageBox.StandardButton.Yes:
-                try:
                     for filename in os.listdir(self.parent.image_model.dir_path):
                         file_path = os.path.join(self.parent.image_model.dir_path, filename)
                         if os.path.isfile(file_path) and filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp')):
@@ -87,22 +89,13 @@ class DeleteAllImagesAction(QtGui.QAction):
                     self.parent.image_model.dir_path = ""
 
                     show_message(self.parent, "Success", "All images have been deleted.", is_error=False)
-                except Exception as e:
-                    show_message(self.parent, "Error", f"Error while deleting images: {str(e)}", is_error=True)
         else:
             show_message(self.parent, "Error", "No directory selected.", is_error=True)
 
-class AddImageAction(QtGui.QAction):
+class AddImageAction(BaseAction):
     def __init__(self, model, parent=None):
         super().__init__("Add Image", parent)
         self.model = model
-        self.triggered.connect(self.do)
-
-    def do(self):
-        try:
-            self.do_impl()
-        except Exception as e:
-            QtWidgets.QMessageBox.critical(None, "ERROR", str(e))
 
     def do_impl(self):
         if self.model.dir_path is None:
@@ -127,18 +120,11 @@ class AddImageAction(QtGui.QAction):
             if not self.model.add_image(new_image_info, file_name):
                 QtWidgets.QMessageBox.critical(None, "Error", "Failed to add image.")
 
-class RenameFileAction(QtGui.QAction):
+class RenameFileAction(BaseAction):
     def __init__(self, model, index, parent=None):
         super().__init__("Rename File", parent)
         self.model = model
         self.index = index
-        self.triggered.connect(self.do)
-
-    def do(self):
-        try:
-            self.do_impl()
-        except Exception as e:
-            QtWidgets.QMessageBox.critical(None, "ERROR", str(e))
 
     def do_impl(self):
         index = self.index
@@ -156,9 +142,6 @@ class RenameFileAction(QtGui.QAction):
                         QtWidgets.QMessageBox.warning(None, "Error", "File with this name already exists.")
                         return
 
-                    try:
-                        os.rename(old_path, new_path)
-                        self.model.images[index.row()].name = new_name
-                        self.model.dataChanged.emit(index, index, [QtCore.Qt.ItemDataRole.DisplayRole])
-                    except Exception as e:
-                        QtWidgets.QMessageBox.warning(None, "Error", f"Could not rename file: {e}")
+                    os.rename(old_path, new_path)
+                    self.model.images[index.row()].name = new_name
+                    self.model.dataChanged.emit(index, index, [QtCore.Qt.ItemDataRole.DisplayRole])

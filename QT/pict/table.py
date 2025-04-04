@@ -1,8 +1,7 @@
 from PyQt6 import QtWidgets, QtCore
 import os
-
 import shutil
-from actions import RenameFileAction
+
 class ImageInfo:
     def __init__(self, name = "", size = 0, width = 0, height = 0):
         self.set_properties(name, size, width, height)
