@@ -31,7 +31,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setStatusBar(self.status_bar)
 
         self.table_viewer.image_selected.connect(self.image_model_viewer.display_image)
-        self.image_model_viewer.coordinates_clicked.connect(self.status_bar.showMessage)
+        self.image_model_viewer.coordinates_clicked.connect(self.show_coordinates)
         self.create_toolbar()
 
     def create_toolbar(self):
@@ -42,3 +42,6 @@ class MainWindow(QtWidgets.QMainWindow):
         toolbar.addAction(AddImageAction(self.table_viewer.image_model, self))
 
         toolbar.addSeparator()
+
+    def show_coordinates(self, x, y):
+        self.status_bar.showMessage(f"X: {x}, Y: {y}")
