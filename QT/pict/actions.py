@@ -19,8 +19,7 @@ class BaseAction(QtGui.QAction):
         self._current_index = index
 
     def _execute(self):
-        if self._current_index is not None:
-            self.do()
+        self.do()
 
     def do(self):
         try:
