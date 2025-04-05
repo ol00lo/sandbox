@@ -5,19 +5,14 @@ from PyQt6 import QtWidgets
 import mainwin
 import resources
 
-def main(app):
-    # create window
+def main():
+    app = QtWidgets.QApplication(sys.argv)
+
     resources.qInitResources()
     mwin = mainwin.MainWindow()
     mwin.show()
 
-    # start gui loop
-    app.exec()
-
+    sys.exit(app.exec())
 
 if __name__ == '__main__':
-    # initialize qt application here to prevent
-    # segmentation fault on exit
-    qApp = QtWidgets.QApplication(sys.argv)
-    main(qApp)
-    sys.exit()
+    main()
