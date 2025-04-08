@@ -25,6 +25,7 @@ Model::Model(std::vector<pnode_t> inputs, std::vector<pnode_t> outputs) : input_
     for (const auto& node : input_nodes_)
 	{
         save_name(node);
+        nodes_.push_back(node);
 	}
     for (const auto& output : output_nodes_)
     {
@@ -54,13 +55,13 @@ std::vector<Tensor> Model::compute(const std::vector<Tensor>& input_values)
     }
     return results;
 }
+const std::vector<pnode_t> Model::nodes() const
+{
+    return nodes_;
+}
 const std::vector<pnode_t> Model::input_nodes() const
 {
     return input_nodes_;
-}
-const std::vector<pnode_t> Model::inter_nodes() const
-{
-    return inter_nodes_;
 }
 const std::vector<pnode_t> Model::output_nodes() const
 {
@@ -84,11 +85,11 @@ void Model::add_into_inter(pnode_t node)
     {
         return;
     }
-    bool not_in_inter = std::find(inter_nodes_.begin(), inter_nodes_.end(), node) == inter_nodes_.end();
+    bool not_in_inter = std::find(nodes_.begin(), nodes_.end(), node) == nodes_.end();
     if (not_in_inter)
     {
         save_name(node);
-        inter_nodes_.push_back(node);
+        nodes_.push_back(node);
         auto dataNode = std::dynamic_pointer_cast<DataNode>(node);
         if (dataNode != nullptr)
         {

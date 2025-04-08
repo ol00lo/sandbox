@@ -29,7 +29,7 @@ void DataNode::deserialize_spec(const nlohmann::json& node_json)
 }
 Tensor DataNode::notself_derivative(const INode* arg)
 {
-    log().debug("Gradient in DataNode compute");
+    log().debug("Gradient in DataNode \"{}\" compute", nodename());
     return Tensor(arg->output_shape(), 0.0);
 }
 

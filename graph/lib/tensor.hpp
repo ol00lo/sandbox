@@ -18,15 +18,18 @@ public:
     Tensor(const std::vector<double>& data) : data_(data), shape_(data.size()) {};
     Tensor(Shape shape, const std::vector<double>& data);
     Tensor(Shape shape, double a);
+
     void set_zero();
     double operator[](Index ind) const;
+    Shape shape() const;
+    const std::vector<double>& data() const;
+
     void add(const Tensor& other);
     void sub(const Tensor& other);
     void mult(const Tensor& other);
     void div(const Tensor& other);
     void scalar_mult(double a);
-    Shape shape() const;
-    const std::vector<double>& data() const;
+
     Tensor& operator=(const Tensor& t);
     bool operator==(const Tensor& other) const;
     void write(std::ostream& os = std::cout) const;

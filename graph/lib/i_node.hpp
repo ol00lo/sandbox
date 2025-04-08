@@ -21,34 +21,44 @@ class INode
 public:
     using ptr_t = std::shared_ptr<INode>;
     using node_builder_t = std::function<ptr_t(std::string nodename)>;
+
     explicit INode(std::string classname = "", std::string nodename = "");
+    static ptr_t factory(std::string classname, std::string nodename = "");
     INode() = delete;
     INode(const INode&) = delete;
     INode& operator=(const INode&) = delete;
-    static ptr_t factory(std::string classname, std::string nodename = "");
+
     void add_prev(std::shared_ptr<INode> a);
     void add_next(std::shared_ptr<INode> a);
+
+	std::string nodename() const;
+    void rename();
+	std::vector<std::shared_ptr<INode>> prev_nodes() const;
+    std::vector<std::shared_ptr<INode>> next_nodes();
+
     virtual Tensor value() = 0;
-    std::string nodename() const;
+	virtual Shape output_shape() const = 0;
     Tensor derivative(const INode* argument);
     Tensor derivative(std::shared_ptr<INode>);
-    std::vector<std::shared_ptr<INode>> prev_nodes() const;
-    std::vector<std::shared_ptr<INode>> next_nodes();
+
     void clear_prev();
-    virtual std::string classname() const = 0;
     void set_dep(const nlohmann::json&, const std::unordered_map<std::string, std::shared_ptr<INode>>&);
-    void rename();
+
+    virtual std::string classname() const = 0;
     virtual void serialize_spec(nlohmann::json& js) const {};
     virtual void deserialize_spec(const nlohmann::json&) {};
-    virtual Shape output_shape() const = 0;
+
     virtual ~INode() {};
 
 protected:
     const std::string nodename_;
-    static inline std::map<std::string, node_builder_t> registered_classes_;
-    static bool register_class(std::string classname, node_builder_t builder);
+
     std::vector<std::shared_ptr<INode>> prev_nodes_;
     std::vector<std::shared_ptr<INode>> next_nodes_;
+
+    static inline std::map<std::string, node_builder_t> registered_classes_;
+    static bool register_class(std::string classname, node_builder_t builder);
+
     virtual void clear_cache() {};
     void clear_backward_cache();
     void clear_forward_cache();
@@ -56,6 +66,7 @@ protected:
 private:
     virtual Tensor notself_derivative(const INode* arg) = 0;
 };
+
 void set_dep(std::shared_ptr<INode>, std::initializer_list<std::shared_ptr<INode>>);
 } // namespace g
 

@@ -36,6 +36,10 @@ Tensor IFunctionalNode::value()
     }
     return value_;
 }
+Shape IFunctionalNode::output_shape() const
+{
+    return prev_nodes_[0]->output_shape();
+}
 
 void IFunctionalNode::clear_cache()
 {
@@ -47,6 +51,10 @@ void IFunctionalNode::clear_cache()
     value_.set_zero();
 }
 
+void IFunctionalNode::log_cache() const
+{
+    log().debug(classname() + " cleaned");
+}
 void IFunctionalNode::before_value_compute()
 {
     for (auto& c : value_callbacks_)
@@ -78,7 +86,6 @@ Tensor IFunctionalNode::notself_derivative(const INode* arg)
         return x->second;
     }
 }
-
 Tensor IFunctionalNode::compute_notself_derivative(const INode* arg)
 {
     Tensor res(arg->output_shape(), 0.0);
@@ -97,8 +104,4 @@ Tensor IFunctionalNode::compute_notself_derivative(const INode* arg)
             _THROW_NOT_IMP_
     }
     return res;
-}
-Shape IFunctionalNode::output_shape() const
-{
-    return prev_nodes_[0]->output_shape();
 }

@@ -26,10 +26,10 @@ TrainingGraph::TrainingGraph(const Model& target_model, LossType loss_type) : ta
             input_nodes_.push_back(gr_t);
             INode::ptr_t minus = std::make_shared<MinusNode>("");
             g::set_dep(minus, {gr_t, out});
-            inter_nodes_.push_back(minus);
+            nodes_.push_back(minus);
             INode::ptr_t loss = std::make_shared<SqrNode>("");
             g::set_dep(loss, {minus});
-            inter_nodes_.push_back(loss);
+            nodes_.push_back(loss);
             output_nodes_.push_back(loss);
         }
         break;

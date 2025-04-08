@@ -14,21 +14,25 @@ class Model
 public:
     Model() {};
     Model(std::vector<pnode_t> inputs, std::vector<pnode_t> outputs);
-    void save(const std::string& filename);
+
     static Model load(const std::string& filename);
-    std::vector<Tensor> compute(const std::vector<Tensor>& input_values);
+    void save(const std::string& filename);
+
+    const std::vector<pnode_t> nodes() const;
     const std::vector<pnode_t> input_nodes() const;
-    const std::vector<pnode_t> inter_nodes() const;
     const std::vector<pnode_t> output_nodes() const;
     std::vector<std::shared_ptr<DataNode>> param_nodes() const;
+
     void set_param_nodes(const std::vector<std::shared_ptr<DataNode>>& p);
+
+    std::vector<Tensor> compute(const std::vector<Tensor>& input_values);
 
 protected:
     std::unordered_set<std::string> names_;
-    std::vector<std::shared_ptr<DataNode>> param_nodes_;
+    std::vector<pnode_t> nodes_;
     std::vector<pnode_t> input_nodes_;
     std::vector<pnode_t> output_nodes_;
-    std::vector<pnode_t> inter_nodes_;
+    std::vector<std::shared_ptr<DataNode>> param_nodes_;
     void add_into_inter(pnode_t node);
     void save_name(pnode_t node);
 };
@@ -47,7 +51,7 @@ struct adl_serializer<g::Model>
             j["nodes"].push_back(input);
             j["io"]["input_nodes"].push_back(input->nodename());
         }
-        for (const auto& inter : model.inter_nodes())
+        for (const auto& inter : model.nodes())
         {
             j["nodes"].push_back(inter);
         }

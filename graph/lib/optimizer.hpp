@@ -9,7 +9,7 @@ struct IOptimizer
 {
     void set_param_nodes(const std::vector<std::shared_ptr<DataNode>>& params);
     virtual void apply(const std::vector<Tensor>& gradients) = 0;
-    virtual ~IOptimizer(){}
+    virtual ~IOptimizer(){};
 
 protected:
     std::vector<std::shared_ptr<DataNode>> params_;
@@ -18,7 +18,7 @@ protected:
 struct SGDOptimizer : public IOptimizer
 {
 public:
-    SGDOptimizer(double lr) : IOptimizer(), learning_rate_(lr) {}
+    SGDOptimizer(double lr) : IOptimizer(), learning_rate_(lr) {};
     void apply(const std::vector<Tensor>& gradients) override;
 
 private:
