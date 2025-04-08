@@ -10,15 +10,18 @@ void OptimizationWorker::set_optimizer(const std::shared_ptr<IOptimizer> optimiz
 
 double OptimizationWorker::train(const std::vector<Tensor>& inputs, const std::vector<Tensor>& gt)
 {
-    double res = compute_loss(inputs, gt);
+    double loss = compute_loss(inputs, gt);
     auto grads = graph_.gradients();
     optimizer_->apply(grads);
-    return res;
+    log().info("Train loss: {}", loss);
+    return loss;
 }
 
 double OptimizationWorker::validate(const std::vector<Tensor>& inputs, const std::vector<Tensor>& gt)
 {
-    return compute_loss(inputs, gt);
+    double loss = compute_loss(inputs, gt);
+    log().info("Valid loss: {}", loss);
+    return loss;
 }
 
 void OptimizationWorker::commit()

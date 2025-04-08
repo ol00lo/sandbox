@@ -36,6 +36,7 @@ private:
     std::vector<tvec_t> outputs_;
     size_t input_index_ = 0;
     size_t gt_index_ = 0;
+    size_t epoch_ = 0;
     int batch_size_;
     std::uniform_int_distribution<std::size_t> distribution_;
 };

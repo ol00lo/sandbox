@@ -31,6 +31,7 @@ bool SimpleDataGenerator::is_epoch_end()
 }
 void SimpleDataGenerator::next_epoch(bool shuffle)
 {
+    log().info("Epoch {}", epoch_++);
     input_index_ = 0;
     gt_index_ = 0;
     if (shuffle)

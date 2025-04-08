@@ -24,7 +24,6 @@ nlohmann::json load_json(const std::string& filename)
 
 TEST_CASE("serialization", "[3]")
 {
-    //g::set_log_debug();
     std::shared_ptr<DataNode> x = std::make_shared<DataNode>("xxx");
     std::shared_ptr<DataNode> y = std::make_shared<DataNode>("yyy");
     std::shared_ptr<DataNode> A = std::make_shared<DataNode>("AAA");
@@ -55,7 +54,6 @@ TEST_CASE("serialization", "[3]")
 
 TEST_CASE("serialization2", "[4]")
 {
-    // g::set_log_debug();
     std::shared_ptr<DataNode> x = std::make_shared<DataNode>("");
     std::shared_ptr<DataNode> y = std::make_shared<DataNode>("");
     std::shared_ptr<DataNode> A = std::make_shared<DataNode>("");

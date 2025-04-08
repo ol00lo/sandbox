@@ -1,7 +1,19 @@
 #include "i_functional_node.hpp"
+#include <iomanip>
+#include <sstream>
 #include <iostream>
 
 using namespace g;
+
+namespace
+{
+std::string pad_string(const std::string& str, size_t width = 10)
+{
+    std::ostringstream oss;
+    oss << std::setw(width) << std::left << str;
+    return oss.str();
+}
+}
 
 void IFunctionalNode::add_value_callback(callback_t cb)
 {
@@ -18,6 +30,8 @@ Tensor IFunctionalNode::value()
     {
         before_value_compute();
         value_ = compute_value();
+        log().trace("Value in {} {} compute.", pad_string(classname()),
+                    pad_string(std::string("\"") + nodename() + std::string("\""), 6));
         has_value_ = true;
     }
     return value_;
@@ -54,6 +68,8 @@ Tensor IFunctionalNode::notself_derivative(const INode* arg)
     if (x == derivative_cache_.end())
     {
         Tensor res = compute_notself_derivative(arg);
+        log().trace("Gradient in {} {} compute.", pad_string(classname()),
+                    pad_string(std::string("\"") + nodename() + std::string("\""), 6));
         derivative_cache_.insert({arg, res});
         return res;
     }

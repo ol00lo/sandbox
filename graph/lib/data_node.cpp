@@ -10,7 +10,7 @@ Tensor DataNode::value()
 void DataNode::set_value(Tensor val)
 {
     value_ = val;
-    log().info("Data node \"{}\" value changed", nodename());
+    log().debug("Data node \"{}\" value changed", nodename());
     clear_forward_cache();
 }
 

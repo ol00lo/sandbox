@@ -111,7 +111,7 @@ void Model::save(const std::string& filename)
     }
     nlohmann::json js = *this;
     file << js.dump(4);
-    log().debug("Model saved to {}", filename);
+    log().info("Model saved to {}", filename);
 }
 
 Model Model::load(const std::string& filename)
@@ -123,7 +123,9 @@ Model Model::load(const std::string& filename)
     }
     nlohmann::json j;
     file >> j;
-    return j.get<Model>();
+    Model res = j.get<Model>();
+    log().info("Model loaded from {}", filename);
+    return res;
 }
 
 void Model::save_name(pnode_t node)

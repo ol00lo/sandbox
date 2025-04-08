@@ -4,6 +4,7 @@
 
 TEST_CASE("graph ping", "[ping]")
 {
+    g::logger()->set_level(spdlog::level::debug);
     CHECK(g::graph_ping() == 19);
 }
 

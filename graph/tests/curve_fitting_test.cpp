@@ -9,6 +9,7 @@ using namespace g;
 
 TEST_CASE("train test", "[tt]")
 {
+    g::logger()->set_level(spdlog::level::info);
     std::shared_ptr<DataNode> y = std::make_shared<DataNode>("y");
     std::shared_ptr<DataNode> L = std::make_shared<DataNode>("L");
     std::shared_ptr<DataNode> K = std::make_shared<DataNode>("K");
@@ -57,7 +58,7 @@ TEST_CASE("sin test", "[st]")
     //==================================================
     // A*sin(B*x + C) + D*x + E = out
     //==================================================
-    g::logger()->set_level(spdlog::level::off);
+    g::logger()->set_level(spdlog::level::info);
 
     std::shared_ptr<DataNode> x = std::make_shared<DataNode>("x");
     std::shared_ptr<DataNode> A = std::make_shared<DataNode>("A");
@@ -118,9 +119,9 @@ TEST_CASE("sin test", "[st]")
     }
     SimpleDataGenerator val_data(inp, outp);
 
+    // train
     for (int iepoch = 0; iepoch < 100; ++iepoch)
     {
-        std::cout << "epoch = " << iepoch << std::endl;
         train_data.next_epoch(true);
         double sum_loss = 0;
         int n_steps = 0;
@@ -133,7 +134,6 @@ TEST_CASE("sin test", "[st]")
             n_steps += 1;
         }
         wrk.commit();
-        std::cout << "Train loss= " << sum_loss / double(n_steps) << std::endl;
 
         // validate step
         val_data.next_epoch(false);
@@ -148,7 +148,6 @@ TEST_CASE("sin test", "[st]")
             n_steps += 1;
         }
         sum_loss_val /= double(n_steps);
-        std::cout << "Val loss= " << sum_loss_val << std::endl;
         if (sum_loss_val <= 0.001)
             break;
     }
@@ -164,7 +163,7 @@ TEST_CASE("simmple test 1", "[st1]")
     //==================================================
     // L*y + K = out
     //==================================================
-    g::logger()->set_level(spdlog::level::off);
+    g::logger()->set_level(spdlog::level::info);
 
     std::shared_ptr<DataNode> y = std::make_shared<DataNode>("");
     std::shared_ptr<DataNode> L = std::make_shared<DataNode>("");
@@ -218,7 +217,6 @@ TEST_CASE("simmple test 1", "[st1]")
             n_steps += 1;
         }
         wrk.commit();
-        std::cout << "epoch = " << iepoch << ", Train loss= " << sum_loss / double(n_steps) << std::endl;
 
         // validate step
         val_data.next_epoch(false);
@@ -233,7 +231,6 @@ TEST_CASE("simmple test 1", "[st1]")
             n_steps += 1;
         }
         sum_loss_val /= double(n_steps);
-        std::cout << "epoch = " << iepoch << ", Val loss= " << sum_loss_val << std::endl;
         if (sum_loss_val <= 0.001)
             break;
     }

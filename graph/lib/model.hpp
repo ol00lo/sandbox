@@ -55,6 +55,7 @@ struct adl_serializer<g::Model>
         {
             j["io"]["output_nodes"].push_back(output->nodename());
         }
+        g::log().debug("Model serialized");
     }
 
     static void from_json(const json& j, g::Model& model)
@@ -85,6 +86,7 @@ struct adl_serializer<g::Model>
             output_nodes.push_back(output_node);
         }
         model = g::Model(input_nodes, output_nodes);
+		g::log().debug("Model deserialized");
     }
 };
 } // namespace nlohmann
