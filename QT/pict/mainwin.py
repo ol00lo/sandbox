@@ -37,7 +37,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def create_toolbar(self):
         toolbar = self.addToolBar("Main Toolbar")
         
-        toolbar.addAction(LoadImagesAction(self))
+        toolbar.addAction(LoadImagesAction(self.table_viewer))
         toolbar.addAction(DeleteAllImagesAction(self.table_viewer))
         toolbar.addAction(AddImageAction(self.table_viewer.image_model, self))
 

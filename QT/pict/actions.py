@@ -2,7 +2,7 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 import os
 import sys
 import traceback
-from qt_common import show_message, SUPPORTED_IMAGE_EXTENSIONS
+from qt_common import show_message, SUPPORTED_IMAGE_EXTENSIONS, SUPPORTED_IMAGE_FILTER
 from table import ImageInfo
 from state import State
 
@@ -33,8 +33,7 @@ class BaseAction(QtGui.QAction):
         print("\n=== ERROR TRACEBACK ===")
         print(tb_str)
         print("======================\n")
-        parent = self.parent if hasattr(self, 'parent') and self.parent else None
-        QtWidgets.QMessageBox.critical(parent, "ERROR", str(error))
+        show_message("ERROR", str(error), is_error=True)
     
     def do_impl(self):
         raise NotImplementedError("Subclasses must implement do_impl()")
@@ -102,9 +101,9 @@ class DeleteAllImagesAction(BaseAction):
                     State().cleanup()
                     self.parent.image_selected.emit(State().get_path())
                     self.parent.filter_line_edit.clear()
-                    show_message(self.parent, "Success", f"Deleted {deleted_files} images.", is_error=False)
+                    show_message("Success", f"Deleted {deleted_files} images.", is_error=False)
         else:
-            show_message(self.parent, "Error", "No directory selected.", is_error=True)
+            show_message("Error", "No directory selected.", is_error=True)
             return
 
 
@@ -122,7 +121,7 @@ class AddImageAction(BaseAction):
             None,
             "Select Image",
             "",
-            "Images (*.png *.jpg *.jpeg *.bmp);;All Files (*)",
+            f"{SUPPORTED_IMAGE_FILTER};;All Files (*)",
             options=options
         )
 
