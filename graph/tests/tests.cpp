@@ -97,6 +97,6 @@ TEST_CASE("trigonometric nodes test", "[tn_test]")
     std::shared_ptr<INode> b = INode::factory("CosNode", "");
     g::set_dep(b, {y});
     Model model1({y}, {b});
-    std::vector<Tensor> v3 = model1.compute({Tensor({3.14159/2})});
+    std::vector<Tensor> v3 = model1.compute({Tensor({3.14159 / 2})});
     CHECK(v3[0][0] == Approx(v1[0][0]).margin(1e-5));
 }

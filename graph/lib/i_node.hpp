@@ -1,13 +1,13 @@
 #ifndef I_NODE_HPP
 #define I_NODE_HPP
 
-#include <nlohmann/json.hpp>
 #include "graph.hpp"
 #include "tensor.hpp"
 #include <functional>
-#include <memory>
-#include <vector>
 #include <map>
+#include <memory>
+#include <nlohmann/json.hpp>
+#include <vector>
 
 #define REGISTER_INODE_CHILD(classname)                                                                                \
     static inline const bool __registered = INode::register_class(#classname, [](std::string nodename) {               \
@@ -31,13 +31,13 @@ public:
     void add_prev(std::shared_ptr<INode> a);
     void add_next(std::shared_ptr<INode> a);
 
-	std::string nodename() const;
+    std::string nodename() const;
     void rename();
-	std::vector<std::shared_ptr<INode>> prev_nodes() const;
+    std::vector<std::shared_ptr<INode>> prev_nodes() const;
     std::vector<std::shared_ptr<INode>> next_nodes();
 
     virtual Tensor value() = 0;
-	virtual Shape output_shape() const = 0;
+    virtual Shape output_shape() const = 0;
     Tensor derivative(const INode* argument);
     Tensor derivative(std::shared_ptr<INode>);
 

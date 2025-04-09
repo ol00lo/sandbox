@@ -9,7 +9,7 @@ struct IOptimizer
 {
     void set_param_nodes(const std::vector<std::shared_ptr<DataNode>>& params);
     virtual void apply(const std::vector<Tensor>& gradients) = 0;
-    virtual ~IOptimizer(){};
+    virtual ~IOptimizer() {};
 
 protected:
     std::vector<std::shared_ptr<DataNode>> params_;

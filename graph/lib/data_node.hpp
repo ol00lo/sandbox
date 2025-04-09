@@ -7,9 +7,9 @@ namespace g
 class DataNode : public INode
 {
 public:
-    DataNode(std::string nodename) : INode("DataNode",  nodename), value_({0}) {};
+    DataNode(std::string nodename) : INode("DataNode", nodename), value_({0}) {};
 
-	void serialize_spec(nlohmann::json& js) const override;
+    void serialize_spec(nlohmann::json& js) const override;
     void deserialize_spec(const nlohmann::json&) override;
 
     Tensor value() override;

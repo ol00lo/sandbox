@@ -11,11 +11,11 @@ class IFunctionalNode : public INode
 public:
     IFunctionalNode(std::string classname, std::string nodename = "") : INode(classname, nodename), value_({0}) {};
 
-	using callback_t = std::function<void(IFunctionalNode*)>;
+    using callback_t = std::function<void(IFunctionalNode*)>;
     void add_value_callback(callback_t cb);
     void add_gradient_callback(callback_t cb);
 
-	Tensor value() override;
+    Tensor value() override;
     Shape output_shape() const override;
 
     virtual ~IFunctionalNode() {};

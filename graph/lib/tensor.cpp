@@ -194,7 +194,9 @@ Tensor g::ctg(const Tensor& t)
     Tensor res(t);
     res.apply_oper([](double x) {
         auto tg = std::tan(x);
-        if (tg == 0) throw std::runtime_error("Division by zero");
-        return 1 / tg; });
+        if (tg == 0)
+            throw std::runtime_error("Division by zero");
+        return 1 / tg;
+    });
     return res;
 }

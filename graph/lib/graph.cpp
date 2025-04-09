@@ -3,7 +3,7 @@
 
 namespace
 {
-std::shared_ptr<spdlog::logger> logger_; 
+std::shared_ptr<spdlog::logger> logger_;
 struct GraphInitializer
 {
     GraphInitializer()

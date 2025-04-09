@@ -1,7 +1,7 @@
 #include "i_functional_node.hpp"
 #include <iomanip>
-#include <sstream>
 #include <iostream>
+#include <sstream>
 
 using namespace g;
 
@@ -13,7 +13,7 @@ std::string pad_string(const std::string& str, size_t width = 10)
     oss << std::setw(width) << std::left << str;
     return oss.str();
 }
-}
+} // namespace
 
 void IFunctionalNode::add_value_callback(callback_t cb)
 {

@@ -153,7 +153,7 @@ TEST_CASE("sin test", "[st]")
     }
     CHECK(A->value()[0] == Approx(a).epsilon(0.02));
     CHECK(B->value()[0] == Approx(b).epsilon(0.01));
-    //CHECK(C->value()[0] == Approx(c).epsilon(0.1));
+    // CHECK(C->value()[0] == Approx(c).epsilon(0.1));
     CHECK(D->value()[0] == Approx(d).epsilon(0.01));
     CHECK(E->value()[0] == Approx(e).epsilon(0.01));
 }

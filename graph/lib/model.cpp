@@ -23,10 +23,10 @@ pnode_t find_node_by_name(std::unordered_map<std::string, pnode_t> all_nodes, co
 Model::Model(std::vector<pnode_t> inputs, std::vector<pnode_t> outputs) : input_nodes_(inputs), output_nodes_(outputs)
 {
     for (const auto& node : input_nodes_)
-	{
+    {
         save_name(node);
         nodes_.push_back(node);
-	}
+    }
     for (const auto& output : output_nodes_)
     {
         add_into_inter(output);

@@ -90,7 +90,7 @@ struct adl_serializer<g::Model>
             output_nodes.push_back(output_node);
         }
         model = g::Model(input_nodes, output_nodes);
-		g::log().debug("Model deserialized");
+        g::log().debug("Model deserialized");
     }
 };
 } // namespace nlohmann

@@ -18,7 +18,6 @@ private:
     REGISTER_INODE_CHILD(MultNode);
 };
 
-
 class PlusNode : public IFunctionalNode
 {
 public:
@@ -32,7 +31,6 @@ protected:
 private:
     REGISTER_INODE_CHILD(PlusNode);
 };
-
 
 class MinusNode : public IFunctionalNode
 {
