@@ -20,7 +20,7 @@ double OptimizationWorker::train(const std::vector<Tensor>& inputs, const std::v
 double OptimizationWorker::validate(const std::vector<Tensor>& inputs, const std::vector<Tensor>& gt)
 {
     double loss = compute_loss(inputs, gt);
-    log().info("Valid loss: {}", loss);
+    log().info("Val loss:   {}", loss);
     return loss;
 }
 

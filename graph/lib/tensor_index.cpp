@@ -1,12 +1,34 @@
 #include "tensor_index.hpp"
 #include <iostream>
+#include <sstream>
+#include <string>
 
 using namespace g;
+
+Shape::Shape(const std::string s)
+{
+    std::stringstream ss(s);
+    char ch;
+    double num;
+    for (int i = 0; i < 4; ++i)
+    {
+        ss >> ch;
+        ss >> num;
+        (*this)[i] = int(num);
+    }
+}
+
+std::string Shape::to_string()
+{
+    return "(" + std::to_string((*this)[0]) + ", " + std::to_string((*this)[1]) + ", " + std::to_string((*this)[2]) +
+           ", " + std::to_string((*this)[3]) + ")";
+}
 
 int Shape::n_indexes() const
 {
     return (*this)[0] * (*this)[1] * (*this)[2] * (*this)[3];
 }
+
 Index::Index(int linear, const Shape& shape)
 {
     if (linear < 0 || linear >= shape.n_indexes())

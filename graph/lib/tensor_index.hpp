@@ -15,7 +15,9 @@ public:
     Shape(int i, int j, int c) : Arr4{1, i, j, c} {};
     Shape(int j, int c) : Arr4{1, 1, j, c} {};
     Shape(int c) : Arr4{1, 1, 1, c} {};
+    Shape(const std::string s);
     int n_indexes() const;
+    std::string to_string();
 };
 
 class Index : public Arr4

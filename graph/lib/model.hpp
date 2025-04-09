@@ -33,7 +33,7 @@ protected:
     std::vector<pnode_t> input_nodes_;
     std::vector<pnode_t> output_nodes_;
     std::vector<std::shared_ptr<DataNode>> param_nodes_;
-    void add_into_inter(pnode_t node);
+    void add_into_nodes(pnode_t node);
     void save_name(pnode_t node);
 };
 

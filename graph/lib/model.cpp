@@ -7,18 +7,6 @@
 #include <stdexcept>
 
 using namespace g;
-namespace
-{
-pnode_t find_node_by_name(std::unordered_map<std::string, pnode_t> all_nodes, const std::string& name)
-{
-    auto it = all_nodes.find(name);
-    if (it != all_nodes.end())
-    {
-        return it->second;
-    }
-    return nullptr;
-}
-} // namespace
 
 Model::Model(std::vector<pnode_t> inputs, std::vector<pnode_t> outputs) : input_nodes_(inputs), output_nodes_(outputs)
 {
@@ -29,7 +17,7 @@ Model::Model(std::vector<pnode_t> inputs, std::vector<pnode_t> outputs) : input_
     }
     for (const auto& output : output_nodes_)
     {
-        add_into_inter(output);
+        add_into_nodes(output);
     }
 }
 
@@ -78,7 +66,7 @@ void Model::set_param_nodes(const std::vector<std::shared_ptr<DataNode>>& p)
         param_nodes_[i]->set_value(p[i]->value());
     }
 }
-void Model::add_into_inter(pnode_t node)
+void Model::add_into_nodes(pnode_t node)
 {
     auto is_in_input = std::find(input_nodes_.begin(), input_nodes_.end(), node) != input_nodes_.end();
     if (is_in_input)
@@ -98,7 +86,7 @@ void Model::add_into_inter(pnode_t node)
     }
     for (const auto& prev : node->prev_nodes())
     {
-        add_into_inter(prev);
+        add_into_nodes(prev);
     }
 }
 

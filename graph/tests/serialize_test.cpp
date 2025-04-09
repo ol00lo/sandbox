@@ -57,10 +57,8 @@ TEST_CASE("tensor serialize", "[tensor_serialize]")
 
     nlohmann::json js = t;
     g::Tensor b(js.get<g::Tensor>());
-    CHECK(js["shape"][0] == 1);
-    CHECK(js["shape"][1] == 1);
-    CHECK(js["shape"][2] == 2);
-    CHECK(js["shape"][3] == 3);
+
+    CHECK(js["shape"].get<std::string>() == "(1, 1, 2, 3)");
     CHECK(b == t);
 }
 
