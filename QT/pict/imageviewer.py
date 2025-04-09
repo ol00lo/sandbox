@@ -31,12 +31,13 @@ class ImageViewer(QtWidgets.QGraphicsView):
             self.setCursor(self.cross_cursor)
 
             scene_pos = self.mapToScene(event.pos())
-            img_pos = scene_pos - item.pos()
 
+            img_pos = item.mapFromScene(scene_pos)
             pixmap = item.pixmap()
+
             x = max(0, min(int(img_pos.x()), pixmap.width() - 1))
             y = max(0, min(int(img_pos.y()), pixmap.height() - 1))
-            
+
             self.coordinates_clicked.emit(x, y)
         else:
             self.setCursor(self.default_cursor)

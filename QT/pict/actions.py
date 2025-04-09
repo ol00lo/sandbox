@@ -50,8 +50,8 @@ class LoadImagesAction(BaseAction):
                     image_info = self.parent.image_model.images[source_index.row()]
                     image_name = image_info.name
                     State().selected_image = image_name
-                    State().current_dir = self.parent.image_model.dir_path
                     self.parent.image_selected.emit(State().get_path())
+                    self.parent.curr_dir_signal.emit(State().current_dir)
 
     def do_impl(self):
         folder = QtWidgets.QFileDialog.getExistingDirectory(self.parent, "Select Folder")
@@ -69,6 +69,8 @@ class LoadImagesAction(BaseAction):
                 self.parent.table_view.setSortingEnabled(True)
                 for column_index in range(len(self.parent.image_model.columns)):
                     self.parent.table_view.horizontalHeader().setSectionResizeMode(column_index, QtWidgets.QHeaderView.ResizeMode.Stretch)
+        State().current_dir = folder
+        self.parent.curr_dir_signal.emit(folder)
 
 class DeleteAllImagesAction(BaseAction):
     def __init__(self, parent):

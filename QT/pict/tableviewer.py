@@ -4,6 +4,7 @@ from state import State
 
 class TableViewer (QtWidgets.QWidget):
     image_selected = QtCore.pyqtSignal(str)
+    curr_dir_signal = QtCore.pyqtSignal(str)
 
     def __init__(self, parent):
         super().__init__(parent)

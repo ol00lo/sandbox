@@ -30,6 +30,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.status_bar = QtWidgets.QStatusBar(self)
         self.setStatusBar(self.status_bar)
 
+        self.table_viewer.curr_dir_signal.connect(self.show_folder_name)
         self.table_viewer.image_selected.connect(self.image_model_viewer.display_image)
         self.image_model_viewer.coordinates_clicked.connect(self.show_coordinates)
         self.create_toolbar()
@@ -45,3 +46,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def show_coordinates(self, x, y):
         self.status_bar.showMessage(f"X: {x}, Y: {y}")
+
+    def show_folder_name(self, dir_path):
+        if dir_path:
+            self.setWindowTitle(f"Image Viewer - {dir_path}")
+        else:
+            self.setWindowTitle("Image Viewer")
