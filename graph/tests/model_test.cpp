@@ -100,3 +100,11 @@ TEST_CASE("trigonometric nodes test", "[tn_test]")
     std::vector<Tensor> v3 = model1.compute({Tensor({3.14159 / 2})});
     CHECK(v3[0][0] == Approx(v1[0][0]).margin(1e-5));
 }
+
+TEST_CASE("same nodes name", "[n_name_test]")
+{
+	std::shared_ptr<DataNode> x = std::make_shared<DataNode>("x");
+	std::shared_ptr<INode> y = INode::factory("SinNode", "x");
+	g::set_dep(y, {x});
+    CHECK_THROWS(Model({x}, {y}));
+}

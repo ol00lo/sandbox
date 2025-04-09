@@ -2,6 +2,7 @@
 #define TENSOR_INDEX_HPP
 
 #include <array>
+#include <string>
 
 namespace g
 {

@@ -32,7 +32,6 @@ public:
     void add_next(std::shared_ptr<INode> a);
 
     std::string nodename() const;
-    void rename();
     std::vector<std::shared_ptr<INode>> prev_nodes() const;
     std::vector<std::shared_ptr<INode>> next_nodes();
 

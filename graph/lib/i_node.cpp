@@ -125,8 +125,3 @@ void g::set_dep(std::shared_ptr<INode> node, std::initializer_list<std::shared_p
         prev_node->add_next(node);
     }
 }
-
-void INode::rename()
-{
-    throw std::runtime_error("Not implemented");
-}

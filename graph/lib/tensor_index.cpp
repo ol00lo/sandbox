@@ -1,7 +1,6 @@
 #include "tensor_index.hpp"
 #include <iostream>
 #include <sstream>
-#include <string>
 
 using namespace g;
 

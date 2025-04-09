@@ -83,10 +83,10 @@ void Model::add_into_nodes(pnode_t node)
         {
             param_nodes_.push_back(dataNode);
         }
-    }
-    for (const auto& prev : node->prev_nodes())
-    {
-        add_into_nodes(prev);
+        for (const auto& prev : node->prev_nodes())
+        {
+            add_into_nodes(prev);
+        }
     }
 }
 
@@ -123,5 +123,5 @@ void Model::save_name(pnode_t node)
     if (names_.find(nodename) == names_.end())
         names_.insert(nodename);
     else
-        node->rename();
+        throw std::runtime_error("Node names must be unique.");
 }
