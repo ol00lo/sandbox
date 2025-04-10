@@ -33,14 +33,24 @@ class MainWindow(QtWidgets.QMainWindow):
         self.table_viewer.curr_dir_signal.connect(self.show_folder_name)
         self.table_viewer.image_selected.connect(self.image_model_viewer.display_image)
         self.image_model_viewer.coordinates_clicked.connect(self.show_coordinates)
+
         self.create_toolbar()
 
     def create_toolbar(self):
+        self.load_action = LoadImagesAction(self.table_viewer)
+        self.load_action.triggered.connect(self.load_action.do)
+
+        self.delete_action = DeleteAllImagesAction(self.table_viewer)
+        self.delete_action.triggered.connect(self.delete_action.do)
+
+        self.add_action = AddImageAction(self)
+        self.add_action.triggered.connect(self.add_action.do)
+
         toolbar = self.addToolBar("Main Toolbar")
-        
-        toolbar.addAction(LoadImagesAction(self.table_viewer))
-        toolbar.addAction(DeleteAllImagesAction(self.table_viewer))
-        toolbar.addAction(AddImageAction(self.table_viewer.image_model, self))
+
+        toolbar.addAction(self.load_action)
+        toolbar.addAction(self.delete_action)
+        toolbar.addAction(self.add_action)
 
         toolbar.addSeparator()
 

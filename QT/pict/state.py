@@ -1,6 +1,6 @@
 from table import TableModel
 import os
-
+from PyQt6 import QtCore, QtWidgets
 class State:
     _instance = None
     def __new__(cls):
@@ -11,18 +11,19 @@ class State:
 
     def _init_state(self):
         self.model = TableModel()
+        self.proxy_model = QtCore.QSortFilterProxyModel()
+        self.proxy_model.setSourceModel(self.model)
+
+        self.filter_line_edit = QtWidgets.QLineEdit()
+        self.filter_line_edit.setPlaceholderText("Filter by name...")
+        self.filter_line_edit.textChanged.connect(self._on_filter_text_changed)
+
         self.current_dir = None
         self.selected_image = None
-        self.actions = {
-            'delete': None,
-            'rename': None
-        }
 
-    def register_action(self, name, action):
-        self.actions[name] = action
-
-    def get_action(self, name):
-        return self.actions.get(name)
+    def _on_filter_text_changed(self, text):
+        if self.model:
+            self.proxy_model.setFilterFixedString(text)
 
     def set_current_dir(self, dir_path):
         if os.path.isdir(dir_path):
@@ -36,10 +37,8 @@ class State:
         path = os.path.join(self.current_dir, self.selected_image)
         return path
 
-    def get_model(self):
-        return self.model
-
     def cleanup(self):
         self.model.set_data([], None)
         self.current_dir = None
         self.selected_image = None
+        self.filter_line_edit.clear()
