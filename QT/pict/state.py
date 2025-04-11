@@ -3,6 +3,7 @@ import os
 from PyQt6 import QtCore, QtWidgets
 class State:
     _instance = None
+
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
@@ -20,6 +21,19 @@ class State:
 
         self.current_dir = None
         self.selected_image = None
+        self.actions = {}
+
+    @classmethod
+    def register_action(cls, action_name, action_class):
+        if not hasattr(cls, '_action_classes'):
+            cls._action_classes = {}
+        cls._action_classes[action_name] = action_class
+
+    def init_actions(self, parent_widget):
+        if not hasattr(self.__class__, '_action_classes'):
+            return
+        for name, action_class in self.__class__._action_classes.items():
+            self.actions[name] = action_class(parent_widget)
 
     def _on_filter_text_changed(self, text):
         if self.model:

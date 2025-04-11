@@ -3,9 +3,6 @@ from actions import LoadImagesAction, DeleteAllImagesAction, RenameFileAction, D
 from state import State
 
 class TableViewer (QtWidgets.QWidget):
-    image_selected = QtCore.pyqtSignal(str)
-    curr_dir_signal = QtCore.pyqtSignal(str)
-
     def __init__(self, parent):
         super().__init__(parent)
 
@@ -18,10 +15,10 @@ class TableViewer (QtWidgets.QWidget):
         self.table_view.viewport().installEventFilter(self)
 
         self.load_images_button = QtWidgets.QPushButton("Load Images")
-        self.load_images_button.clicked.connect(LoadImagesAction(self).do)
+        self.load_images_button.clicked.connect(State().actions["LoadImages"].do)
 
         self.delete_images_button = QtWidgets.QPushButton("Delete All Images")
-        self.delete_images_button.clicked.connect(DeleteAllImagesAction(self).do)
+        self.delete_images_button.clicked.connect(State().actions["DeleteAllImages"].do)
 
         main_layout = QtWidgets.QVBoxLayout()
         main_layout.addWidget(State().filter_line_edit)
@@ -34,26 +31,29 @@ class TableViewer (QtWidgets.QWidget):
         table_widget.setLayout(main_layout)
         self.setLayout(main_layout)
 
-        self.delete_action = DeleteImageAction(self)
-        self.rename_action = RenameFileAction(self)
-
     def show_context_menu(self, position):
             selected_rows = self.table_view.selectionModel().selectedRows()
             cur_row = selected_rows[0]
             context_menu = QtWidgets.QMenu(self.table_view)
 
-            context_menu.addAction(self.delete_action)
-            self.delete_action.triggered.connect(lambda: self.delete_action.do(selected_rows))
+            context_menu.addAction(State().actions["DeleteImage"])
+            State().actions["DeleteImage"].triggered.connect(lambda: State().actions["DeleteImage"].do(selected_rows))
 
-            context_menu.addAction(self.rename_action)
-            self.rename_action.triggered.connect(lambda: self.rename_action.do(cur_row))
+            context_menu.addAction(State().actions["RenameFile"])
+            State().actions["RenameFile"].triggered.connect(lambda: State().actions["RenameFile"].do(cur_row))
 
             context_menu.exec(self.table_view.viewport().mapToGlobal(position))
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key.Key_Delete:
-            index = self.table_view.currentIndex()
-            if index.isValid():
-                self.delete_action.trigger()
+            selected_rows = self.table_view.selectionModel().selectedRows()
+            State().actions["DeleteImage"].do(selected_rows)
         else:
             super().keyPressEvent(event)
+
+    def init_connections(self):
+        self.table_view.setModel(State().proxy_model)
+        self.table_view.selectionModel().selectionChanged.connect(State().actions["LoadImages"].on_selection_changed)
+        self.table_view.setSortingEnabled(True)
+        for column_index in range(len(State().model.columns)):
+            self.table_view.horizontalHeader().setSectionResizeMode(column_index, QtWidgets.QHeaderView.ResizeMode.Stretch)

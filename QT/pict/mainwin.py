@@ -1,9 +1,13 @@
 from PyQt6 import QtWidgets, QtGui, QtCore
 from imageviewer import ImageViewer
 from tableviewer import TableViewer
-from actions import LoadImagesAction, DeleteAllImagesAction, AddImageAction
+from state import State
 
 class MainWindow(QtWidgets.QMainWindow):
+    image_selected = QtCore.pyqtSignal(str)
+    curr_dir_signal = QtCore.pyqtSignal(str)
+    load_images_signal = QtCore.pyqtSignal()
+
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Image Viewer")
@@ -14,7 +18,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setCentralWidget(self.central_widget)
 
         self.splitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal, self.central_widget)
-
+        State().init_actions(self)
         self.image_model_viewer = ImageViewer(self)
         self.table_viewer = TableViewer(self)
 
@@ -30,27 +34,24 @@ class MainWindow(QtWidgets.QMainWindow):
         self.status_bar = QtWidgets.QStatusBar(self)
         self.setStatusBar(self.status_bar)
 
-        self.table_viewer.curr_dir_signal.connect(self.show_folder_name)
-        self.table_viewer.image_selected.connect(self.image_model_viewer.display_image)
+        self.curr_dir_signal.connect(self.show_folder_name)
+        self.image_selected.connect(self.image_model_viewer.display_image)
         self.image_model_viewer.coordinates_clicked.connect(self.show_coordinates)
+        self.load_images_signal.connect(self.table_viewer.init_connections)
 
         self.create_toolbar()
 
     def create_toolbar(self):
-        self.load_action = LoadImagesAction(self.table_viewer)
-        self.load_action.triggered.connect(self.load_action.do)
-
-        self.delete_action = DeleteAllImagesAction(self.table_viewer)
-        self.delete_action.triggered.connect(self.delete_action.do)
-
-        self.add_action = AddImageAction(self)
-        self.add_action.triggered.connect(self.add_action.do)
-
         toolbar = self.addToolBar("Main Toolbar")
 
-        toolbar.addAction(self.load_action)
-        toolbar.addAction(self.delete_action)
-        toolbar.addAction(self.add_action)
+        toolbar.addAction(State().actions["LoadImages"])
+        State().actions["LoadImages"].triggered.connect(State().actions["LoadImages"].do)
+
+        toolbar.addAction(State().actions["DeleteAllImages"])
+        State().actions["DeleteAllImages"].triggered.connect(State().actions["DeleteAllImages"].do)
+
+        toolbar.addAction(State().actions["AddImage"])
+        State().actions["AddImage"].triggered.connect(State().actions["AddImage"].do)
 
         toolbar.addSeparator()
 

@@ -7,10 +7,17 @@ from table import ImageInfo
 from state import State
 
 class BaseAction(QtGui.QAction):
-    def __init__(self, name, parent, shortcut=None):
-        super().__init__(name, parent)
+    _action_name = None  
+
+    def __init__(self, parent, shortcut=None):
+        super().__init__(self._action_name, parent)
         if shortcut:
             self.setShortcut(shortcut)
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        if cls._action_name and cls is not BaseAction:
+            State.register_action(cls._action_name, cls)
 
     def do(self, *args):
         try:
@@ -30,9 +37,10 @@ class BaseAction(QtGui.QAction):
         raise NotImplementedError("Subclasses must implement do_impl()")
 
 class LoadImagesAction(BaseAction):
-    def __init__(self, parent):
-        self.parent = parent
-        super().__init__("Load Images", parent, "Ctrl+L")
+    _action_name = "LoadImages"
+    def __init__(self, main_win):
+        self.main_win = main_win
+        super().__init__(main_win, "Ctrl+L")
 
     def on_selection_changed(self, selected, deselected):
         for index in selected.indexes():
@@ -42,37 +50,36 @@ class LoadImagesAction(BaseAction):
                     image_info = State().model.images[source_index.row()]
                     image_name = image_info.name
                     State().selected_image = image_name
-                    self.parent.image_selected.emit(State().get_path())
-                    self.parent.curr_dir_signal.emit(State().current_dir)
+                    self.main_win.image_selected.emit(State().get_path())
+                    self.main_win.curr_dir_signal.emit(State().current_dir)
 
     def do_impl(self, *args):
-        folder = QtWidgets.QFileDialog.getExistingDirectory(self.parent, "Select Folder")
-        if folder:
-            images = []
-            for filename in os.listdir(folder):
-                if filename.lower().endswith(SUPPORTED_IMAGE_EXTENSIONS):
-                    image_path = os.path.join(folder, filename)
-                    images.append(ImageInfo(image_path))
+        folder = QtWidgets.QFileDialog.getExistingDirectory(self.main_win, "Select Folder")
+        if not folder:
+            return
+        images = []
+        for filename in os.listdir(folder):
+            if filename.lower().endswith(SUPPORTED_IMAGE_EXTENSIONS):
+                image_path = os.path.join(folder, filename)
+                images.append(ImageInfo(image_path))
 
-            if images:
-                State().model.set_data(images, dir_path=folder)
-                self.parent.table_view.setModel(State().proxy_model)
-                self.parent.table_view.selectionModel().selectionChanged.connect(self.on_selection_changed)
-                self.parent.table_view.setSortingEnabled(True)
-                for column_index in range(len(State().model.columns)):
-                    self.parent.table_view.horizontalHeader().setSectionResizeMode(column_index, QtWidgets.QHeaderView.ResizeMode.Stretch)
+        if images:
+            State().model.set_data(images, dir_path=folder)
+            self.main_win.load_images_signal.emit()
         State().current_dir = folder
-        self.parent.curr_dir_signal.emit(folder)
+        self.main_win.curr_dir_signal.emit(folder)
+
 
 class DeleteAllImagesAction(BaseAction):
-    def __init__(self, parent):
-        super().__init__("Delete All Images", parent, "Ctrl+D")
-        self.parent = parent
+    _action_name = "DeleteAllImages"
+    def __init__(self, main_win):
+        super().__init__(main_win, "Ctrl+D")
+        self.main_win = main_win
 
     def do_impl(self, *args):
         if State().model and State().current_dir is not None:
             reply = QtWidgets.QMessageBox.question(
-                self.parent,
+                self.main_win,
                 'Delete All Images',
                 'Are you sure you want to delete all images?',
                 QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No,
@@ -94,15 +101,16 @@ class DeleteAllImagesAction(BaseAction):
                     State().model.endResetModel()
 
                     State().cleanup()
-                    self.parent.image_selected.emit(State().get_path())
+                    self.main_win.image_selected.emit(State().get_path())
                     show_message("Success", f"Deleted {deleted_files} images.", is_error=False)
         else:
             show_message("Error", "No directory selected.", is_error=True)
             return
 
 class AddImageAction(BaseAction):
-    def __init__(self,  parent=None):
-        super().__init__("Add Image", parent)
+    _action_name = "AddImage"
+    def __init__(self,  main_win):
+        super().__init__(main_win)
 
     def do_impl(self, *args):
         if State().current_dir is None:
@@ -122,8 +130,9 @@ class AddImageAction(BaseAction):
             State().model.add_image(new_image_info, file_name)
 
 class RenameFileAction(BaseAction):
-    def __init__(self, parent):
-        super().__init__("Rename File", parent)
+    _action_name = "RenameFile"
+    def __init__(self, main_win):
+        super().__init__(main_win)
 
     def do_impl(self, index):
         if index.isValid():
@@ -146,9 +155,10 @@ class RenameFileAction(BaseAction):
                     State().model.dataChanged.emit(index, index, [QtCore.Qt.ItemDataRole.DisplayRole])
 
 class DeleteImageAction(BaseAction):
-    def __init__(self, parent):
-        super().__init__("Delete Image", parent, "Delete")
-        self.parent = parent
+    _action_name = "DeleteImage"
+    def __init__(self, main_win):
+        super().__init__(main_win, "Delete")
+        self.main_win = main_win
 
     def do_impl(self, selected):
         if not selected:
@@ -186,4 +196,4 @@ class DeleteImageAction(BaseAction):
 
         State().selected_image = next_image_path
 
-        self.parent.image_selected.emit(next_image_path)
+        self.main_win.image_selected.emit(next_image_path)
