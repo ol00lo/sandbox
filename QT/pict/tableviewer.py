@@ -14,7 +14,7 @@ class TableViewer (QtWidgets.QWidget):
         self.table_view.setMouseTracking(True)
         self.table_view.viewport().installEventFilter(self)
 
-        self.load_images_button = QtWidgets.QPushButton("Load Images")
+        self.load_images_button = QtWidgets.QPushButton("Open Folder")
         self.load_images_button.clicked.connect(State().actions["LoadImages"].do)
 
         self.delete_images_button = QtWidgets.QPushButton("Delete All Images")
@@ -26,8 +26,8 @@ class TableViewer (QtWidgets.QWidget):
         main_layout.addWidget(self.load_images_button)
         main_layout.addWidget(self.delete_images_button)
 
+        main_layout.setContentsMargins(10, 0, 10, 0)
         table_widget = QtWidgets.QWidget()
-        table_widget.setMaximumWidth(400)
         table_widget.setLayout(main_layout)
         self.setLayout(main_layout)
 
@@ -36,13 +36,19 @@ class TableViewer (QtWidgets.QWidget):
             cur_row = selected_rows[0]
             context_menu = QtWidgets.QMenu(self.table_view)
 
-            context_menu.addAction(State().actions["DeleteImage"])
-            State().actions["DeleteImage"].triggered.connect(lambda: State().actions["DeleteImage"].do(selected_rows))
+            rename_action = State().actions["RenameFile"]
+            delete_action = State().actions["DeleteImage"]
 
-            context_menu.addAction(State().actions["RenameFile"])
-            State().actions["RenameFile"].triggered.connect(lambda: State().actions["RenameFile"].do(cur_row))
+            context_menu.addAction(delete_action)
+            delete_action.triggered.connect(lambda: delete_action.do(selected_rows))
+
+            context_menu.addAction(rename_action)
+            rename_action.triggered.connect(lambda: rename_action.do(cur_row))
 
             context_menu.exec(self.table_view.viewport().mapToGlobal(position))
+
+            rename_action.triggered.disconnect()
+            delete_action.triggered.disconnect()
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key.Key_Delete:

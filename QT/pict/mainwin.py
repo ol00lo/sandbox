@@ -43,6 +43,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def create_toolbar(self):
         toolbar = self.addToolBar("Main Toolbar")
+        toolbar.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        toolbar.setIconSize(QtCore.QSize(15, 15))
 
         toolbar.addAction(State().actions["LoadImages"])
         State().actions["LoadImages"].triggered.connect(State().actions["LoadImages"].do)

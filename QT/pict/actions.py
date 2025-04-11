@@ -39,8 +39,9 @@ class BaseAction(QtGui.QAction):
 class LoadImagesAction(BaseAction):
     _action_name = "LoadImages"
     def __init__(self, main_win):
-        self.main_win = main_win
         super().__init__(main_win, "Ctrl+L")
+        self.main_win = main_win
+        self.setIcon(QtGui.QIcon(":/load"))
 
     def on_selection_changed(self, selected, deselected):
         for index in selected.indexes():
@@ -74,6 +75,7 @@ class DeleteAllImagesAction(BaseAction):
     _action_name = "DeleteAllImages"
     def __init__(self, main_win):
         super().__init__(main_win, "Ctrl+D")
+        self.setIcon(QtGui.QIcon(":/deleteall"))
         self.main_win = main_win
 
     def do_impl(self, *args):
@@ -111,6 +113,7 @@ class AddImageAction(BaseAction):
     _action_name = "AddImage"
     def __init__(self,  main_win):
         super().__init__(main_win)
+        self.setIcon(QtGui.QIcon(":/add"))
 
     def do_impl(self, *args):
         if State().current_dir is None:
@@ -131,33 +134,56 @@ class AddImageAction(BaseAction):
 
 class RenameFileAction(BaseAction):
     _action_name = "RenameFile"
+
     def __init__(self, main_win):
         super().__init__(main_win)
+        self.setIcon(QtGui.QIcon(":/rename"))
+        self.main_win = main_win
 
     def do_impl(self, index):
         if index.isValid():
             source_index = State().proxy_model.mapToSource(index)
-            old_name = State().model.images[source_index.row()].name
-            new_name, ok = QtWidgets.QInputDialog.getText(None, "Rename File", "Enter new name:", text=old_name)
+            row = source_index.row()
 
-            if ok and new_name.strip():
-                new_name = new_name.strip()
-                if new_name != old_name:
-                    old_path = os.path.join(State().current_dir, old_name)
-                    new_path = os.path.join(State().current_dir, new_name)
+            old_name = State().model.images[row].name
+            new_name, ok = QtWidgets.QInputDialog.getText(
+                self._main_win,
+                "Rename File",
+                "Enter new name:",
+                text=old_name
+            )
+            new_name = new_name.strip()
 
-                    if os.path.exists(new_path):
-                        QtWidgets.QMessageBox.warning(None, "Error", "File with this name already exists.")
-                        return
+            if not ok or not new_name or new_name == old_name:
+                return
 
-                    os.rename(old_path, new_path)
-                    State().model.images[index.row()].name = new_name
-                    State().model.dataChanged.emit(index, index, [QtCore.Qt.ItemDataRole.DisplayRole])
+            old_path = os.path.join(State().current_dir, old_name)
+            new_path = os.path.join(State().current_dir, new_name)
+
+            if os.path.exists(new_path):
+                QtWidgets.QMessageBox.warning(
+                    self.main_win,
+                    "Error",
+                    "File with this name already exists."
+                )
+                return
+
+            os.rename(old_path, new_path)
+
+            State().model.layoutAboutToBeChanged.emit()
+            State().model.images[row].name = new_name
+            State().model.dataChanged.emit(index, index, [QtCore.Qt.ItemDataRole.DisplayRole])
+            State().model.layoutChanged.emit()
+
+            if State().selected_image == old_name:
+                State().selected_image = new_name
+                self.main_win.image_selected.emit(new_path)
 
 class DeleteImageAction(BaseAction):
     _action_name = "DeleteImage"
     def __init__(self, main_win):
         super().__init__(main_win, "Delete")
+        self.setIcon(QtGui.QIcon(":/delete"))
         self.main_win = main_win
 
     def do_impl(self, selected):
