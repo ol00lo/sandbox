@@ -120,7 +120,8 @@ void Tensor::write(std::ostream& os) const
         if (b != shape_[0] - 1)
             os << ", ";
     }
-    os << ",  shape = (" << shape_[0] << ", " << shape_[1] << ", " << shape_[2] << ", " << shape_[3] << ")" << std::endl;
+    os << ",  shape = (" << shape_[0] << ", " << shape_[1] << ", " << shape_[2] << ", " << shape_[3] << ")"
+       << std::endl;
 }
 
 Tensor g::add(const Tensor& t1, const Tensor& t2)

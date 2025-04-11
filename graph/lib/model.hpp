@@ -12,7 +12,7 @@ using pnode_t = INode::ptr_t;
 class Model
 {
 public:
-    Model() {};
+    Model(){};
     Model(std::vector<pnode_t> inputs, std::vector<pnode_t> outputs);
 
     static Model load(const std::string& filename);

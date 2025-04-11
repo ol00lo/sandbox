@@ -8,7 +8,7 @@ namespace g
 class OptimizationWorker
 {
 public:
-    OptimizationWorker(const Model& model, LossType loss_type) : graph_(model, loss_type) {};
+    OptimizationWorker(const Model& model, LossType loss_type) : graph_(model, loss_type){};
 
     void set_optimizer(std::shared_ptr<IOptimizer> optimizer);
 

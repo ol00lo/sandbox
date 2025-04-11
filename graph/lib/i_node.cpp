@@ -26,7 +26,7 @@ std::string set_nodename(std::string classname, std::string nodename)
 }
 } // namespace
 
-INode::INode(std::string classname, std::string nodename) : nodename_(set_nodename(classname, nodename)) {};
+INode::INode(std::string classname, std::string nodename) : nodename_(set_nodename(classname, nodename)){};
 INode::ptr_t INode::factory(std::string classname, std::string nodename)
 {
     auto fnd = registered_classes_.find(classname);

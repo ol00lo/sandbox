@@ -7,7 +7,7 @@ namespace g
 class SqrNode : public IFunctionalNode
 {
 public:
-    SqrNode(std::string nodename = "") : IFunctionalNode("SqrNode", nodename) {};
+    SqrNode(std::string nodename = "") : IFunctionalNode("SqrNode", nodename){};
 
 protected:
     Tensor compute_value() override;

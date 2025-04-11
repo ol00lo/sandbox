@@ -44,12 +44,14 @@ std::vector<Tensor> MultNode::gradient()
 
 std::vector<Tensor> PlusNode::gradient()
 {
-    std::vector<Tensor> res = {Tensor(prev_nodes_[0]->output_shape(), 1.0), Tensor(prev_nodes_[1]->output_shape(), 1.0)};
+    std::vector<Tensor> res = {Tensor(prev_nodes_[0]->output_shape(), 1.0),
+                               Tensor(prev_nodes_[1]->output_shape(), 1.0)};
     return res;
 }
 
 std::vector<Tensor> MinusNode::gradient()
 {
-    std::vector<Tensor> res = {Tensor(prev_nodes_[0]->output_shape(), 1.0), Tensor(prev_nodes_[1]->output_shape(), -1.0)};
+    std::vector<Tensor> res = {Tensor(prev_nodes_[0]->output_shape(), 1.0),
+                               Tensor(prev_nodes_[1]->output_shape(), -1.0)};
     return res;
 }

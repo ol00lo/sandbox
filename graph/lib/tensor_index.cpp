@@ -17,12 +17,6 @@ Shape::Shape(const std::string s)
     }
 }
 
-std::string Shape::to_string()
-{
-    return "(" + std::to_string((*this)[0]) + ", " + std::to_string((*this)[1]) + ", " + std::to_string((*this)[2]) +
-           ", " + std::to_string((*this)[3]) + ")";
-}
-
 int Shape::n_indexes() const
 {
     return (*this)[0] * (*this)[1] * (*this)[2] * (*this)[3];

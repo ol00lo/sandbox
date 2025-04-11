@@ -1,7 +1,8 @@
 #include "generator.hpp"
 
 using namespace g;
-SimpleDataGenerator::SimpleDataGenerator(const std::vector<tvec_t>& in, const std::vector<tvec_t>& out, int batch_size, int seed)
+SimpleDataGenerator::SimpleDataGenerator(const std::vector<tvec_t>& in, const std::vector<tvec_t>& out, int batch_size,
+                                         int seed)
     : IDataGenerator(seed), inputs_(in), outputs_(out), batch_size_(batch_size), distribution_(0, inputs_.size() - 1)
 {
     if (in[0][0].shape()[0] != 1 || out[0][0].shape()[0] != 1)

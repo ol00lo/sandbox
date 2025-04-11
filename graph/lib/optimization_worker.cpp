@@ -10,9 +10,9 @@ void OptimizationWorker::set_optimizer(const std::shared_ptr<IOptimizer> optimiz
 
 double OptimizationWorker::train(const std::vector<Tensor>& inputs, const std::vector<Tensor>& gt)
 {
-    double loss = compute_loss(inputs, gt);
     auto grads = graph_.gradients();
     optimizer_->apply(grads);
+    double loss = compute_loss(inputs, gt);
     log().info("Train loss: {}", loss);
     return loss;
 }

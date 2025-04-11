@@ -11,7 +11,7 @@ using tvec_t = std::vector<Tensor>;
 struct IDataGenerator
 {
 public:
-    IDataGenerator(int seed = 0) : rng_(seed) {};
+    IDataGenerator(int seed = 0) : rng_(seed){};
 
     virtual tvec_t next_input() = 0;
     virtual tvec_t next_gt() = 0;
@@ -19,7 +19,7 @@ public:
     virtual bool is_epoch_end() = 0;
     virtual void next_epoch(bool shuffle) = 0;
 
-    virtual ~IDataGenerator() {};
+    virtual ~IDataGenerator(){};
 
 protected:
     std::mt19937 rng_;
@@ -28,7 +28,8 @@ protected:
 struct SimpleDataGenerator : public IDataGenerator
 {
 public:
-    SimpleDataGenerator(const std::vector<tvec_t>& in, const std::vector<tvec_t>& out, int batch_size = 1, int seed = 0);
+    SimpleDataGenerator(const std::vector<tvec_t>& in, const std::vector<tvec_t>& out, int batch_size = 1,
+                        int seed = 0);
 
     tvec_t next_input() override;
     tvec_t next_gt() override;

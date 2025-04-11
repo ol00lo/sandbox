@@ -45,9 +45,9 @@ public:
 
     virtual std::string classname() const = 0;
     virtual void serialize_spec(nlohmann::json& js) const {};
-    virtual void deserialize_spec(const nlohmann::json&) {};
+    virtual void deserialize_spec(const nlohmann::json&){};
 
-    virtual ~INode() {};
+    virtual ~INode(){};
 
 protected:
     const std::string nodename_;
@@ -58,7 +58,7 @@ protected:
     static inline std::map<std::string, node_builder_t> registered_classes_;
     static bool register_class(std::string classname, node_builder_t builder);
 
-    virtual void clear_cache() {};
+    virtual void clear_cache(){};
     void clear_backward_cache();
     void clear_forward_cache();
 

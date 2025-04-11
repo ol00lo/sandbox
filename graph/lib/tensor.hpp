@@ -12,10 +12,10 @@ namespace g
 class Tensor
 {
 public:
-    Tensor() : shape_(1), data_(0) {};
-    Tensor(const Tensor& t) : data_(t.data_), shape_(t.shape_) {};
-    Tensor(Tensor&& t) : data_(std::move(t.data_)), shape_(std::move(t.shape_)) {};
-    Tensor(const std::vector<double>& data) : data_(data), shape_(data.size()) {};
+    Tensor() : shape_(1), data_(0){};
+    Tensor(const Tensor& t) : data_(t.data_), shape_(t.shape_){};
+    Tensor(Tensor&& t) : data_(std::move(t.data_)), shape_(std::move(t.shape_)){};
+    Tensor(const std::vector<double>& data) : data_(data), shape_(data.size()){};
     Tensor(Shape shape, const std::vector<double>& data);
     Tensor(Shape shape, double a);
 
@@ -69,7 +69,7 @@ struct adl_serializer<g::Tensor>
 {
     static void to_json(json& j, const g::Tensor& t)
     {
-        j = json{{"value", t.data()}, {"shape", t.shape().to_string()}};
+        j = json{{"value", t.data()}, {"shape", json(t.shape())}};
     }
 
     static void from_json(const json& j, g::Tensor& t)

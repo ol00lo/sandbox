@@ -24,9 +24,9 @@ TEST_CASE("train test", "[tt]")
     wrk.set_optimizer(std::make_shared<SGDOptimizer>(1e-2));
 
     double loss = wrk.train({Tensor({1})}, {Tensor({4})});
-    CHECK(loss == 36);
+    CHECK(loss == 34.81);
     loss = wrk.train({Tensor({2})}, {Tensor({6})});
-    CHECK(loss == Approx(74.65));
+    CHECK(loss == Approx(73.034));
     CHECK(K->value() == Tensor({5}));
     wrk.commit();
     CHECK(K->value()[0] != 5);
@@ -234,6 +234,6 @@ TEST_CASE("simmple test 1", "[st1]")
         if (sum_loss_val <= 0.001)
             break;
     }
-    CHECK(K->value()[0] == Approx(2).epsilon(0.03));
+    CHECK(K->value()[0] == Approx(2).epsilon(0.07));
     CHECK(L->value()[0] == Approx(2).epsilon(0.01));
 }

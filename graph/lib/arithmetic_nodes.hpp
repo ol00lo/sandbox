@@ -7,7 +7,7 @@ namespace g
 class MultNode : public IFunctionalNode
 {
 public:
-    MultNode(std::string nodename = "") : IFunctionalNode("MultNode", nodename) {};
+    MultNode(std::string nodename = "") : IFunctionalNode("MultNode", nodename){};
 
 protected:
     Tensor compute_value() override;
@@ -21,7 +21,7 @@ private:
 class PlusNode : public IFunctionalNode
 {
 public:
-    PlusNode(std::string nodename = "") : IFunctionalNode("PlusNode", nodename) {};
+    PlusNode(std::string nodename = "") : IFunctionalNode("PlusNode", nodename){};
 
 protected:
     Tensor compute_value() override;
@@ -35,7 +35,7 @@ private:
 class MinusNode : public IFunctionalNode
 {
 public:
-    MinusNode(std::string nodename = "") : IFunctionalNode("MinusNode", nodename) {};
+    MinusNode(std::string nodename = "") : IFunctionalNode("MinusNode", nodename){};
 
 protected:
     Tensor compute_value() override;
