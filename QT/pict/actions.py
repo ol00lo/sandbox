@@ -147,7 +147,7 @@ class RenameFileAction(BaseAction):
 
             old_name = State().model.images[row].name
             new_name, ok = QtWidgets.QInputDialog.getText(
-                self._main_win,
+                self.main_win,
                 "Rename File",
                 "Enter new name:",
                 text=old_name
