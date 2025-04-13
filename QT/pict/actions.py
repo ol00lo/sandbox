@@ -65,7 +65,9 @@ class LoadImagesAction(BaseAction):
                 images.append(ImageInfo(image_path))
 
         if images:
+            State().model.layoutAboutToBeChanged.emit()
             State().model.set_data(images, dir_path=folder)
+            State().model.layoutChanged.emit()
             self.main_win.load_images_signal.emit()
         State().current_dir = folder
         self.main_win.curr_dir_signal.emit(folder)
