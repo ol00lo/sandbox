@@ -69,13 +69,13 @@ struct adl_serializer<g::Tensor>
 {
     static void to_json(json& j, const g::Tensor& t)
     {
-        j = json{{"value", t.data()}, {"shape", json(t.shape())}};
+        j = json{{"value", t.data()}, {"shape", t.shape()}};
     }
 
     static void from_json(const json& j, g::Tensor& t)
     {
         std::vector<double> data = j.at("value").get<std::vector<double>>();
-        g::Shape shape = j.at("shape").get<std::string>();
+        g::Shape shape = j.at("shape").get<g::Shape>();
         t = g::Tensor(shape, data);
     }
 };

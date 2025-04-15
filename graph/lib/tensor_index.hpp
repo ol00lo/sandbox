@@ -3,6 +3,7 @@
 
 #include <array>
 #include <nlohmann/json.hpp>
+#include <sstream>
 #include <string>
 
 namespace g
@@ -12,12 +13,11 @@ using Arr4 = std::array<int, 4>;
 class Shape : public Arr4
 {
 public:
-    Shape(const Arr4& shape) : Arr4{shape} {};
+    Shape(const Arr4& shape = {1, 1, 1, 1}) : Arr4{shape} {};
     Shape(int b, int i, int j, int c) : Arr4{b, i, j, c} {};
     Shape(int i, int j, int c) : Arr4{1, i, j, c} {};
     Shape(int j, int c) : Arr4{1, 1, j, c} {};
     Shape(int c) : Arr4{1, 1, 1, c} {};
-    Shape(const std::string s);
     int n_indexes() const;
 };
 
@@ -46,7 +46,17 @@ struct adl_serializer<g::Shape>
 
     static void from_json(const json& j, g::Shape& s)
     {
-        s = j.at("shape").get<std::string>();
+        std::string str = j.get<std::string>();
+        str.erase(0, 1);
+        str.erase(str.size() - 1);
+        std::stringstream ss(str);
+        std::string item;
+        int i = 0;
+        while (std::getline(ss, item, ','))
+        {
+            s[i] = std::stoi(item);
+            i++;
+        }
     }
 };
 } // namespace nlohmann

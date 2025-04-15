@@ -8,7 +8,7 @@ include(FetchContent)
 add_subdirectory(lib)
 add_subdirectory(tests)
 
-set(FORMAT_SOURCE_DIRS  lib test)
+set(FORMAT_SOURCE_DIRS  lib tests)
 add_custom_target(clangformat
     COMMAND ${PYTHON3_EXECUTABLE} clangformat.py ${FORMAT_SOURCE_DIRS}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}

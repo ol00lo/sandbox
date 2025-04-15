@@ -23,7 +23,7 @@ void DataNode::deserialize_spec(const nlohmann::json& node_json)
 {
     std::string nname = node_json["nodename"].get<std::string>();
     std::vector<double> x = node_json["value"]["value"].get<std::vector<double>>();
-    Shape shape = node_json["value"]["shape"].get<std::string>();
+    Shape shape = node_json["value"]["shape"].get<Shape>();
     Tensor val(shape, x);
     set_value(val);
 }

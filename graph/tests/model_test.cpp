@@ -103,8 +103,8 @@ TEST_CASE("trigonometric nodes test", "[tn_test]")
 
 TEST_CASE("same nodes name", "[n_name_test]")
 {
-	std::shared_ptr<DataNode> x = std::make_shared<DataNode>("x");
-	std::shared_ptr<INode> y = INode::factory("SinNode", "x");
-	g::set_dep(y, {x});
+    std::shared_ptr<DataNode> x = std::make_shared<DataNode>("x");
+    std::shared_ptr<INode> y = INode::factory("SinNode", "x");
+    g::set_dep(y, {x});
     CHECK_THROWS(Model({x}, {y}));
 }

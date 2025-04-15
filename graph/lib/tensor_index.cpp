@@ -4,19 +4,6 @@
 
 using namespace g;
 
-Shape::Shape(const std::string s)
-{
-    std::stringstream ss(s);
-    char ch;
-    double num;
-    for (int i = 0; i < 4; ++i)
-    {
-        ss >> ch;
-        ss >> num;
-        (*this)[i] = int(num);
-    }
-}
-
 int Shape::n_indexes() const
 {
     return (*this)[0] * (*this)[1] * (*this)[2] * (*this)[3];
