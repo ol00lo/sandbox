@@ -3,11 +3,14 @@ import os
 import sys
 from PyQt6 import QtWidgets
 import mainwin
+import resources
 
 def main(app):
     # create window
+    resources.qInitResources()
     mwin = mainwin.MainWindow()
     mwin.show()
+
     # start gui loop
     app.exec()
 
