@@ -13,10 +13,10 @@ class TrainingGraph : public Model
 public:
     TrainingGraph(const Model& target_model, LossType loss_type);
     void copy_to_target();
-    std::vector<Tensor> get_gradients() const;
+    std::vector<Tensor> gradients() const;
 
 private:
-    Model _target_model;
+    Model target_model_;
 };
 } // namespace g
 
