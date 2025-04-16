@@ -8,9 +8,9 @@ class RightControl(QtWidgets.QWidget):
         self.setLayout(QtWidgets.QVBoxLayout())
         
         # create lineedit
-        self._lineedit1 = QtWidgets.QLineEdit(self)
-        self._lineedit1.setPlaceholderText("sum of digits")
-        self._lineedit1.setMinimumHeight(50)  
+        self._lineedit = QtWidgets.QLineEdit(self)
+        self._lineedit.setPlaceholderText("sum of digits")
+        self._lineedit.setMinimumHeight(50)  
         self._label1 = QtWidgets.QLabel("write sum of digits:", self)
 
         # create radio buttons
@@ -32,7 +32,7 @@ class RightControl(QtWidgets.QWidget):
         # set font
         font = QtGui.QFont()
         font.setPointSize(15)  
-        self._lineedit1.setFont(font)
+        self._lineedit.setFont(font)
         self.rb3.setFont(font)
         self.rb4.setFont(font)
         font2 = QtGui.QFont()
@@ -42,14 +42,14 @@ class RightControl(QtWidgets.QWidget):
 
         # add on layout
         self.layout().addWidget(self._label1) 
-        self.layout().addWidget(self._lineedit1)
+        self.layout().addWidget(self._lineedit)
         self.layout().addWidget(self._label2)
         self.layout().addLayout(button_layout)
         self.layout().addWidget(button)
         self.layout().addItem(QtWidgets.QSpacerItem(50, 50, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Expanding))
     
     def get_data(self):
-        x = self._lineedit1.text()
+        x = self._lineedit.text()
         try:
             x = int(x)
         except Exception as e:
@@ -58,3 +58,6 @@ class RightControl(QtWidgets.QWidget):
             raise Exception("Sum of digits must be positive")
         y = 3 if self.rb3.isChecked() else 4
         return x, y
+
+    def write_to_lineedit(self, x):
+        self._lineedit.setText(str(x))

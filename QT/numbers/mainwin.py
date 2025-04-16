@@ -42,3 +42,6 @@ class MainWindow(QtWidgets.QMainWindow):
             event.accept()    
         else:
             super().keyPressEvent(event)     
+
+    def write_to_lineedit(self, str):
+        self._right.write_to_lineedit(str)
