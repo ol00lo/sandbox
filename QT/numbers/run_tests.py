@@ -8,7 +8,13 @@ app = QtWidgets.QApplication(sys.argv)
 start_screen = MainWindow()
 start_screen.show()
 
-tester.initialize_module(tests)
+params = sys.argv[2:]
+if not params:
+    tester.initialize_module(tests)
+else:
+    names = ["tests." + x for x in params]
+    tester.initialize_names(names)
+
 tester.setapp(app)
 tester.start()
 

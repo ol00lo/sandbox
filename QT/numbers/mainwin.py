@@ -45,3 +45,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def write_to_lineedit(self, str):
         self._right.write_to_lineedit(str)
+
+    def get_from_lineedit(self):
+        return self._right.get_from_lineedit()

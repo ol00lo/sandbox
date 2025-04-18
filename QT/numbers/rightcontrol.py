@@ -25,9 +25,9 @@ class RightControl(QtWidgets.QWidget):
         self._label2 = QtWidgets.QLabel("choose num of digits:", self)
 
         # create start button
-        button = QtWidgets.QPushButton("RUN")
-        button.setMinimumHeight(50)
-        button.clicked.connect(lambda: self._triggered.emit())
+        self.button = QtWidgets.QPushButton("RUN")
+        self.button.setMinimumHeight(50)
+        self.button.clicked.connect(lambda: self._triggered.emit())
 
         # set font
         font = QtGui.QFont()
@@ -45,7 +45,7 @@ class RightControl(QtWidgets.QWidget):
         self.layout().addWidget(self._lineedit)
         self.layout().addWidget(self._label2)
         self.layout().addLayout(button_layout)
-        self.layout().addWidget(button)
+        self.layout().addWidget(self.button)
         self.layout().addItem(QtWidgets.QSpacerItem(50, 50, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Expanding))
     
     def get_data(self):
@@ -53,7 +53,7 @@ class RightControl(QtWidgets.QWidget):
         try:
             x = int(x)
         except Exception as e:
-            raise Exception("Enter numbers only")
+            raise Exception("Enter integer numbers only")
         if x < 0:
             raise Exception("Sum of digits must be positive")
         y = 3 if self.rb3.isChecked() else 4
@@ -61,3 +61,6 @@ class RightControl(QtWidgets.QWidget):
 
     def write_to_lineedit(self, x):
         self._lineedit.setText(str(x))
+
+    def get_from_lineedit(self):
+        return self._lineedit.text()
