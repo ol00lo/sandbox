@@ -86,6 +86,12 @@ class TableModel(QtCore.QAbstractTableModel):
                 return True
         return False
 
+    def clear_data(self):
+        self.beginResetModel()
+        self.images.clear()
+        self.dir_path = ""
+        self.endResetModel()
+
     def flags(self, index):
         ret = super().flags(index)
 

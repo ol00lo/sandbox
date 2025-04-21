@@ -25,6 +25,7 @@ class TableViewer (QtWidgets.QWidget):
 
         State().signals.load_images_signal.connect(self.init_connections)
         State().signals.curr_dir_signal.connect(self.main_win.show_folder_name)
+        State().signals.next_image_signal.connect(self.set_selected_row_focus)
 
         self.delete_images_button = QtWidgets.QPushButton("Delete All Images")
         self.delete_images_button.clicked.connect(State().actions["DeleteAllImages"].do)
@@ -93,3 +94,25 @@ class TableViewer (QtWidgets.QWidget):
                     State().selected_image = image_name
                     State().signals.image_selected.emit(State().get_path())
                     State().signals.curr_dir_signal.emit(State().current_dir)
+
+    def set_selected_row_focus(self, row_index):
+            source_index = State().model.index(row_index, 0)
+            if source_index.row() < 0:
+                source_index = State().model.index(len(State().model.images)-1, 0)
+            proxy_index = self.proxy_model.mapFromSource(source_index)
+
+            source_index = self.proxy_model.mapToSource(proxy_index)
+            State().selected_image = State().model.images[source_index.row()].name
+            State().signals.image_selected.emit(State().get_path())
+
+            selection_model = self.table_view.selectionModel()
+            selection_model.select(
+                proxy_index,
+                QtCore.QItemSelectionModel.SelectionFlag.ClearAndSelect |
+                QtCore.QItemSelectionModel.SelectionFlag.Rows
+            )
+            self.table_view.scrollTo(
+                proxy_index,
+                QtWidgets.QAbstractItemView.ScrollHint.PositionAtCenter
+            )
+            self.table_view.setFocus()

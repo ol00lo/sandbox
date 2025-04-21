@@ -52,13 +52,7 @@ class LoadImagesAction(BaseAction):
                 image_path = os.path.join(folder, filename)
                 images.append(ImageInfo(image_path))
 
-        if images:
-            State().model.layoutAboutToBeChanged.emit()
-            State().model.set_data(images, dir_path=folder)
-            State().model.layoutChanged.emit()
-            State().signals.load_images_signal.emit()
-        State().current_dir = folder
-        State().signals.curr_dir_signal.emit(folder)
+        State().set_data(images, folder)
 
 class DeleteAllImagesAction(BaseAction):
     _action_name = "DeleteAllImages"
@@ -86,11 +80,7 @@ class DeleteAllImagesAction(BaseAction):
                         deleted_files += 1
 
                 if deleted_files > 0:
-                    State().model.beginResetModel()
-                    State().model.images.clear()
-                    State().model.dir_path = ""
-                    State().model.endResetModel()
-
+                    State().model.clear_data()
                     State().cleanup()
                     show_message("Success", f"Deleted {deleted_files} images.", is_error=False)
         else:
@@ -176,10 +166,9 @@ class DeleteImageAction(BaseAction):
         model = State().model
         if not index.isValid():
             return
-        source_index = index
-        if not source_index.isValid():
+        if not index.isValid():
             return
-        current_row = source_index.row()
+        current_row = index.row()
         if current_row >= len(model.images) or current_row < 0:
             return
 
@@ -193,10 +182,4 @@ class DeleteImageAction(BaseAction):
         model.images.pop(current_row)
         model.endRemoveRows()
 
-        next_image_path = ""
-        if model.images:
-            next_row = min(current_row, len(model.images) - 1)
-            next_image_info = model.images[next_row]
-            next_image_path = os.path.join(model.dir_path, next_image_info.name)
-
-        State().signals.image_selected.emit(next_image_path)
+        State().signals.next_image_signal.emit(current_row)
