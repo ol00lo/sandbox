@@ -13,15 +13,8 @@ class State:
 
     def _init_state(self):
         self.model = TableModel()
-        self.proxy_model = QtCore.QSortFilterProxyModel()
-        self.proxy_model.setSourceModel(self.model)
-
-        self.filter_line_edit = QtWidgets.QLineEdit()
-        self.filter_line_edit.setPlaceholderText("Filter by name...")
-        self.filter_line_edit.textChanged.connect(self._on_filter_text_changed)
 
         self.current_dir = None
-        self.selected_image = None
         self.actions = {}
 
     @classmethod
@@ -35,10 +28,6 @@ class State:
             return
         for name, action_class in self.__class__._action_classes.items():
             self.actions[name] = action_class(parent_widget)
-
-    def _on_filter_text_changed(self, text):
-        if self.model:
-            self.proxy_model.setFilterFixedString(text)
 
     def set_current_dir(self, dir_path):
         if os.path.isdir(dir_path):
@@ -56,4 +45,3 @@ class State:
         self.model.set_data([], None)
         self.current_dir = None
         self.selected_image = None
-        self.filter_line_edit.clear()

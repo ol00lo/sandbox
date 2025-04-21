@@ -5,6 +5,7 @@ from backend.state import State
 class TableViewer (QtWidgets.QWidget):
     def __init__(self, parent):
         super().__init__(parent)
+        self.main_win = parent
 
         self.table_view = QtWidgets.QTableView()
         self.table_view.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.DoubleClicked)
@@ -20,8 +21,12 @@ class TableViewer (QtWidgets.QWidget):
         self.delete_images_button = QtWidgets.QPushButton("Delete All Images")
         self.delete_images_button.clicked.connect(State().actions["DeleteAllImages"].do)
 
+        self.filter_line_edit = QtWidgets.QLineEdit()
+        self.filter_line_edit.setPlaceholderText("Filter by name...")
+        self.filter_line_edit.textChanged.connect(self._on_filter_text_changed)
+
         main_layout = QtWidgets.QVBoxLayout()
-        main_layout.addWidget(State().filter_line_edit)
+        main_layout.addWidget(self.filter_line_edit)
         main_layout.addWidget(self.table_view)
         main_layout.addWidget(self.load_images_button)
         main_layout.addWidget(self.delete_images_button)
@@ -30,6 +35,9 @@ class TableViewer (QtWidgets.QWidget):
         table_widget = QtWidgets.QWidget()
         table_widget.setLayout(main_layout)
         self.setLayout(main_layout)
+
+        self.proxy_model = QtCore.QSortFilterProxyModel()
+        self.proxy_model.setSourceModel(State().model)
 
     def show_context_menu(self, position):
         selected_rows = self.table_view.selectionModel().selectedRows()
@@ -43,7 +51,7 @@ class TableViewer (QtWidgets.QWidget):
         delete_action.triggered.connect(lambda: delete_action.do(selected_rows))
 
         context_menu.addAction(rename_action)
-        rename_action.triggered.connect(lambda: rename_action.do(cur_row))
+        rename_action.triggered.connect(lambda: rename_action.do(self.proxy_model.mapToSource(cur_row)))
 
         context_menu.exec(self.table_view.viewport().mapToGlobal(position))
 
@@ -53,13 +61,29 @@ class TableViewer (QtWidgets.QWidget):
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key.Key_Delete:
             selected_rows = self.table_view.selectionModel().selectedRows()
-            State().actions["DeleteImage"].do(selected_rows)
+            source_indexes = [self.proxy_model.mapToSource(index) for index in selected_rows]
+            State().actions["DeleteImage"].do(source_indexes)
         else:
             super().keyPressEvent(event)
 
     def init_connections(self):
-        self.table_view.setModel(State().proxy_model)
-        self.table_view.selectionModel().selectionChanged.connect(State().actions["LoadImages"].on_selection_changed)
+        self.table_view.setModel(self.proxy_model)
+        self.table_view.selectionModel().selectionChanged.connect(self.on_selection_changed)
         self.table_view.setSortingEnabled(True)
         for column_index in range(len(State().model.columns)):
             self.table_view.horizontalHeader().setSectionResizeMode(column_index, QtWidgets.QHeaderView.ResizeMode.Stretch)
+
+    def _on_filter_text_changed(self, text):
+        if State().model:
+            self.proxy_model.setFilterFixedString(text)
+
+    def on_selection_changed(self, selected, deselected):
+        for index in selected.indexes():
+            if index.isValid() and index.column() == 0:
+                source_index = self.proxy_model.mapToSource(index)
+                if source_index.isValid():
+                    image_info = State().model.images[source_index.row()]
+                    image_name = image_info.name
+                    State().selected_image = image_name
+                    self.main_win.image_selected.emit(State().get_path())
+                    self.main_win.curr_dir_signal.emit(State().current_dir)

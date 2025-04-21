@@ -32,27 +32,17 @@ class BaseAction(QtGui.QAction):
         print(tb_str)
         print("======================\n")
         show_message("ERROR", str(error), is_error=True)
-    
+
     def do_impl(self, *args):
         raise NotImplementedError("Subclasses must implement do_impl()")
 
 class LoadImagesAction(BaseAction):
     _action_name = "LoadImages"
+
     def __init__(self, main_win):
         super().__init__(main_win, "Ctrl+L")
         self.main_win = main_win
         self.setIcon(QtGui.QIcon(":/load"))
-
-    def on_selection_changed(self, selected, deselected):
-        for index in selected.indexes():
-            if index.isValid() and index.column() == 0:
-                source_index = State().proxy_model.mapToSource(index)
-                if source_index.isValid():
-                    image_info = State().model.images[source_index.row()]
-                    image_name = image_info.name
-                    State().selected_image = image_name
-                    self.main_win.image_selected.emit(State().get_path())
-                    self.main_win.curr_dir_signal.emit(State().current_dir)
 
     def do_impl(self, *args):
         folder = QtWidgets.QFileDialog.getExistingDirectory(self.main_win, "Select Folder")
@@ -71,7 +61,6 @@ class LoadImagesAction(BaseAction):
             self.main_win.load_images_signal.emit()
         State().current_dir = folder
         self.main_win.curr_dir_signal.emit(folder)
-
 
 class DeleteAllImagesAction(BaseAction):
     _action_name = "DeleteAllImages"
@@ -143,8 +132,7 @@ class RenameFileAction(BaseAction):
 
     def do_impl(self, index):
         if index.isValid():
-            source_index = State().proxy_model.mapToSource(index)
-            row = source_index.row()
+            row = index.row()
 
             old_name = State().model.images[row].name
             new_name, ok = QtWidgets.QInputDialog.getText(
@@ -173,12 +161,9 @@ class RenameFileAction(BaseAction):
 
             State().model.layoutAboutToBeChanged.emit()
             State().model.images[row].name = new_name
-            State().model.dataChanged.emit(index, index, [QtCore.Qt.ItemDataRole.DisplayRole])
             State().model.layoutChanged.emit()
 
-            if State().selected_image == old_name:
-                State().selected_image = new_name
-                self.main_win.image_selected.emit(new_path)
+            self.main_win.image_selected.emit(new_path)
 
 class DeleteImageAction(BaseAction):
     _action_name = "DeleteImage"
@@ -197,7 +182,7 @@ class DeleteImageAction(BaseAction):
         model = State().model
         if not index.isValid():
             return
-        source_index = State().proxy_model.mapToSource(index)
+        source_index = index
         if not source_index.isValid():
             return
         current_row = source_index.row()
@@ -219,7 +204,5 @@ class DeleteImageAction(BaseAction):
             next_row = min(current_row, len(model.images) - 1)
             next_image_info = model.images[next_row]
             next_image_path = os.path.join(model.dir_path, next_image_info.name)
-
-        State().selected_image = next_image_path
 
         self.main_win.image_selected.emit(next_image_path)
