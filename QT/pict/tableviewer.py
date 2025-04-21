@@ -6,7 +6,12 @@ class TableViewer (QtWidgets.QWidget):
     def __init__(self, parent):
         super().__init__(parent)
         self.main_win = parent
+        self.init_main_layout()
 
+        self.proxy_model = QtCore.QSortFilterProxyModel()
+        self.proxy_model.setSourceModel(State().model)
+
+    def init_main_layout(self):
         self.table_view = QtWidgets.QTableView()
         self.table_view.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.DoubleClicked)
         self.table_view.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
@@ -17,6 +22,9 @@ class TableViewer (QtWidgets.QWidget):
 
         self.load_images_button = QtWidgets.QPushButton("Open Folder")
         self.load_images_button.clicked.connect(State().actions["LoadImages"].do)
+
+        State().signals.load_images_signal.connect(self.init_connections)
+        State().signals.curr_dir_signal.connect(self.main_win.show_folder_name)
 
         self.delete_images_button = QtWidgets.QPushButton("Delete All Images")
         self.delete_images_button.clicked.connect(State().actions["DeleteAllImages"].do)
@@ -36,22 +44,20 @@ class TableViewer (QtWidgets.QWidget):
         table_widget.setLayout(main_layout)
         self.setLayout(main_layout)
 
-        self.proxy_model = QtCore.QSortFilterProxyModel()
-        self.proxy_model.setSourceModel(State().model)
-
     def show_context_menu(self, position):
         selected_rows = self.table_view.selectionModel().selectedRows()
-        cur_row = selected_rows[0]
         context_menu = QtWidgets.QMenu(self.table_view)
 
         rename_action = State().actions["RenameFile"]
         delete_action = State().actions["DeleteImage"]
 
         context_menu.addAction(delete_action)
-        delete_action.triggered.connect(lambda: delete_action.do(selected_rows))
+        source_indexes = [self.proxy_model.mapToSource(index) for index in selected_rows]        
+        delete_action.triggered.connect(lambda: delete_action.do(source_indexes))
 
         context_menu.addAction(rename_action)
-        rename_action.triggered.connect(lambda: rename_action.do(self.proxy_model.mapToSource(cur_row)))
+        source_index = selected_rows[0]
+        rename_action.triggered.connect(lambda: rename_action.do(self.proxy_model.mapToSource(source_index)))
 
         context_menu.exec(self.table_view.viewport().mapToGlobal(position))
 
@@ -85,5 +91,5 @@ class TableViewer (QtWidgets.QWidget):
                     image_info = State().model.images[source_index.row()]
                     image_name = image_info.name
                     State().selected_image = image_name
-                    self.main_win.image_selected.emit(State().get_path())
-                    self.main_win.curr_dir_signal.emit(State().current_dir)
+                    State().signals.image_selected.emit(State().get_path())
+                    State().signals.curr_dir_signal.emit(State().current_dir)

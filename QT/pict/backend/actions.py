@@ -7,10 +7,9 @@ from .table import ImageInfo
 from .state import State
 
 class BaseAction(QtGui.QAction):
-    _action_name = None  
-
-    def __init__(self, parent, shortcut=None):
-        super().__init__(self._action_name, parent)
+    _action_name = "BaseAction"
+    def __init__(self, shortcut=None):
+        super().__init__(self._action_name)
         if shortcut:
             self.setShortcut(shortcut)
 
@@ -39,13 +38,12 @@ class BaseAction(QtGui.QAction):
 class LoadImagesAction(BaseAction):
     _action_name = "LoadImages"
 
-    def __init__(self, main_win):
-        super().__init__(main_win, "Ctrl+L")
-        self.main_win = main_win
+    def __init__(self):
+        super().__init__("Ctrl+L")
         self.setIcon(QtGui.QIcon(":/load"))
 
     def do_impl(self, *args):
-        folder = QtWidgets.QFileDialog.getExistingDirectory(self.main_win, "Select Folder")
+        folder = QtWidgets.QFileDialog.getExistingDirectory(None, "Select Folder")
         if not folder:
             return
         images = []
@@ -58,23 +56,23 @@ class LoadImagesAction(BaseAction):
             State().model.layoutAboutToBeChanged.emit()
             State().model.set_data(images, dir_path=folder)
             State().model.layoutChanged.emit()
-            self.main_win.load_images_signal.emit()
+            State().signals.load_images_signal.emit()
         State().current_dir = folder
-        self.main_win.curr_dir_signal.emit(folder)
+        State().signals.curr_dir_signal.emit(folder)
 
 class DeleteAllImagesAction(BaseAction):
     _action_name = "DeleteAllImages"
-    def __init__(self, main_win):
-        super().__init__(main_win, "Ctrl+D")
+    def __init__(self):
+        super().__init__("Ctrl+D")
         self.setIcon(QtGui.QIcon(":/deleteall"))
-        self.main_win = main_win
 
     def do_impl(self, *args):
         if State().model and State().current_dir is not None:
             reply = QtWidgets.QMessageBox.question(
-                self.main_win,
+                None,
                 'Delete All Images',
                 'Are you sure you want to delete all images?',
+                QtWidgets.QMessageBox.Icon.Question,
                 QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No,
                 QtWidgets.QMessageBox.StandardButton.No
             )
@@ -94,15 +92,14 @@ class DeleteAllImagesAction(BaseAction):
                     State().model.endResetModel()
 
                     State().cleanup()
-                    self.main_win.image_selected.emit(State().get_path())
                     show_message("Success", f"Deleted {deleted_files} images.", is_error=False)
         else:
             raise Exception("No directory selected.")
 
 class AddImageAction(BaseAction):
     _action_name = "AddImage"
-    def __init__(self,  main_win):
-        super().__init__(main_win)
+    def __init__(self):
+        super().__init__()
         self.setIcon(QtGui.QIcon(":/add"))
 
     def do_impl(self, *args):
@@ -124,11 +121,9 @@ class AddImageAction(BaseAction):
 
 class RenameFileAction(BaseAction):
     _action_name = "RenameFile"
-
-    def __init__(self, main_win):
-        super().__init__(main_win)
+    def __init__(self):
+        super().__init__()
         self.setIcon(QtGui.QIcon(":/rename"))
-        self.main_win = main_win
 
     def do_impl(self, index):
         if index.isValid():
@@ -136,7 +131,7 @@ class RenameFileAction(BaseAction):
 
             old_name = State().model.images[row].name
             new_name, ok = QtWidgets.QInputDialog.getText(
-                self.main_win,
+                None,
                 "Rename File",
                 "Enter new name:",
                 text=old_name
@@ -151,7 +146,7 @@ class RenameFileAction(BaseAction):
 
             if os.path.exists(new_path):
                 QtWidgets.QMessageBox.warning(
-                    self.main_win,
+                    None,
                     "Error",
                     "File with this name already exists."
                 )
@@ -163,14 +158,13 @@ class RenameFileAction(BaseAction):
             State().model.images[row].name = new_name
             State().model.layoutChanged.emit()
 
-            self.main_win.image_selected.emit(new_path)
+            State().signals.image_selected.emit(new_path)
 
 class DeleteImageAction(BaseAction):
     _action_name = "DeleteImage"
-    def __init__(self, main_win):
-        super().__init__(main_win, "Delete")
+    def __init__(self):
+        super().__init__("Delete")
         self.setIcon(QtGui.QIcon(":/delete"))
-        self.main_win = main_win
 
     def do_impl(self, selected):
         if not selected:
@@ -205,4 +199,4 @@ class DeleteImageAction(BaseAction):
             next_image_info = model.images[next_row]
             next_image_path = os.path.join(model.dir_path, next_image_info.name)
 
-        self.main_win.image_selected.emit(next_image_path)
+        State().signals.image_selected.emit(next_image_path)

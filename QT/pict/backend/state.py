@@ -2,8 +2,14 @@ from .table import TableModel
 import os
 from PyQt6 import QtCore, QtWidgets
 
+class Signals(QtCore.QObject):
+    image_selected = QtCore.pyqtSignal(str)
+    load_images_signal = QtCore.pyqtSignal()
+    curr_dir_signal = QtCore.pyqtSignal(str)
+
 class State:
     _instance = None
+    signals = None
 
     def __new__(cls):
         if cls._instance is None:
@@ -12,10 +18,12 @@ class State:
         return cls._instance
 
     def _init_state(self):
+        self.signals = Signals()
         self.model = TableModel()
 
         self.current_dir = None
         self.actions = {}
+        self.init_actions()
 
     @classmethod
     def register_action(cls, action_name, action_class):
@@ -23,11 +31,11 @@ class State:
             cls._action_classes = {}
         cls._action_classes[action_name] = action_class
 
-    def init_actions(self, parent_widget):
+    def init_actions(self):
         if not hasattr(self.__class__, '_action_classes'):
             return
         for name, action_class in self.__class__._action_classes.items():
-            self.actions[name] = action_class(parent_widget)
+            self.actions[name] = action_class()
 
     def set_current_dir(self, dir_path):
         if os.path.isdir(dir_path):

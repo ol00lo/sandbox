@@ -1,5 +1,6 @@
 from PyQt6 import QtCore, QtWidgets, QtGui
 from scene import ImageModel
+from backend.state import State
 
 class ImageViewer(QtWidgets.QGraphicsView):
     coordinates_clicked = QtCore.pyqtSignal(int, int) 
@@ -14,6 +15,8 @@ class ImageViewer(QtWidgets.QGraphicsView):
         self.cross_cursor = QtGui.QCursor(QtCore.Qt.CursorShape.CrossCursor)
         self.default_cursor = QtGui.QCursor()
         self.setCursor(self.default_cursor)
+
+        State().signals.image_selected.connect(self.display_image)
 
     def display_image(self, image_path):
         self.image_model.display_image(image_path)

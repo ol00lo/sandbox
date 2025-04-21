@@ -4,10 +4,6 @@ from tableviewer import TableViewer
 from backend.state import State
 
 class MainWindow(QtWidgets.QMainWindow):
-    image_selected = QtCore.pyqtSignal(str)
-    curr_dir_signal = QtCore.pyqtSignal(str)
-    load_images_signal = QtCore.pyqtSignal()
-
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Image Viewer")
@@ -18,7 +14,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setCentralWidget(self.central_widget)
 
         self.splitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal, self.central_widget)
-        State().init_actions(self)
         self.image_model_viewer = ImageViewer(self)
         self.table_viewer = TableViewer(self)
 
@@ -34,10 +29,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.status_bar = QtWidgets.QStatusBar(self)
         self.setStatusBar(self.status_bar)
 
-        self.curr_dir_signal.connect(self.show_folder_name)
-        self.image_selected.connect(self.image_model_viewer.display_image)
         self.image_model_viewer.coordinates_clicked.connect(self.show_coordinates)
-        self.load_images_signal.connect(self.table_viewer.init_connections)
 
         self.create_toolbar()
 
