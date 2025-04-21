@@ -3,8 +3,8 @@ import os
 import sys
 import traceback
 from qt_common import show_message, SUPPORTED_IMAGE_EXTENSIONS, SUPPORTED_IMAGE_FILTER
-from table import ImageInfo
-from state import State
+from .table import ImageInfo
+from .state import State
 
 class BaseAction(QtGui.QAction):
     _action_name = None  
@@ -108,8 +108,7 @@ class DeleteAllImagesAction(BaseAction):
                     self.main_win.image_selected.emit(State().get_path())
                     show_message("Success", f"Deleted {deleted_files} images.", is_error=False)
         else:
-            show_message("Error", "No directory selected.", is_error=True)
-            return
+            raise Exception("No directory selected.")
 
 class AddImageAction(BaseAction):
     _action_name = "AddImage"
@@ -190,8 +189,7 @@ class DeleteImageAction(BaseAction):
 
     def do_impl(self, selected):
         if not selected:
-            show_message("No selection", "Please select images to delete", is_error=True)
-            return
+            raise Exception("No selection")
         for index in sorted(selected, key=lambda x: x.row(), reverse=True):
             self.delete(index)
 

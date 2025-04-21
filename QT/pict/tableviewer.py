@@ -1,6 +1,6 @@
-from PyQt6 import QtCore, QtWidgets, QtGui
-from actions import LoadImagesAction, DeleteAllImagesAction, RenameFileAction, DeleteImageAction
-from state import State
+from PyQt6 import QtCore, QtWidgets
+from backend.actions import BaseAction
+from backend.state import State
 
 class TableViewer (QtWidgets.QWidget):
     def __init__(self, parent):
@@ -32,23 +32,23 @@ class TableViewer (QtWidgets.QWidget):
         self.setLayout(main_layout)
 
     def show_context_menu(self, position):
-            selected_rows = self.table_view.selectionModel().selectedRows()
-            cur_row = selected_rows[0]
-            context_menu = QtWidgets.QMenu(self.table_view)
+        selected_rows = self.table_view.selectionModel().selectedRows()
+        cur_row = selected_rows[0]
+        context_menu = QtWidgets.QMenu(self.table_view)
 
-            rename_action = State().actions["RenameFile"]
-            delete_action = State().actions["DeleteImage"]
+        rename_action = State().actions["RenameFile"]
+        delete_action = State().actions["DeleteImage"]
 
-            context_menu.addAction(delete_action)
-            delete_action.triggered.connect(lambda: delete_action.do(selected_rows))
+        context_menu.addAction(delete_action)
+        delete_action.triggered.connect(lambda: delete_action.do(selected_rows))
 
-            context_menu.addAction(rename_action)
-            rename_action.triggered.connect(lambda: rename_action.do(cur_row))
+        context_menu.addAction(rename_action)
+        rename_action.triggered.connect(lambda: rename_action.do(cur_row))
 
-            context_menu.exec(self.table_view.viewport().mapToGlobal(position))
+        context_menu.exec(self.table_view.viewport().mapToGlobal(position))
 
-            rename_action.triggered.disconnect()
-            delete_action.triggered.disconnect()
+        rename_action.triggered.disconnect()
+        delete_action.triggered.disconnect()
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key.Key_Delete:

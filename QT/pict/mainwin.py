@@ -1,7 +1,7 @@
 from PyQt6 import QtWidgets, QtGui, QtCore
 from imageviewer import ImageViewer
 from tableviewer import TableViewer
-from state import State
+from backend.state import State
 
 class MainWindow(QtWidgets.QMainWindow):
     image_selected = QtCore.pyqtSignal(str)

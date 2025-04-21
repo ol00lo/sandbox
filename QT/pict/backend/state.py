@@ -1,6 +1,7 @@
-from table import TableModel
+from .table import TableModel
 import os
 from PyQt6 import QtCore, QtWidgets
+
 class State:
     _instance = None
 
