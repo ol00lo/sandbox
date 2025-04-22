@@ -1,7 +1,7 @@
 import time
 import unittest
 from PyQt6 import QtCore, QtWidgets
-from gui_communicator import guicom
+from .gui_communicator import guicom
 
 
 class TestThread(QtCore.QThread):

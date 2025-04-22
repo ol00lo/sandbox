@@ -23,17 +23,17 @@ class GuiCommunicator(QtCore.QObject):
         self.emitter.connect(self._execute_fun)
 
     @_call_in_gui
-    def press_key(self, key, wid=None, modifier=QtCore.Qt.KeyboardModifier.NoModifier):
+    def press_key(self, key, wid, modifier=QtCore.Qt.KeyboardModifier.NoModifier):
         """ key: QtCore.Qt.Key_...
             wid: QtWidgets or None
         """
         QtTest.QTest.keyClick(wid, key, modifier)
 
     def press_enter(self):
-        self.press_key(QtCore.Qt.Key.Key_Return)
+        self.press_key(QtCore.Qt.Key.Key_Return, None)
 
     @_call_in_gui
-    def type_text(self, text, wid=None, call_clear=False, focus=False):
+    def type_text(self, text, wid, call_clear=False, focus=False):
         if focus and wid:
             self.focus_widget(wid)
         if wid is not None and call_clear:

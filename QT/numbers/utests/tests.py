@@ -1,7 +1,7 @@
 import unittest
 from mainwin import MainWindow
-from tester import tester
-from gui_communicator import guicom
+from .tester import tester
+from .gui_communicator import guicom
 from PyQt6 import QtWidgets, QtCore
 
 class Test(unittest.TestCase):
@@ -54,8 +54,8 @@ class Test(unittest.TestCase):
         tester.close_error_window()
 
         # <-/->
-        tester.eval_and_wait_focus(self.write_text, ("\t",), QtWidgets.QRadioButton)
-        tester.eval_and_wait_true(guicom.press_key, (QtCore.Qt.Key.Key_Right),  'isChecked4()', {'isChecked4': mwin._right.rb4.isChecked})  
+        tester.eval_and_wait_focus(guicom.press_key, (QtCore.Qt.Key.Key_Tab, mwin), type( mwin._right.rb3))
+        tester.eval_and_wait_true(guicom.press_key, (QtCore.Qt.Key.Key_Right, mwin),'isChecked4()', {'isChecked4': mwin._right.rb3.isChecked}) 
 
     def test_case4numbers(self):
         mwin = self.mwin
@@ -96,4 +96,4 @@ class Test(unittest.TestCase):
     def write_text(self, text):
         self.mwin._right._lineedit.clear()
         self.mwin._right._lineedit.setFocus()
-        guicom.type_text(text)
+        guicom.type_text(text, self.mwin._right._lineedit)
