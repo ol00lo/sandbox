@@ -57,7 +57,7 @@ SectionEnd
 Section "Start Menu shortcut." SecStartMenu
     CreateDirectory "$SMPROGRAMS\PictApp"
     CreateShortcut "$SMPROGRAMS\PictApp\PictApp.lnk" "$INSTDIR\PictApp.exe"
-    CreateShortcut "$SMPROGRAMS\PictApp\Удалить PictApp.lnk" "$INSTDIR\Uninstall.exe"
+    CreateShortcut "$SMPROGRAMS\PictApp\Delete PictApp.lnk" "$INSTDIR\Uninstall.exe"
 SectionEnd
 
 Section "Uninstall"

@@ -15,6 +15,7 @@ def create():
         "--name", "PictApp",
         str(main_script)
     ]
+    print(' '.join(cmd))
     result = subprocess.run(cmd, check=True)
 
     if result.returncode == 0:

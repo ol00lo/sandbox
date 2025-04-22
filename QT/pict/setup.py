@@ -6,7 +6,8 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     install_requires=[
         'PyQt6',
-        'imagesize'
+        'imagesize',
+        'pillow'
     ],
     entry_points={
         'gui_scripts': [
