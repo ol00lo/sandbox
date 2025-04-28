@@ -31,6 +31,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.image_model_viewer.coordinates_clicked.connect(self.show_coordinates)
 
+        self.table_viewer.image_selected.connect(self.image_model_viewer.display_image)
         self.create_toolbar()
 
     def create_toolbar(self):

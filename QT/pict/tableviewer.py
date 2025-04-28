@@ -3,6 +3,8 @@ from backend.actions import BaseAction
 from backend.state import State
 
 class TableViewer (QtWidgets.QWidget):
+    image_selected = QtCore.pyqtSignal(str)
+
     def __init__(self, parent):
         super().__init__(parent)
         self.main_win = parent
@@ -24,8 +26,7 @@ class TableViewer (QtWidgets.QWidget):
         self.load_images_button.clicked.connect(State().actions["LoadImages"].do)
 
         State().signals.load_images_signal.connect(self.init_connections)
-        State().signals.curr_dir_signal.connect(self.main_win.show_folder_name)
-        State().signals.next_image_signal.connect(self.set_selected_row_focus)
+        State().signals.delete_image_signal.connect(self.update_row_focus)
 
         self.delete_images_button = QtWidgets.QPushButton("Delete All Images")
         self.delete_images_button.clicked.connect(State().actions["DeleteAllImages"].do)
@@ -79,6 +80,7 @@ class TableViewer (QtWidgets.QWidget):
         self.table_view.setSortingEnabled(True)
         for column_index in range(len(State().model.columns)):
             self.table_view.horizontalHeader().setSectionResizeMode(column_index, QtWidgets.QHeaderView.ResizeMode.Stretch)
+        self.main_win.show_folder_name(State().current_dir)
 
     def _on_filter_text_changed(self, text):
         if State().model:
@@ -92,27 +94,21 @@ class TableViewer (QtWidgets.QWidget):
                     image_info = State().model.images[source_index.row()]
                     image_name = image_info.name
                     State().selected_image = image_name
-                    State().signals.image_selected.emit(State().get_path())
-                    State().signals.curr_dir_signal.emit(State().current_dir)
+                    self.image_selected.emit(State().get_path())
+                    self.main_win.show_folder_name(State().current_dir)
 
-    def set_selected_row_focus(self, row_index):
-            source_index = State().model.index(row_index, 0)
-            if source_index.row() < 0:
-                source_index = State().model.index(len(State().model.images)-1, 0)
-            proxy_index = self.proxy_model.mapFromSource(source_index)
+    def update_row_focus(self):
+        selected = self.table_view.currentIndex()
+        current_row = selected.row()
 
-            source_index = self.proxy_model.mapToSource(proxy_index)
-            State().selected_image = State().model.images[source_index.row()].name
-            State().signals.image_selected.emit(State().get_path())
+        new_row = min(current_row, self.proxy_model.rowCount() - 1)
+        if new_row >= 0:
+            new_index = self.proxy_model.index(new_row, 0)
 
-            selection_model = self.table_view.selectionModel()
-            selection_model.select(
-                proxy_index,
+            self.table_view.selectionModel().setCurrentIndex(
+                new_index,
                 QtCore.QItemSelectionModel.SelectionFlag.ClearAndSelect |
                 QtCore.QItemSelectionModel.SelectionFlag.Rows
             )
-            self.table_view.scrollTo(
-                proxy_index,
-                QtWidgets.QAbstractItemView.ScrollHint.PositionAtCenter
-            )
+            self.table_view.scrollTo(new_index)
             self.table_view.setFocus()

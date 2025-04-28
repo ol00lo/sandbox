@@ -52,7 +52,11 @@ class LoadImagesAction(BaseAction):
                 image_path = os.path.join(folder, filename)
                 images.append(ImageInfo(image_path))
 
-        State().set_data(images, folder)
+        if images:
+            State().model.set_data(images, dir_path=folder)
+            State().signals.load_images_signal.emit()
+            State().current_dir = folder
+        State().current_dir = folder
 
 class DeleteAllImagesAction(BaseAction):
     _action_name = "DeleteAllImages"
@@ -148,7 +152,7 @@ class RenameFileAction(BaseAction):
             State().model.images[row].name = new_name
             State().model.layoutChanged.emit()
 
-            State().signals.image_selected.emit(new_path)
+            State().signals.rename_image_signal.emit(new_path)
 
 class DeleteImageAction(BaseAction):
     _action_name = "DeleteImage"
@@ -159,15 +163,15 @@ class DeleteImageAction(BaseAction):
     def do_impl(self, selected):
         if not selected:
             raise Exception("No selection")
-        for index in sorted(selected, key=lambda x: x.row(), reverse=True):
+        for index in sorted(selected, key=lambda x: x.row(), reverse=True):  
             self.delete(index)
+            State().signals.delete_image_signal.emit()
 
     def delete(self, index):
         model = State().model
         if not index.isValid():
             return
-        if not index.isValid():
-            return
+
         current_row = index.row()
         if current_row >= len(model.images) or current_row < 0:
             return
@@ -175,11 +179,8 @@ class DeleteImageAction(BaseAction):
         image_info = model.images[current_row]
         image_path = os.path.join(model.dir_path, image_info.name)
 
+        model.beginRemoveRows(QtCore.QModelIndex(), current_row, current_row)
         if os.path.exists(image_path):
             os.remove(image_path)
-
-        model.beginRemoveRows(QtCore.QModelIndex(), current_row, current_row)
         model.images.pop(current_row)
         model.endRemoveRows()
-
-        State().signals.next_image_signal.emit(current_row)

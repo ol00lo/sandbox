@@ -23,9 +23,11 @@ class TableModel(QtCore.QAbstractTableModel):
         self.set_data(images, dir_path)
 
     def set_data(self, images, dir_path=None):
-         self.images = images
-         if dir_path:
-             self.dir_path = dir_path
+        self.layoutAboutToBeChanged.emit()
+        self.images = images
+        if dir_path:
+            self.dir_path = dir_path
+        self.layoutChanged.emit()
 
     def add_image(self, image_info, source_path):
         destination_path = os.path.join(self.dir_path, image_info.name)

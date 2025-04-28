@@ -3,10 +3,9 @@ import os
 from PyQt6 import QtCore, QtWidgets
 
 class Signals(QtCore.QObject):
-    image_selected = QtCore.pyqtSignal(str)
+    rename_image_signal = QtCore.pyqtSignal(str)
+    delete_image_signal =  QtCore.pyqtSignal()
     load_images_signal = QtCore.pyqtSignal()
-    curr_dir_signal = QtCore.pyqtSignal(str)
-    next_image_signal = QtCore.pyqtSignal(int)
 
 class State:
     _instance = None
@@ -22,6 +21,7 @@ class State:
         self.signals = Signals()
         self.model = TableModel()
 
+        self.selected_image = None
         self.current_dir = None
         self.actions = {}
         self.init_actions()
@@ -54,13 +54,3 @@ class State:
         self.model.set_data([], None)
         self.current_dir = None
         self.selected_image = None
-
-    def set_data(self, images, folder):
-        if images:
-            self.model.layoutAboutToBeChanged.emit()
-            self.model.set_data(images, dir_path=folder)
-            self.model.layoutChanged.emit()
-            self.signals.load_images_signal.emit()
-            self.current_dir = folder
-        self.current_dir = folder
-        self.signals.curr_dir_signal.emit(folder)
