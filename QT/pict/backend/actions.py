@@ -66,14 +66,16 @@ class DeleteAllImagesAction(BaseAction):
 
     def do_impl(self, *args):
         if State().model and State().current_dir is not None:
-            reply = QtWidgets.QMessageBox.question(
-                None,
-                'Delete All Images',
-                'Are you sure you want to delete all images?',
-                QtWidgets.QMessageBox.Icon.Question,
-                QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No,
-                QtWidgets.QMessageBox.StandardButton.No
+            question = QtWidgets.QMessageBox()
+            question.setIcon(QtWidgets.QMessageBox.Icon.Question)
+            question.setWindowTitle('Delete All Images')
+            question.setText('Are you sure you want to delete all images?')
+            question.setStandardButtons(
+                 QtWidgets.QMessageBox.StandardButton.Yes | 
+                 QtWidgets.QMessageBox.StandardButton.No
             )
+            question.setDefaultButton(QtWidgets.QMessageBox.StandardButton.No)
+            reply = question.exec()
 
             if reply == QtWidgets.QMessageBox.StandardButton.Yes:
                 deleted_files = 0
