@@ -23,10 +23,10 @@ def minutes_loss(y_true, y_pred):
 
 def build_accuracy_metrics(delta, name = "custom_accuracy"):
     def custom_accuracy(y_true, y_pred):
-        #tf.print("\nTRUE\n", y_true)
-        #tf.print("\nPRED\n", y_pred)
         angle_diff = diff(y_true, y_pred, 720)
-        return tf.reduce_mean(tf.cast(tf.abs(angle_diff) <= delta, tf.float32))
+        accuracy = tf.reduce_mean(tf.cast(tf.abs(angle_diff) <= delta, tf.float32))
+        #tf.print("[DEBUG] y_true:", y_true[:3], "y_pred:", y_pred[:3], "accuracy:", accuracy)
+        return accuracy
     custom_accuracy.__name__ = name 
     return custom_accuracy
 
@@ -34,3 +34,17 @@ def old_loss(y_true, y_pred):
     #tf.print("\nTRUE\n", y_true)
     #tf.print("\nPRED\n", y_pred)
     return tf.reduce_mean(tf.square(diff(y_true, y_pred, 720)))
+
+if __name__ == "__main__":
+    true = np.array([0.0, 720.0, 4.0, 713.2])
+    pred = np.array([720.0, 0.0, 1.0, 718.1])
+    print(f"1 == {build_accuracy_metrics(5)(true, pred)}")
+    true = np.array([1312.0])
+    pred = np.array([-128.5])
+    print(f"-0.5 == {diff(true, pred, 720)}")
+    true = np.array([23, -1, 23])
+    pred = np.array([11, -13,-1])
+    print(f"0 == {diff(true, pred, 12)}")
+    true = np.array([90, -30])
+    pred = np.array([30, 150])
+    print(f"0 == {diff(true, pred, 60)}")

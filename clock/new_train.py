@@ -6,18 +6,18 @@ import tensorflow as tf
 from tensorflow.keras.applications import MobileNet
 from tensorflow.keras import layers, callbacks
 import customs
+from tensorflow.keras.models import load_model
 
-seed_value = np.random.randint(0, 2**32 - 1)
+#seed_value = np.random.randint(0, 2**32 - 1)
+seed_value = 1
 random.seed(seed_value)
 np.random.seed(seed_value)
 
 class SumMinutesLayer(layers.Layer):
-    def __init__(self, **kwargs):
-        super(SumMinutesLayer, self).__init__(**kwargs)
-    
     def call(self, inputs):
         hours, minutes = inputs
-        hours = tf.floor(hours)
+        hours = tf.math.floormod(hours, 12)
+        minutes = tf.math.floormod(minutes, 60)
         sum_min = hours * 60 + minutes
         return tf.stop_gradient(sum_min)
     
@@ -42,9 +42,9 @@ def data_generator_from_folder(data_dir, batch_size, need_shuffle=True):
             batch_data = np.load(data_path)
             batch_labels = np.load(labels_path)
 
-            sum_minutes = batch_labels.astype(np.float32)
-            hour_labels = (batch_labels / 60).astype(np.float32)
-            minute_labels = (batch_labels % 60).astype(np.float32)
+            sum_minutes = batch_labels
+            hour_labels = (sum_minutes / 60)
+            minute_labels = (sum_minutes % 60)
 
             if need_shuffle:
                 bindices = np.linspace(0, len(batch_data)-1, len(batch_data), dtype=int)
@@ -89,6 +89,13 @@ def func():
     sum_minutes = SumMinutesLayer(name='sum_minutes')([hours, minutes])
 
     model = tf.keras.Model(inputs=inp, outputs=[hours, minutes, sum_minutes])
+    #model = load_model('final_model.keras',
+    #                   safe_mode=False,
+    #                   custom_objects={ 'hours_loss': customs.hours_loss,
+    #                                    'minutes_loss': customs.minutes_loss,
+    #                                    'custom_accuracy': customs.build_accuracy_metrics(5),
+    #                                    'old_loss': customs.old_loss,
+    #                                    'SumMinutesLayer': SumMinutesLayer})
 
     log_dir = os.path.join("logs", "fit", "model_run")
 
@@ -109,8 +116,7 @@ def func():
                 customs.build_accuracy_metrics(10),
                 customs.old_loss
            ]
-        },
-        jit_compile=False
+        }
     )
 
     model_checkpoint = callbacks.ModelCheckpoint(
