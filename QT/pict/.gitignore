@@ -1,0 +1,5 @@
+__pycache__/
+testpics/
+.vscode/
+dist/
+pict.egg-info/

@@ -1,0 +1,7 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+    <file alias="error">er.svg</file>
+    <file alias="main">p.svg</file>
+    <file alias="right">sc.svg</file>
+</qresource>
+</RCC>

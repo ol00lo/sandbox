@@ -1,0 +1,1 @@
+pyside6-rcc resources.qrc -o __init__.py
