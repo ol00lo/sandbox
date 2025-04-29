@@ -1,7 +1,7 @@
 from PyQt6 import QtGui, QtWidgets
 
 SUPPORTED_IMAGE_EXTENSIONS = ('.png', '.jpg', '.jpeg', '.bmp')
-SUPPORTED_IMAGE_FILTER = 'Images (' + ' '.join([f'*.{x}' for x in SUPPORTED_IMAGE_EXTENSIONS]) + ')'
+SUPPORTED_IMAGE_FILTER = 'Images (' + ' '.join([f'*{x}' for x in SUPPORTED_IMAGE_EXTENSIONS]) + ')'
 
 def show_message(title = "ERROR", message = "", is_error=False):
     dialog = QtWidgets.QMessageBox()

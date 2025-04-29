@@ -101,7 +101,8 @@ class TableViewer (QtWidgets.QWidget):
         selected = self.table_view.currentIndex()
         current_row = selected.row()
 
-        new_row = min(current_row, self.proxy_model.rowCount() - 1)
+        new_row = min(current_row if current_row == 0 else current_row + 1,  self.proxy_model.rowCount() - 1)
+
         if new_row >= 0:
             new_index = self.proxy_model.index(new_row, 0)
 
@@ -112,3 +113,5 @@ class TableViewer (QtWidgets.QWidget):
             )
             self.table_view.scrollTo(new_index)
             self.table_view.setFocus()
+        else:
+            self.image_selected.emit(None)
