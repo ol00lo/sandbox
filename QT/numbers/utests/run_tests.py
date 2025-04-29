@@ -15,7 +15,7 @@ params = sys.argv[2:]
 if not params:
     tester.initialize_module(utests.tests)
 else:
-    names = [x for x in params]
+    names = ["utests.tests." + x for x in params]
     tester.initialize_names(names)
 
 tester.setapp(app)
