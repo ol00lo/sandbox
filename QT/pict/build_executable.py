@@ -1,35 +1,28 @@
-import subprocess
 import sys
-import shutil
+import os
+from pathlib import Path
+from build_installer import run_cmd
 
-def run_cmd(cmd: str):
-    print(cmd)
-    subprocess.run(cmd, shell=True)
+def create():
+    project_dir = Path(__file__).parent
+    icon_path = project_dir / 'resources' / 'p.ico'
+    main_script = project_dir / 'main.py'
 
-def check_cmd(cmd: str, install_hint: str) -> bool:
-    if not shutil.which(cmd):
-        print(f" {cmd} not found\n {install_hint}")
-        return False
-    return True
-
-def main():
-    commands = [
-        "pip install .",
-        "python -c \"from main import main; main()\""
+    cmd = [
+        sys.executable, "-O", "-m", "PyInstaller",
+        "-y", "--clean", "-w", "--onedir", "-i", str(icon_path),
+        "--add-data", f"{project_dir / 'resources'}{os.pathsep}resources",
+        "--name", "PictApp",
+        str(main_script)
     ]
-    for cmd in commands:
-        run_cmd(cmd)
+    result = run_cmd(cmd)
 
-    if not check_cmd("pyinstaller", "Installing pyinstaller..."):
-        run_cmd([ sys.executable, "-m", "pip", "install", "pyinstaller" ])
-        
-    if sys.platform == "win32":
-        if not check_cmd("makensis", "Install NSIS"):
-            return
-        
-        run_cmd([ sys.executable, "build_installer.py" ])
-
-        run_cmd(["makensis", "make_installer.nsi"])
+    if result.returncode == 0:
+        output_dir = project_dir / 'dist' / 'PictApp'
+        print(f"\nBuild successful! Application created in: {output_dir}")
+    else:
+        print("Build failed!", file=sys.stderr)
+        sys.exit(1)
 
 if __name__ == "__main__":
-    main()
+    create()

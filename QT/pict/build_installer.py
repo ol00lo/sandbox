@@ -1,29 +1,26 @@
 import subprocess
 import sys
-import os
-from pathlib import Path
+import shutil
 
-def create():
-    project_dir = Path(__file__).parent
-    icon_path = project_dir / 'resources' / 'p.ico'
-    main_script = project_dir / 'main.py'
-
-    cmd = [
-        sys.executable, "-O", "-m", "PyInstaller",
-        "-y", "--clean", "-w", "--onedir", "-i", str(icon_path),
-        "--add-data", f"{project_dir / 'resources'}{os.pathsep}resources",
-        "--name", "PictApp",
-        str(main_script)
-    ]
+def run_cmd(cmd: list):
     print(' '.join(cmd))
-    result = subprocess.run(cmd, check=True)
+    result = subprocess.run(cmd, shell=True, check=True)
+    return result
 
-    if result.returncode == 0:
-        output_dir = project_dir / 'dist' / 'PictApp'
-        print(f"\nBuild successful! Application created in: {output_dir}")
-    else:
-        print("Build failed!", file=sys.stderr)
-        sys.exit(1)
+def check_cmd(cmd: str, install_hint: str):
+    if not shutil.which(cmd):
+        print(f" {cmd} not found\n {install_hint}")
+        return False
+    return True
+
+def win_main():
+    if not check_cmd("makensis", "Install NSIS."):
+        return
+
+    run_cmd([ sys.executable, "build_executable.py" ])
+
+    run_cmd(["makensis", "make_installer.nsi"])
 
 if __name__ == "__main__":
-    create()
+    if sys.platform == "win32":
+        win_main()
