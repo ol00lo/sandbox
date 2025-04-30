@@ -16,7 +16,7 @@ np.random.seed(seed_value)
 class SumMinutesLayer(layers.Layer):
     def call(self, inputs):
         hours, minutes = inputs
-        hours = tf.math.floormod(hours, 12)
+        hours = tf.math.floormod(tf.floor(hours), 12)
         minutes = tf.math.floormod(minutes, 60)
         sum_min = hours * 60 + minutes
         return tf.stop_gradient(sum_min)
