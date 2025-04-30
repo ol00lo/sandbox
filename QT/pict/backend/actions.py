@@ -52,10 +52,8 @@ class LoadImagesAction(BaseAction):
                 image_path = os.path.join(folder, filename)
                 images.append(ImageInfo(image_path))
 
-        if images:
-            State().model.set_data(images, dir_path=folder)
-            State().signals.load_images_signal.emit()
-            State().current_dir = folder
+        State().model.set_data(images, dir_path=folder)
+        State().signals.load_images_signal.emit()
         State().current_dir = folder
 
 class DeleteAllImagesAction(BaseAction):
@@ -89,6 +87,8 @@ class DeleteAllImagesAction(BaseAction):
                     State().model.clear_data()
                     State().cleanup()
                     show_message("Success", f"Deleted {deleted_files} images.", is_error=False)
+
+                    State().signals.delete_image_signal.emit()
         else:
             raise Exception("No directory selected.")
 

@@ -52,5 +52,4 @@ class State:
 
     def cleanup(self):
         self.model.set_data([], None)
-        self.current_dir = None
         self.selected_image = None

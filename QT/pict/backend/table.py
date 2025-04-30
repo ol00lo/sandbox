@@ -25,13 +25,14 @@ class TableModel(QtCore.QAbstractTableModel):
     def set_data(self, images, dir_path=None):
         self.layoutAboutToBeChanged.emit()
         self.images = images
-        if dir_path:
-            self.dir_path = dir_path
+        self.dir_path = dir_path
         self.layoutChanged.emit()
 
     def add_image(self, image_info, source_path):
-        destination_path = os.path.join(self.dir_path, image_info.name)
+        if not self.dir_path:
+            raise Exception("Select folder.")
 
+        destination_path = os.path.join(self.dir_path, image_info.name)
         if os.path.exists(destination_path):
             raise Exception ("File with this name already exists.")
 
