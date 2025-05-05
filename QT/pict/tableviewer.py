@@ -12,6 +12,7 @@ class TableViewer (QtWidgets.QWidget):
 
         self.proxy_model = QtCore.QSortFilterProxyModel()
         self.proxy_model.setSourceModel(State().model)
+        self.proxy_model.rowsRemoved.connect(self.update_row_focus)
 
     def init_main_layout(self):
         self.table_view = QtWidgets.QTableView()
@@ -26,7 +27,7 @@ class TableViewer (QtWidgets.QWidget):
         self.load_images_button.clicked.connect(State().actions["LoadImages"].do)
 
         State().signals.load_images_signal.connect(self.init_connections)
-        State().signals.delete_image_signal.connect(self.update_row_focus)
+        State().signals.all_image_deleted_signal.connect(lambda: self.image_selected.emit(None))
 
         self.delete_images_button = QtWidgets.QPushButton("Delete All Images")
         self.delete_images_button.clicked.connect(State().actions["DeleteAllImages"].do)
@@ -97,13 +98,11 @@ class TableViewer (QtWidgets.QWidget):
                     self.image_selected.emit(State().get_path())
                     self.main_win.show_folder_name(State().current_dir)
 
-    def update_row_focus(self):
-        selected = self.table_view.currentIndex()
-        current_row = selected.row()
-
-        new_row = min(current_row if current_row == 0 else current_row + 1,  self.proxy_model.rowCount() - 1)
-
-        if new_row >= 0:
+    def update_row_focus(self, parent, first, last):
+        if self.proxy_model.rowCount() <= 0:
+            self.image_selected.emit(None)
+        else:
+            new_row = min(last, self.proxy_model.rowCount() - 1)
             new_index = self.proxy_model.index(new_row, 0)
 
             self.table_view.selectionModel().setCurrentIndex(
@@ -113,5 +112,3 @@ class TableViewer (QtWidgets.QWidget):
             )
             self.table_view.scrollTo(new_index)
             self.table_view.setFocus()
-        else:
-            self.image_selected.emit(None)

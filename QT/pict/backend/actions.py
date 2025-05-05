@@ -87,8 +87,7 @@ class DeleteAllImagesAction(BaseAction):
                     State().model.clear_data()
                     State().cleanup()
                     show_message("Success", f"Deleted {deleted_files} images.", is_error=False)
-
-                    State().signals.delete_image_signal.emit()
+                    State().signals.all_image_deleted_signal.emit()
         else:
             raise Exception("No directory selected.")
 
@@ -167,7 +166,6 @@ class DeleteImageAction(BaseAction):
             raise Exception("No selection")
         for index in sorted(selected, key=lambda x: x.row(), reverse=True):  
             self.delete(index)
-            State().signals.delete_image_signal.emit()
 
     def delete(self, index):
         model = State().model

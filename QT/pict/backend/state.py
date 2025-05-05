@@ -4,7 +4,7 @@ from PyQt6 import QtCore, QtWidgets
 
 class Signals(QtCore.QObject):
     rename_image_signal = QtCore.pyqtSignal(str)
-    delete_image_signal =  QtCore.pyqtSignal()
+    all_image_deleted_signal =  QtCore.pyqtSignal()
     load_images_signal = QtCore.pyqtSignal()
 
 class State:
