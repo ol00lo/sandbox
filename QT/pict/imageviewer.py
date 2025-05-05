@@ -5,9 +5,11 @@ from backend.state import State
 class ImageViewer(QtWidgets.QGraphicsView):
     coordinates_clicked = QtCore.pyqtSignal(int, int)
 
+
     def __init__(self, parent):
         super().__init__(parent)
         self.parent = parent
+
         self.image_model = ImageModel(self)
         self.setScene(self.image_model)
         self.setMouseTracking(True)

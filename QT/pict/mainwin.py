@@ -1,6 +1,7 @@
 from PyQt6 import QtWidgets, QtGui, QtCore
 from imageviewer import ImageViewer
 from tableviewer import TableViewer
+
 from backend.state import State
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -14,6 +15,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setCentralWidget(self.central_widget)
 
         self.splitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal, self.central_widget)
+
         self.image_model_viewer = ImageViewer(self)
         self.table_viewer = TableViewer(self)
 

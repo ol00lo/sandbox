@@ -3,25 +3,25 @@
 
 namespace
 {
-std::shared_ptr<spdlog::logger> logger; 
+std::shared_ptr<spdlog::logger> logger_;
 struct GraphInitializer
 {
     GraphInitializer()
     {
-        logger = spdlog::stdout_color_mt("graph-logger");
+        logger_ = spdlog::stdout_color_mt("graph-logger");
     }
 };
 GraphInitializer graph_init;
 } // namespace
 
-std::shared_ptr<spdlog::logger> g::get_logger()
+std::shared_ptr<spdlog::logger> g::logger()
 {
-    return logger;
+    return logger_;
 }
 
 spdlog::logger& g::log()
 {
-    return *logger;
+    return *logger_;
 }
 
 int g::graph_ping()

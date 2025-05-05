@@ -5,6 +5,7 @@ SUPPORTED_IMAGE_FILTER = 'Images (' + ' '.join([f'*{x}' for x in SUPPORTED_IMAGE
 
 def show_message(title = "ERROR", message = "", is_error=False):
     dialog = QtWidgets.QMessageBox()
+
     dialog.setWindowTitle(title)
     dialog.setText(message)
 

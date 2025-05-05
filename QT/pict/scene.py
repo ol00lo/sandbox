@@ -11,4 +11,3 @@ class ImageModel(QtWidgets.QGraphicsScene):
 
         pixmap_item = self.addPixmap(pixmap)
         self.setSceneRect(pixmap_item.boundingRect())
-

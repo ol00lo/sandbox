@@ -55,10 +55,10 @@ TEST_CASE("tensor test", "[tensor_test]")
 
 TEST_CASE("compute test", "[compute_test]")
 {
-    Tensor a1(Shape(1),{0});
-    Tensor a2(Shape(2),{1, 1});
+    Tensor a1(Shape(1), {0});
+    Tensor a2(Shape(2), {1, 1});
     CHECK_THROWS(g::mult(a1, a2));
-	CHECK_THROWS(g::add(a1, a2));
+    CHECK_THROWS(g::add(a1, a2));
     a1.apply_oper([](double x) { return std::sin(x); });
     CHECK(a1[0] == Approx(0.0));
     CHECK(g::sin(a1)[0] == Approx(0.0));
@@ -76,13 +76,13 @@ size_t n_braces(std::string s)
     auto i = s.find("[");
     while (i != std::string::npos)
     {
-        s.erase(0, i+1);
+        s.erase(0, i + 1);
         i = s.find("[");
         res++;
     }
     return res;
 }
-}
+} // namespace
 TEST_CASE("print tensor test", "[print_tensor_test]")
 {
     auto shape = Shape(1, 1, 3);
@@ -93,7 +93,7 @@ TEST_CASE("print tensor test", "[print_tensor_test]")
     CHECK(n_braces(oss1.str()) == 3);
     Tensor x1(Shape(2, 2, 1), {1, 2, 3, 4});
     std::ostringstream oss;
-    x1.write(oss); 
+    x1.write(oss);
     CHECK(n_braces(oss.str()) == 7);
     CHECK(oss.str()[11] == '1');
 }

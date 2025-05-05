@@ -3,3 +3,5 @@ photos/
 new_output/
 train_data/
 valid_data/
+notdelete/
+models/

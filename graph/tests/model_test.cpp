@@ -24,7 +24,6 @@ nlohmann::json load_json(const std::string& filename)
 
 TEST_CASE("serialization", "[3]")
 {
-    //g::set_log_debug();
     std::shared_ptr<DataNode> x = std::make_shared<DataNode>("xxx");
     std::shared_ptr<DataNode> y = std::make_shared<DataNode>("yyy");
     std::shared_ptr<DataNode> A = std::make_shared<DataNode>("AAA");
@@ -55,7 +54,6 @@ TEST_CASE("serialization", "[3]")
 
 TEST_CASE("serialization2", "[4]")
 {
-    // g::set_log_debug();
     std::shared_ptr<DataNode> x = std::make_shared<DataNode>("");
     std::shared_ptr<DataNode> y = std::make_shared<DataNode>("");
     std::shared_ptr<DataNode> A = std::make_shared<DataNode>("");
@@ -99,6 +97,14 @@ TEST_CASE("trigonometric nodes test", "[tn_test]")
     std::shared_ptr<INode> b = INode::factory("CosNode", "");
     g::set_dep(b, {y});
     Model model1({y}, {b});
-    std::vector<Tensor> v3 = model1.compute({Tensor({3.14159/2})});
+    std::vector<Tensor> v3 = model1.compute({Tensor({3.14159 / 2})});
     CHECK(v3[0][0] == Approx(v1[0][0]).margin(1e-5));
+}
+
+TEST_CASE("same nodes name", "[n_name_test]")
+{
+    std::shared_ptr<DataNode> x = std::make_shared<DataNode>("x");
+    std::shared_ptr<INode> y = INode::factory("SinNode", "x");
+    g::set_dep(y, {x});
+    CHECK_THROWS(Model({x}, {y}));
 }

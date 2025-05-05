@@ -1,9 +1,10 @@
 #define CATCH_CONFIG_RUNNER
-#include <catch2/catch.hpp>
 #include "graph.hpp"
+#include <catch2/catch.hpp>
 
 TEST_CASE("graph ping", "[ping]")
 {
+    g::logger()->set_level(spdlog::level::debug);
     CHECK(g::graph_ping() == 19);
 }
 

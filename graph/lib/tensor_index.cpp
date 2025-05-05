@@ -1,5 +1,6 @@
 #include "tensor_index.hpp"
 #include <iostream>
+#include <sstream>
 
 using namespace g;
 
@@ -7,6 +8,7 @@ int Shape::n_indexes() const
 {
     return (*this)[0] * (*this)[1] * (*this)[2] * (*this)[3];
 }
+
 Index::Index(int linear, const Shape& shape)
 {
     if (linear < 0 || linear >= shape.n_indexes())

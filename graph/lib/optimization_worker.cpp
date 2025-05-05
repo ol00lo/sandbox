@@ -4,26 +4,29 @@ using namespace g;
 
 void OptimizationWorker::set_optimizer(const std::shared_ptr<IOptimizer> optimizer)
 {
-    _optimizer = optimizer;
-    _optimizer->set_param_nodes(_graph.get_param_nodes());
+    optimizer_ = optimizer;
+    optimizer_->set_param_nodes(graph_.param_nodes());
 }
 
 double OptimizationWorker::train(const std::vector<Tensor>& inputs, const std::vector<Tensor>& gt)
 {
-    double res = compute_loss(inputs, gt);
-    auto grads = _graph.get_gradients();
-    _optimizer->apply(grads);
-    return res;
+    auto grads = graph_.gradients();
+    optimizer_->apply(grads);
+    double loss = compute_loss(inputs, gt);
+    log().info("Train loss: {}", loss);
+    return loss;
 }
 
 double OptimizationWorker::validate(const std::vector<Tensor>& inputs, const std::vector<Tensor>& gt)
 {
-    return compute_loss(inputs, gt);
+    double loss = compute_loss(inputs, gt);
+    log().info("Val loss:   {}", loss);
+    return loss;
 }
 
 void OptimizationWorker::commit()
 {
-    _graph.copy_to_target();
+    graph_.copy_to_target();
 }
 
 double OptimizationWorker::compute_loss(const std::vector<Tensor>& inputs, const std::vector<Tensor>& gt)
@@ -34,7 +37,7 @@ double OptimizationWorker::compute_loss(const std::vector<Tensor>& inputs, const
     {
         local_inputs.push_back(x);
     }
-    auto out = _graph.compute(local_inputs);
+    auto out = graph_.compute(local_inputs);
     if (out.size() != 1)
     {
         _THROW_NOT_IMP_

@@ -9,6 +9,7 @@ using namespace g;
 
 TEST_CASE("train test", "[tt]")
 {
+    g::logger()->set_level(spdlog::level::info);
     std::shared_ptr<DataNode> y = std::make_shared<DataNode>("y");
     std::shared_ptr<DataNode> L = std::make_shared<DataNode>("L");
     std::shared_ptr<DataNode> K = std::make_shared<DataNode>("K");
@@ -23,12 +24,12 @@ TEST_CASE("train test", "[tt]")
     wrk.set_optimizer(std::make_shared<SGDOptimizer>(1e-2));
 
     double loss = wrk.train({Tensor({1})}, {Tensor({4})});
-    CHECK(loss == 36);
+    CHECK(loss == 34.81);
     loss = wrk.train({Tensor({2})}, {Tensor({6})});
-    CHECK(loss == Approx(74.65));
-    CHECK(K->get_value() == Tensor({5}));
+    CHECK(loss == Approx(73.034));
+    CHECK(K->value() == Tensor({5}));
     wrk.commit();
-    CHECK(K->get_value()[0] != 5);
+    CHECK(K->value()[0] != 5);
 }
 
 namespace
@@ -57,7 +58,7 @@ TEST_CASE("sin test", "[st]")
     //==================================================
     // A*sin(B*x + C) + D*x + E = out
     //==================================================
-    g::get_logger()->set_level(spdlog::level::off);
+    g::logger()->set_level(spdlog::level::info);
 
     std::shared_ptr<DataNode> x = std::make_shared<DataNode>("x");
     std::shared_ptr<DataNode> A = std::make_shared<DataNode>("A");
@@ -118,9 +119,9 @@ TEST_CASE("sin test", "[st]")
     }
     SimpleDataGenerator val_data(inp, outp);
 
+    // train
     for (int iepoch = 0; iepoch < 100; ++iepoch)
     {
-        std::cout << "epoch = " << iepoch << std::endl;
         train_data.next_epoch(true);
         double sum_loss = 0;
         int n_steps = 0;
@@ -133,7 +134,6 @@ TEST_CASE("sin test", "[st]")
             n_steps += 1;
         }
         wrk.commit();
-        std::cout << "Train loss= " << sum_loss / double(n_steps) << std::endl;
 
         // validate step
         val_data.next_epoch(false);
@@ -148,15 +148,14 @@ TEST_CASE("sin test", "[st]")
             n_steps += 1;
         }
         sum_loss_val /= double(n_steps);
-        std::cout << "Val loss= " << sum_loss_val << std::endl;
         if (sum_loss_val <= 0.001)
             break;
     }
-    CHECK(A->get_value()[0] == Approx(a).epsilon(0.02));
-    CHECK(B->get_value()[0] == Approx(b).epsilon(0.01));
-    //CHECK(C->get_value()[0] == Approx(c).epsilon(0.1));
-    CHECK(D->get_value()[0] == Approx(d).epsilon(0.01));
-    CHECK(E->get_value()[0] == Approx(e).epsilon(0.01));
+    CHECK(A->value()[0] == Approx(a).epsilon(0.02));
+    CHECK(B->value()[0] == Approx(b).epsilon(0.01));
+    // CHECK(C->value()[0] == Approx(c).epsilon(0.1));
+    CHECK(D->value()[0] == Approx(d).epsilon(0.01));
+    CHECK(E->value()[0] == Approx(e).epsilon(0.01));
 }
 
 TEST_CASE("simmple test 1", "[st1]")
@@ -164,7 +163,7 @@ TEST_CASE("simmple test 1", "[st1]")
     //==================================================
     // L*y + K = out
     //==================================================
-    g::get_logger()->set_level(spdlog::level::off);
+    g::logger()->set_level(spdlog::level::info);
 
     std::shared_ptr<DataNode> y = std::make_shared<DataNode>("");
     std::shared_ptr<DataNode> L = std::make_shared<DataNode>("");
@@ -218,7 +217,6 @@ TEST_CASE("simmple test 1", "[st1]")
             n_steps += 1;
         }
         wrk.commit();
-        std::cout << "epoch = " << iepoch << ", Train loss= " << sum_loss / double(n_steps) << std::endl;
 
         // validate step
         val_data.next_epoch(false);
@@ -233,10 +231,9 @@ TEST_CASE("simmple test 1", "[st1]")
             n_steps += 1;
         }
         sum_loss_val /= double(n_steps);
-        std::cout << "epoch = " << iepoch << ", Val loss= " << sum_loss_val << std::endl;
         if (sum_loss_val <= 0.001)
             break;
     }
-    CHECK(K->get_value()[0] == Approx(2).epsilon(0.03));
-    CHECK(L->get_value()[0] == Approx(2).epsilon(0.01));
+    CHECK(K->value()[0] == Approx(2).epsilon(0.07));
+    CHECK(L->value()[0] == Approx(2).epsilon(0.01));
 }

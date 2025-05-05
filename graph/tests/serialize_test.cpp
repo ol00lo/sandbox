@@ -1,8 +1,8 @@
 #include "catch2/catch.hpp"
 #include "data_node.hpp"
 #include "i_node.hpp"
-#include "tensor.hpp"
 #include "model.hpp"
+#include "tensor.hpp"
 #include <iostream>
 #include <nlohmann/json.hpp>
 
@@ -48,7 +48,7 @@ TEST_CASE("a test", "[a_test]")
     CHECK(js["A"]["a"] == 5);
     CHECK(js["A"]["b"] == a.b);
     CHECK(js["B"]["a"] == js["A"]["a"]);
-    CHECK(js["B"]["b"] ==js["A"]["b"]);
+    CHECK(js["B"]["b"] == js["A"]["b"]);
 };
 
 TEST_CASE("tensor serialize", "[tensor_serialize]")
@@ -57,10 +57,10 @@ TEST_CASE("tensor serialize", "[tensor_serialize]")
 
     nlohmann::json js = t;
     g::Tensor b(js.get<g::Tensor>());
-    CHECK(js["shape"][0] == 1);
-    CHECK(js["shape"][1] == 1);
-    CHECK(js["shape"][2] == 2);
-    CHECK(js["shape"][3] == 3);
+
+    g::Shape shape = js["shape"].get<g::Shape>();
+    CHECK(shape == g::Shape(1, 1, 2, 3));
+    CHECK(shape == t.shape());
     CHECK(b == t);
 }
 

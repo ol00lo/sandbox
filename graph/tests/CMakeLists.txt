@@ -8,7 +8,7 @@ set(CATCH2_FRAMEWORK "Catch2::Catch2")
 
 set (SRC
 	main.cpp
-	tests.cpp
+	model_test.cpp
 	tensor_test.cpp
 	generator_test.cpp
 	curve_fitting_test.cpp

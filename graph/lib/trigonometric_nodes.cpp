@@ -3,37 +3,33 @@ using namespace g;
 
 Tensor SinNode::compute_value()
 {
-    Tensor pred = _prev_nodes[0]->get_value();
+    Tensor pred = prev_nodes_[0]->value();
     Tensor res = sin(pred);
-    log().debug("SinNode  \"{}\" compute", nodename());
     return res;
 }
 std::string SinNode::classname() const
 {
     return "SinNode";
 }
-std::vector<Tensor> SinNode::get_gradient()
+std::vector<Tensor> SinNode::gradient()
 {
-    Tensor res = g::cos(_prev_nodes[0]->get_value());
-    log().debug("Gradient in SinNode compute");
+    Tensor res = g::cos(prev_nodes_[0]->value());
     return {res};
 }
 
 Tensor CosNode::compute_value()
 {
-    Tensor pred = _prev_nodes[0]->get_value();
+    Tensor pred = prev_nodes_[0]->value();
     Tensor res = cos(pred);
-    log().debug("CosNode  \"{}\" compute", nodename());
     return res;
 }
 std::string CosNode::classname() const
 {
     return "CosNode";
 }
-std::vector<Tensor> CosNode::get_gradient()
+std::vector<Tensor> CosNode::gradient()
 {
-    Tensor res = g::sin(_prev_nodes[0]->get_value());
+    Tensor res = g::sin(prev_nodes_[0]->value());
     res.scalar_mult(-1.0);
-    log().debug("Gradient in CosNode compute");
     return {res};
 }

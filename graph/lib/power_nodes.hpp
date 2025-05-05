@@ -7,12 +7,12 @@ namespace g
 class SqrNode : public IFunctionalNode
 {
 public:
-    SqrNode(std::string nodename = "") : IFunctionalNode(nodename) {};
+    SqrNode(std::string nodename = "") : IFunctionalNode("SqrNode", nodename){};
 
 protected:
     Tensor compute_value() override;
     std::string classname() const override;
-    std::vector<Tensor> get_gradient() override;
+    std::vector<Tensor> gradient() override;
 
 private:
     REGISTER_INODE_CHILD(SqrNode);

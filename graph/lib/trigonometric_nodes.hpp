@@ -7,12 +7,12 @@ namespace g
 class SinNode : public IFunctionalNode
 {
 public:
-    SinNode(std::string nodename = "") : IFunctionalNode(nodename) {};
+    SinNode(std::string nodename = "") : IFunctionalNode("SinNode", nodename){};
 
 protected:
     Tensor compute_value() override;
     std::string classname() const override;
-    std::vector<Tensor> get_gradient() override;
+    std::vector<Tensor> gradient() override;
 
 private:
     REGISTER_INODE_CHILD(SinNode);
@@ -21,12 +21,12 @@ private:
 class CosNode : public IFunctionalNode
 {
 public:
-    CosNode(std::string nodename = "") : IFunctionalNode(nodename) {};
+    CosNode(std::string nodename = "") : IFunctionalNode("CosNode", nodename){};
 
 protected:
     Tensor compute_value() override;
     std::string classname() const override;
-    std::vector<Tensor> get_gradient() override;
+    std::vector<Tensor> gradient() override;
 
 private:
     REGISTER_INODE_CHILD(CosNode);

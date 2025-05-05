@@ -3,22 +3,19 @@ using namespace g;
 
 Tensor MultNode::compute_value()
 {
-    Tensor res = mult(_prev_nodes[0]->get_value(), _prev_nodes[1]->get_value());
-    log().debug("MultNode  \"{}\" compute", nodename());
+    Tensor res = mult(prev_nodes_[0]->value(), prev_nodes_[1]->value());
     return res;
 }
 
 Tensor PlusNode::compute_value()
 {
-    Tensor res = add(_prev_nodes[0]->get_value(), _prev_nodes[1]->get_value());
-    log().debug("PlusNode  \"{}\" compute", nodename());
+    Tensor res = add(prev_nodes_[0]->value(), prev_nodes_[1]->value());
     return res;
 }
 
 Tensor MinusNode::compute_value()
 {
-    Tensor res = sub(_prev_nodes[0]->get_value(), _prev_nodes[1]->get_value());
-    log().debug("MinusNode  \"{}\" compute", nodename());
+    Tensor res = sub(prev_nodes_[0]->value(), prev_nodes_[1]->value());
     return res;
 }
 
@@ -37,25 +34,24 @@ std::string MinusNode::classname() const
     return "MinusNode";
 }
 
-std::vector<Tensor> MultNode::get_gradient()
+std::vector<Tensor> MultNode::gradient()
 {
-    log().debug("Gradient in MultNode compute");
-    Tensor val1 = _prev_nodes[0]->get_value();
-    Tensor val2 = _prev_nodes[1]->get_value();
+    Tensor val1 = prev_nodes_[0]->value();
+    Tensor val2 = prev_nodes_[1]->value();
     std::vector<Tensor> res = {val2, val1};
     return res;
 }
 
-std::vector<Tensor> PlusNode::get_gradient()
+std::vector<Tensor> PlusNode::gradient()
 {
-    log().debug("Gradient in PlusNode compute");
-    std::vector<Tensor> res = {Tensor(_prev_nodes[0]->output_shape(), 1.0), Tensor(_prev_nodes[1]->output_shape(), 1.0)};
+    std::vector<Tensor> res = {Tensor(prev_nodes_[0]->output_shape(), 1.0),
+                               Tensor(prev_nodes_[1]->output_shape(), 1.0)};
     return res;
 }
 
-std::vector<Tensor> MinusNode::get_gradient()
+std::vector<Tensor> MinusNode::gradient()
 {
-    log().debug("Gradient in MinusNode compute");
-    std::vector<Tensor> res = {Tensor(_prev_nodes[0]->output_shape(), 1.0), Tensor(_prev_nodes[1]->output_shape(), -1.0)};
+    std::vector<Tensor> res = {Tensor(prev_nodes_[0]->output_shape(), 1.0),
+                               Tensor(prev_nodes_[1]->output_shape(), -1.0)};
     return res;
 }

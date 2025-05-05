@@ -7,6 +7,7 @@ import resources
 
 def main(app):
     # create window
+
     resources.qInitResources()
     mwin = mainwin.MainWindow()
     mwin.show()
@@ -21,3 +22,4 @@ if __name__ == '__main__':
     qApp = QtWidgets.QApplication(sys.argv)
     main(qApp)
     sys.exit()
+
