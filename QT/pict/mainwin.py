@@ -1,7 +1,8 @@
 from PyQt6 import QtWidgets, QtGui, QtCore
 from imageviewer import ImageViewer
 from tableviewer import TableViewer
-from actions import LoadImagesAction, DeleteAllImagesAction, AddImageAction
+
+from backend.state import State
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -30,15 +31,32 @@ class MainWindow(QtWidgets.QMainWindow):
         self.status_bar = QtWidgets.QStatusBar(self)
         self.setStatusBar(self.status_bar)
 
+        self.image_model_viewer.coordinates_clicked.connect(self.show_coordinates)
+
         self.table_viewer.image_selected.connect(self.image_model_viewer.display_image)
-        self.image_model_viewer.coordinates_clicked.connect(self.status_bar.showMessage)
         self.create_toolbar()
 
     def create_toolbar(self):
         toolbar = self.addToolBar("Main Toolbar")
-        
-        toolbar.addAction(LoadImagesAction(self))
-        toolbar.addAction(DeleteAllImagesAction(self.table_viewer))
-        toolbar.addAction(AddImageAction(self.table_viewer.image_model, self))
+        toolbar.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        toolbar.setIconSize(QtCore.QSize(15, 15))
+
+        toolbar.addAction(State().actions["LoadImages"])
+        State().actions["LoadImages"].triggered.connect(State().actions["LoadImages"].do)
+
+        toolbar.addAction(State().actions["DeleteAllImages"])
+        State().actions["DeleteAllImages"].triggered.connect(State().actions["DeleteAllImages"].do)
+
+        toolbar.addAction(State().actions["AddImage"])
+        State().actions["AddImage"].triggered.connect(State().actions["AddImage"].do)
 
         toolbar.addSeparator()
+
+    def show_coordinates(self, x, y):
+        self.status_bar.showMessage(f"X: {x}, Y: {y}")
+
+    def show_folder_name(self, dir_path):
+        if dir_path:
+            self.setWindowTitle(f"Image Viewer - {dir_path}")
+        else:
+            self.setWindowTitle("Image Viewer")

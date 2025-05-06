@@ -3,5 +3,10 @@
     <file alias="error">er.svg</file>
     <file alias="main">p.svg</file>
     <file alias="right">sc.svg</file>
+    <file alias="add">add.svg</file>
+    <file alias="delete">delete.svg</file>
+    <file alias="deleteall">deleteall.svg</file>
+    <file alias="load">load.svg</file>
+    <file alias="rename">rename.svg</file>
 </qresource>
 </RCC>
