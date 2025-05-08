@@ -44,6 +44,9 @@ class LoadImagesAction(BaseAction):
 
     def do_impl(self, *args):
         folder = QtWidgets.QFileDialog.getExistingDirectory(None, "Select Folder")
+        self.openfolder(folder)
+
+    def openfolder(self, folder):
         if not folder:
             return
         images = []

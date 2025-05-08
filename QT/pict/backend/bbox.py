@@ -44,7 +44,7 @@ class BBoxList:
         print(f"Xlsx saved to: {Path(self.output_file).absolute()}")
 
 
-if __name__ :
+if __name__ == "__main__":
     bbox_list = BBoxList()
 
     rect1 = QtCore.QRect(10, 20, 30, 40)
