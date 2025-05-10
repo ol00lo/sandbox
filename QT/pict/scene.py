@@ -6,12 +6,13 @@ class ImageModel(QtWidgets.QGraphicsScene):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.current_image_path = ""
-        self.current_image_path = None
         self.base_pixmap_item = None
         self.overlay_pixmap_item = None
         self.base_image = None
         self.blurred_image = None
-
+        self.saved_rects = []
+        self.current_rect = None
+        self.is_drawing = False
 
     def display_image(self, image_path):
         self.clear()
@@ -38,6 +39,7 @@ class ImageModel(QtWidgets.QGraphicsScene):
         self.overlay_pixmap_item = self.addPixmap(overlay)
         self.overlay_pixmap_item.setZValue(1)
 
+        self.update_mask()
 
     def _create_blurred_image(self, cv_image):
         small = cv2.resize(cv_image, (0,0), fx=0.5, fy=0.5)
@@ -55,32 +57,53 @@ class ImageModel(QtWidgets.QGraphicsScene):
 
         return cv2.resize(small, (cv_image.shape[1], cv_image.shape[0]))
 
-    def update_mask(self, rect):
-        if self.base_image is None or self.blurred_image is None:
+    def start_drawing(self):
+        self.is_drawing = True
+        self.update_mask()
+
+    def stop_drawing(self):
+        self.is_drawing = False
+        self.update_mask()
+
+    def update_mask(self, rect=None):
+        if self.base_image is None:
+            return
+
+        if not self.is_drawing and not self.saved_rects:
+            overlay = QtGui.QPixmap(self.base_pixmap_item.pixmap().size())
+            overlay.fill(QtCore.Qt.GlobalColor.transparent)
+            self.overlay_pixmap_item.setPixmap(overlay)
             return
 
         overlay = np.zeros_like(self.base_image)
-
         overlay[:] = self.blurred_image
 
-        if rect.isValid():
-            x = int(rect.x())
-            y = int(rect.y())
-            w = int(rect.width())
-            h = int(rect.height())
-
-            x = max(0, min(x, self.base_image.shape[1] - 1))
-            y = max(0, min(y, self.base_image.shape[0] - 1))
-            w = min(w, self.base_image.shape[1] - x)
-            h = min(h, self.base_image.shape[0] - y)
-
+        for saved_rect in self.saved_rects:
+            x, y, w, h = self._get_valid_rect(saved_rect)
             overlay[y:y+h, x:x+w] = self.base_image[y:y+h, x:x+w]
+            cv2.rectangle(overlay, (x, y), (x+w, y+h), (255, 255, 255), 1)
 
+        if self.is_drawing and rect and rect.isValid():
+            x, y, w, h = self._get_valid_rect(rect)
+            overlay[y:y+h, x:x+w] = self.base_image[y:y+h, x:x+w]
             cv2.rectangle(overlay, (x, y), (x+w, y+h), (255, 255, 255), 1)
 
         height, width, channel = overlay.shape
         bytes_per_line = 3 * width
         q_image = QtGui.QImage(overlay.data, width, height, bytes_per_line, QtGui.QImage.Format.Format_RGB888)
-        pixmap = QtGui.QPixmap.fromImage(q_image)
+        self.overlay_pixmap_item.setPixmap(QtGui.QPixmap.fromImage(q_image))
 
-        self.overlay_pixmap_item.setPixmap(pixmap)
+    def _get_valid_rect(self, rect):
+        x = max(0, min(int(rect.x()), self.base_image.shape[1] - 1))
+        y = max(0, min(int(rect.y()), self.base_image.shape[0] - 1))
+        w = min(int(rect.width()), self.base_image.shape[1] - x)
+        h = min(int(rect.height()), self.base_image.shape[0] - y)
+        return x, y, w, h
+
+    def add_saved_rect(self, rect):
+        self.saved_rects.append(rect)
+        self.update_mask()
+
+    def clear_saved_rects(self):
+        self.saved_rects.clear()
+        self.update_mask()

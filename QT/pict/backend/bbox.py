@@ -27,6 +27,11 @@ class BBoxList:
 
         print(f"BBox appended to: {Path(self.output_file).absolute()}")
 
+    def get_bboxes_for_image(self, path):
+        if path in self.bbox_data:
+            return self.bbox_data[path]
+        else:
+            return []
 
 if __name__ == "__main__":
     bbox_list = BBoxList()
