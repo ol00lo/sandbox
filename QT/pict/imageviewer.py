@@ -83,6 +83,16 @@ class ImageViewer(QtWidgets.QGraphicsView):
     def mouseMoveEvent(self, event):
         pos = event.pos()
         scene_pos = self.mapToScene(pos)
+
+        item = self.itemAt(pos)
+        if isinstance(item, QtWidgets.QGraphicsPixmapItem):
+            scene_pos = self.mapToScene(pos)
+            img_pos = item.mapFromScene(scene_pos)
+            pixmap = item.pixmap()
+            x = max(0, min(int(img_pos.x()), pixmap.width() - 1))
+            y = max(0, min(int(img_pos.y()), pixmap.height() - 1))
+            self.coordinates_clicked.emit(x, y)
+
         if not self.drawing and not self.resizing:
             self.update_resize_cursor(scene_pos)
         if self.drawing and self.current_box:

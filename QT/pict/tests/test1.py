@@ -25,7 +25,6 @@ class Test1(unittest.TestCase):
         tester.eval_and_wait_window(guicom.click_mouse, (widget, QtCore.QPoint(200, 200), QtCore.Qt.MouseButton.RightButton), QtWidgets.QMessageBox)
         tester.eval_and_wait_true(guicom.press_enter,(), 'len() == 0', {'len': mwin.image_model_viewer.image_model.n_boxes})
 
-
     def type_text_and_press_enter(self, text: str):
         guicom.type_text(text)
         guicom.press_enter()
