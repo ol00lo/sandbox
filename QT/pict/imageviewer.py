@@ -56,6 +56,7 @@ class ImageViewer(QtWidgets.QGraphicsView):
                 end_point = self.mapToScene(event.pos())
                 rect = QtCore.QRectF(self.start_point, end_point).normalized()
                 self.current_box.setRect(rect)
+                self.image_model.update_mask(rect)
         else:
             self.setCursor(self.default_cursor)
         super().mouseMoveEvent(event)
@@ -71,6 +72,8 @@ class ImageViewer(QtWidgets.QGraphicsView):
             self.current_box = QtWidgets.QGraphicsRectItem()
             self.current_box.setPen(self.box_pen)
             self.image_model.addItem(self.current_box)
+            self.current_rect = QtCore.QRectF(self.start_point, self.start_point)
+        self.image_model.update_mask(self.current_rect)
         super().mousePressEvent(event)
 
     def mouseReleaseEvent(self, event):
@@ -78,15 +81,10 @@ class ImageViewer(QtWidgets.QGraphicsView):
             self.drawing = False
             if self.current_box:
                 label, ok = QtWidgets.QInputDialog.getText(self, "Label", "Enter label:")
-                if not ok:
-                    self.image_model.removeItem(self.current_box)
-                    self.current_box = None
-                    return
-
-                rect = self.current_box.rect().toRect()
-                path = self.image_model.current_image_path
-                self.box_created.emit(rect, label, path)
-
-        self.image_model.removeItem(self.current_box)
-        self.current_box = None
-        super().mouseReleaseEvent(event)
+                if ok:
+                     rect = self.current_box.rect().toRect()
+                     self.box_created.emit(rect, label, self.image_model.current_image_path)
+                self.image_model.removeItem(self.current_box)
+                self.current_box = None
+                self.image_model.display_image(self.image_model.current_image_path)
+                super().mouseReleaseEvent(event)
