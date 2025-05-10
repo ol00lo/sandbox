@@ -80,7 +80,7 @@ class ImageModel(QtWidgets.QGraphicsScene):
             h = min(int(saved_rect.height()), self.base_image.shape[0] - y)
 
             overlay[y:y+h, x:x+w] = self.base_image[y:y+h, x:x+w]
-            cv2.rectangle(overlay, (x, y), (x+w, y+h), (255, 255, 255), 1)
+            cv2.rectangle(overlay, (x, y), (x+w, y+h), (255, 255, 255), 10)
 
         if self.is_drawing and rect and rect.isValid():
             x = max(0, min(int(rect.x()), self.base_image.shape[1] - 1))
@@ -89,7 +89,7 @@ class ImageModel(QtWidgets.QGraphicsScene):
             h = min(int(rect.height()), self.base_image.shape[0] - y)
 
             overlay[y:y+h, x:x+w] = self.base_image[y:y+h, x:x+w]
-            cv2.rectangle(overlay, (x, y), (x+w, y+h), (255, 255, 255), 1)
+            cv2.rectangle(overlay, (x, y), (x+w, y+h), (255, 255, 255), 10)
 
         q_image = QtGui.QImage(overlay.data, overlay.shape[1], overlay.shape[0], 
                              3 * overlay.shape[1], QtGui.QImage.Format.Format_RGB888)
