@@ -19,9 +19,13 @@ class Test1(unittest.TestCase):
         end_pos = QtCore.QPoint(300, 300)
         widget = mwin.image_model_viewer
         tester.eval_and_wait_window(guicom.drag_with_mouse, (widget, start_pos, end_pos, QtCore.Qt.MouseButton.LeftButton),  QtWidgets.QInputDialog)
-        guicom.type_text("a")
-        tester.eval_and_wait_true(guicom.press_enter,(), 'text()!=""', {'text': self.get_string_from_file})
 
-    def get_string_from_file(self):
-        with open("bbox_output.csv", "r") as f:
-           return f.read()
+        tester.eval_and_wait_true(self.type_text_and_press_enter,("a"), 'len() == 1', {'len': mwin.image_model_viewer.image_model.n_boxes})
+
+        tester.eval_and_wait_window(guicom.click_mouse, (widget, QtCore.QPoint(200, 200), QtCore.Qt.MouseButton.RightButton), QtWidgets.QMessageBox)
+        tester.eval_and_wait_true(guicom.press_enter,(), 'len() == 0', {'len': mwin.image_model_viewer.image_model.n_boxes})
+
+
+    def type_text_and_press_enter(self, text: str):
+        guicom.type_text(text)
+        guicom.press_enter()

@@ -33,6 +33,10 @@ class BBoxList:
         else:
             return []
 
+    def clear_bboxes_for_image(self, path):
+        if path in self.bbox_data:
+            del self.bbox_data[path]
+
 if __name__ == "__main__":
     bbox_list = BBoxList()
 

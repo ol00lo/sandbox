@@ -107,3 +107,6 @@ class ImageModel(QtWidgets.QGraphicsScene):
     def clear_saved_rects(self):
         self.saved_rects.clear()
         self.update_mask()
+
+    def n_boxes(self):
+        return len(self.saved_rects)

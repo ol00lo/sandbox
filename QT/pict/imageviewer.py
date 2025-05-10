@@ -5,7 +5,6 @@ from backend.bbox import BBoxList
 class ImageViewer(QtWidgets.QGraphicsView):
     coordinates_clicked = QtCore.pyqtSignal(int, int)
     box_created = QtCore.pyqtSignal(QtCore.QRect, str, str)
-    box_deleted = QtCore.pyqtSignal(str)
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -84,7 +83,34 @@ class ImageViewer(QtWidgets.QGraphicsView):
             self.current_box.setPen(self.box_pen)
             self.image_model.addItem(self.current_box)
             self.current_rect = QtCore.QRectF(self.start_point, self.start_point)
+        elif event.button() == QtCore.Qt.MouseButton.RightButton:
+            event.accept()
+            self.handle_right_click(event)
         super().mousePressEvent(event)
+
+    def handle_right_click(self, event):
+        click_pos = self.mapToScene(event.pos())
+
+        for i in reversed(range(len(self.image_model.saved_rects))):
+            rect = self.image_model.saved_rects[i]
+
+            if rect.contains(click_pos):
+                answer = QtWidgets.QMessageBox.question(
+                    self,
+                    "Delete box",
+                    "Do you really want to delete this box?",
+                    QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No
+                )
+
+                if answer == QtWidgets.QMessageBox.StandardButton.Yes:
+                    del self.image_model.saved_rects[i]
+
+                    self.box_saver.clear_bboxes_for_image(self.image_model.current_image_path)
+                    for rect in self.image_model.saved_rects:
+                        self.box_saver.add_bbox(rect.toRect(), "", self.image_model.current_image_path)
+
+                    self.image_model.update_mask()
+                break
 
     def mouseReleaseEvent(self, event):
         if event.button() == QtCore.Qt.MouseButton.LeftButton and self.drawing:
@@ -97,7 +123,6 @@ class ImageViewer(QtWidgets.QGraphicsView):
                     label, ok = QtWidgets.QInputDialog.getText(self, "Label", "Enter label:")
                     if ok and label:
                         self.box_created.emit(rect, label, self.image_model.current_image_path)
-                        self.image_model.add_saved_rect(QtCore.QRectF(rect))
 
                 self.image_model.removeItem(self.current_box)
                 self.current_box = None
