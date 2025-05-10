@@ -3,3 +3,4 @@ pict.egg-info/
 testpics/
 .vscode/
 dist/
+tests/test_images
