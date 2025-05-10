@@ -157,32 +157,30 @@ class GuiCommunicator(QtCore.QObject):
                         modifiers=QtCore.Qt.KeyboardModifier.NoModifier,
                         n_steps=20):
         wdg = wdg.viewport()
-        event = QtGui.QMouseEvent(QtCore.QEvent.MouseMove,
-                                  pos0,
-                                  wdg.mapToGlobal(pos0),
-                                  button, button, modifiers)
+
+        pos0f = QtCore.QPointF(pos0)
+        pos1f = QtCore.QPointF(pos1)
+
+        event = QtGui.QMouseEvent(QtCore.QEvent.Type.MouseMove, pos0f,
+                                  QtCore.QPointF(wdg.mapToGlobal(pos0)), button, button, modifiers)
         QtWidgets.QApplication.postEvent(wdg, event)
         QtTest.QTest.qWait(100)
-        event = QtGui.QMouseEvent(QtCore.QEvent.MouseButtonPress,
-                                  pos0,
-                                  wdg.mapToGlobal(pos0),
-                                  button, button, modifiers)
+
+        event = QtGui.QMouseEvent(QtCore.QEvent.Type.MouseButtonPress, pos0f,
+                                  QtCore.QPointF(wdg.mapToGlobal(pos0)), button, button, modifiers)
         QtWidgets.QApplication.postEvent(wdg, event)
         QtTest.QTest.qWait(100)
         for i in range(n_steps):
             t = float(i)/(n_steps-1)
-            posi = (1 - t) * pos0 + t * pos1
-            event = QtGui.QMouseEvent(QtCore.QEvent.MouseMove,
-                                      posi,
-                                      wdg.mapToGlobal(posi),
-                                      button, button, modifiers)
             # should i use sendEvent here?
+            posi = (1 - t) * pos0f + t * pos1f
+            event = QtGui.QMouseEvent(QtCore.QEvent.Type.MouseMove, posi,
+                                      QtCore.QPointF(wdg.mapToGlobal(posi.toPoint())), button, button, modifiers)
             QtWidgets.QApplication.postEvent(wdg, event)
             QtTest.QTest.qWait(5)
-        event = QtGui.QMouseEvent(QtCore.QEvent.MouseButtonRelease,
-                                  pos1,
-                                  wdg.mapToGlobal(pos1),
-                                  button, button, modifiers)
+
+        event = QtGui.QMouseEvent(QtCore.QEvent.Type.MouseButtonRelease, pos1f,
+                                   QtCore.QPointF(wdg.mapToGlobal(pos1)), button, button, modifiers)
         QtWidgets.QApplication.postEvent(wdg, event)
         QtTest.QTest.qWait(100)
 

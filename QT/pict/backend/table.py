@@ -103,3 +103,5 @@ class TableModel(QtCore.QAbstractTableModel):
         ret |= QtCore.Qt.ItemFlag.ItemIsEnabled
         ret |= QtCore.Qt.ItemFlag.ItemIsSelectable
         return ret
+    def get_len(self):
+        return len(self.images)

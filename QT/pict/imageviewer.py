@@ -24,6 +24,8 @@ class ImageViewer(QtWidgets.QGraphicsView):
         self.current_box = None
         t = self.image_model.sceneRect().width() // 90
         self.box_pen = QtGui.QPen(QtCore.Qt.GlobalColor.yellow, t, QtCore.Qt.PenStyle.SolidLine)
+        self.box_saver = BBoxList()
+        self.box_created.connect(self.box_saver.add_bbox)
 
     def display_image(self, image_path):
         self.image_model.display_image(image_path)
@@ -82,7 +84,8 @@ class ImageViewer(QtWidgets.QGraphicsView):
                     return
 
                 rect = self.current_box.rect().toRect()
-                self.box_created.emit(rect, label, self.image_model.current_image_path)
+                path = self.image_model.current_image_path
+                self.box_created.emit(rect, label, path)
 
         self.image_model.removeItem(self.current_box)
         self.current_box = None

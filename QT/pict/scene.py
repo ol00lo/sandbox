@@ -3,6 +3,7 @@ from PyQt6 import QtWidgets, QtGui
 class ImageModel(QtWidgets.QGraphicsScene):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.current_image_path = ""
 
     def display_image(self, image_path):
         self.clear()
