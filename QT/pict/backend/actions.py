@@ -197,6 +197,25 @@ class CreateBoxAction(BaseAction):
         super().__init__()
 
     def do_impl(self, box: Box):
-        rect = box.rect().toRect()
-        name = box.name
-        State().box_saver.add_bbox(rect, box.label, name)
+        State().box_saver.add_bbox(box)
+
+class DeleteBoxAction(BaseAction):
+    _action_name = "DeleteBox"
+    def __init__(self):
+        super().__init__()
+
+    def do_impl(self, box: Box):
+        question = QtWidgets.QMessageBox()
+        question.setIcon(QtWidgets.QMessageBox.Icon.Question)
+        question.setWindowTitle('Delete All Images')
+        question.setText('Are you sure you want to delete this box?')
+        question.setStandardButtons(
+            QtWidgets.QMessageBox.StandardButton.Yes | 
+            QtWidgets.QMessageBox.StandardButton.No
+        )
+        question.setDefaultButton(QtWidgets.QMessageBox.StandardButton.No)
+        reply = question.exec()
+
+        if reply == QtWidgets.QMessageBox.StandardButton.Yes:
+            ok = State().box_saver.delete_bbox(box) 
+            if ok: State().signals.delete_box_signal.emit(box.image_path)

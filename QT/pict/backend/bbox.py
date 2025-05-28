@@ -8,6 +8,7 @@ class Box(QtWidgets.QGraphicsRectItem):
         rect = rect if rect else QtCore.QRectF()
         super().__init__(rect, parent)
         self.label = label
+        self.image_path = image_path
         self.name = image_path.split("\\")[-1].split(".")[0]
 
         self.setPen(QtGui.QPen(QtCore.Qt.GlobalColor.yellow, 2, QtCore.Qt.PenStyle.SolidLine))
@@ -25,7 +26,11 @@ class BBoxList:
             with open(self.output_file, 'w') as f:
                 f.write("Path,n_boxes,Label,x1,y1,x2,y2\n")
 
-    def add_bbox(self, bbox: QtCore.QRect, label: str, image_name: str):
+    def add_bbox(self, box: Box):
+        image_name = box.name
+        label = box.label
+        bbox = box.rect().toRect()
+
         if image_name not in self.bbox_data:
             self.bbox_data[image_name] = []
         self.bbox_data[image_name].append((label, bbox))
@@ -41,6 +46,41 @@ class BBoxList:
 
         print(f"BBox appended to: {Path(self.output_file).absolute()}")
 
+    def delete_bbox(self, box: Box):
+        name = box.name
+        label = box.label
+        rect = box.rect().toRect()
+
+        if name not in self.bbox_data:
+            return False
+
+        for bbox_label, bbox_rect in self.bbox_data[name]:
+            if label == bbox_label and rectangles_are_similar(rect, bbox_rect):
+                self.bbox_data[name].remove((bbox_label, bbox_rect))
+                self._write_bbox_data_to_file()
+                print(f"BBox deleted from: {Path(self.output_file).absolute()}")
+                return True
+
+        return False
+
+    def _write_bbox_data_to_file(self):
+        with open(self.output_file, 'w') as f:
+            f.write("Path,n_boxes,Label,x1,y1,x2,y2\n")
+            for bbox_name, bboxes in self.bbox_data.items():
+                n_boxes = len(bboxes)
+                for bbox_label, bbox_rect in bboxes:
+                    line = (
+                        f'"{bbox_name}",{n_boxes},"{bbox_label}",'
+                        f'{bbox_rect.left()},{bbox_rect.top()},'
+                        f'{bbox_rect.right()},{bbox_rect.bottom()}\n'
+                    )
+                    f.write(line)
+
+
+def rectangles_are_similar(rect1: QtCore.QRect, rect2: QtCore.QRect, tolerance: int = 2) -> bool:
+        expanded_rect1 = rect1.adjusted(-tolerance, -tolerance, tolerance, tolerance)
+        expanded_rect2 = rect2.adjusted(-tolerance, -tolerance, tolerance, tolerance)
+        return expanded_rect1.intersects(expanded_rect2)
 
 if __name__ == "__main__":
     bbox_list = BBoxList()

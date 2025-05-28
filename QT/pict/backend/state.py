@@ -7,6 +7,7 @@ class Signals(QtCore.QObject):
     rename_image_signal = QtCore.pyqtSignal(str)
     all_image_deleted_signal =  QtCore.pyqtSignal()
     load_images_signal = QtCore.pyqtSignal()
+    delete_box_signal = QtCore.pyqtSignal(str)
 
 class State:
     _instance = None
