@@ -5,6 +5,7 @@ import traceback
 from qt_common import show_message, SUPPORTED_IMAGE_EXTENSIONS, SUPPORTED_IMAGE_FILTER
 from .table import ImageInfo
 from .state import State
+from .bbox import Box
 
 class BaseAction(QtGui.QAction):
     _action_name = "BaseAction"
@@ -188,3 +189,14 @@ class DeleteImageAction(BaseAction):
             os.remove(image_path)
         model.images.pop(current_row)
         model.endRemoveRows()
+
+
+class CreateBoxAction(BaseAction):
+    _action_name = "CreateBox"
+    def __init__(self):
+        super().__init__()
+
+    def do_impl(self, box: Box):
+        rect = box.rect().toRect()
+        name = box.name
+        State().box_saver.add_bbox(rect, box.label, name)

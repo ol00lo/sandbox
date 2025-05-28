@@ -8,7 +8,7 @@ class Box(QtWidgets.QGraphicsRectItem):
         rect = rect if rect else QtCore.QRectF()
         super().__init__(rect, parent)
         self.label = label
-        self.image_path = image_path
+        self.name = image_path.split("\\")[-1].split(".")[0]
 
         self.setPen(QtGui.QPen(QtCore.Qt.GlobalColor.yellow, 2, QtCore.Qt.PenStyle.SolidLine))
         self.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)

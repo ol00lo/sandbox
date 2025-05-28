@@ -5,7 +5,6 @@ from backend.state import State
 
 class ImageViewer(QtWidgets.QGraphicsView):
     coordinates_clicked = QtCore.pyqtSignal(int, int)
-    box_created = QtCore.pyqtSignal(QtCore.QRect, str, str)
     box_deleted = QtCore.pyqtSignal(str)
 
     def __init__(self, parent):
@@ -23,8 +22,6 @@ class ImageViewer(QtWidgets.QGraphicsView):
         self.drawing = False
         self.start_point = QtCore.QPoint()
         self.current_box = None
-
-        self.box_created.connect(State().box_saver.add_bbox)
 
     def display_image(self, image_path):
         self.image_model.display_image(image_path)
@@ -77,7 +74,7 @@ class ImageViewer(QtWidgets.QGraphicsView):
     def start_drawing(self, event):
         self.drawing = True
         self.start_point = self.mapToScene(event.pos())
-        self.current_box = Box()
+        self.current_box = Box(image_path=self.image_model.current_image_path)
         self.image_model.addItem(self.current_box)
 
     def finish_drawing(self):
@@ -86,29 +83,16 @@ class ImageViewer(QtWidgets.QGraphicsView):
         if not self.current_box:
             return
 
-        label, ok = self.get_label_from_user()
+        label, ok = QtWidgets.QInputDialog.getText(self, "Label", "Enter label:")
         if not ok:
             self.cancel_drawing()
             return
-
-        self.save_box(label)
-
-    def get_label_from_user(self):
-        return QtWidgets.QInputDialog.getText(self, "Label", "Enter label:")
+        self.current_box.update_label(label)
+        State().actions["CreateBox"].do(self.current_box)
+        self.current_box = None
 
     def cancel_drawing(self):
         self.image_model.removeItem(self.current_box)
-        self.current_box = None
-
-    def save_box(self, label):
-        rect = self.current_box.rect().toRect()
-        path = self.image_model.current_image_path
-
-        self.current_box.label = label
-        self.current_box.image_path = path
-
-        name = path.split("/")[-1].split(".")[0]
-        State().box_saver.add_bbox(rect, label, name)
         self.current_box = None
 
     def leaveEvent(self, event):
