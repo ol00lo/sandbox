@@ -58,6 +58,7 @@ class LoadImagesAction(BaseAction):
         State().model.set_data(images, dir_path=folder)
         State().signals.load_images_signal.emit()
         State().current_dir = folder
+        State().set_current_dir(folder)
 
 class DeleteAllImagesAction(BaseAction):
     _action_name = "DeleteAllImages"

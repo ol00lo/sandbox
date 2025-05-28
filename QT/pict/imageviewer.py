@@ -1,6 +1,7 @@
 from PyQt6 import QtCore, QtWidgets, QtGui
 from scene import ImageModel
-from backend.bbox import BBoxList
+from backend.bbox import Box
+from backend.state import State
 
 class ImageViewer(QtWidgets.QGraphicsView):
     coordinates_clicked = QtCore.pyqtSignal(int, int)
@@ -22,10 +23,8 @@ class ImageViewer(QtWidgets.QGraphicsView):
         self.drawing = False
         self.start_point = QtCore.QPoint()
         self.current_box = None
-        t = self.image_model.sceneRect().width() // 90
-        self.box_pen = QtGui.QPen(QtCore.Qt.GlobalColor.yellow, t, QtCore.Qt.PenStyle.SolidLine)
-        self.box_saver = BBoxList()
-        self.box_created.connect(self.box_saver.add_bbox)
+
+        self.box_created.connect(State().box_saver.add_bbox)
 
     def display_image(self, image_path):
         self.image_model.display_image(image_path)
@@ -36,57 +35,82 @@ class ImageViewer(QtWidgets.QGraphicsView):
         if self.image_model.items():
             self.fitInView(self.image_model.sceneRect(), QtCore.Qt.AspectRatioMode.KeepAspectRatio)
 
+    def mousePressEvent(self, event):
+        if event.button() == QtCore.Qt.MouseButton.LeftButton:
+            self.start_drawing(event)
+        super().mousePressEvent(event)
+
     def mouseMoveEvent(self, event):
         item = self.itemAt(event.pos())
-
         if isinstance(item, QtWidgets.QGraphicsPixmapItem):
             self.setCursor(self.cross_cursor)
-
-            scene_pos = self.mapToScene(event.pos())
-
-            img_pos = item.mapFromScene(scene_pos)
-            pixmap = item.pixmap()
-
-            x = max(0, min(int(img_pos.x()), pixmap.width() - 1))
-            y = max(0, min(int(img_pos.y()), pixmap.height() - 1))
-
-            self.coordinates_clicked.emit(x, y)
-
-            if self.drawing and self.current_box:
-                end_point = self.mapToScene(event.pos())
-                rect = QtCore.QRectF(self.start_point, end_point).normalized()
-                self.current_box.setRect(rect)
-        else:
+            self.track_coordinates(event)
+        if self.drawing and self.current_box:
+            self.update_current_box(event)
+        if not isinstance(item, QtWidgets.QGraphicsPixmapItem):
             self.setCursor(self.default_cursor)
         super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        if event.button() == QtCore.Qt.MouseButton.LeftButton and self.drawing:
+            self.finish_drawing()
+
+        super().mouseReleaseEvent(event)
+
+    def track_coordinates(self, event):
+        pos = event.pos()
+        scene_pos = self.mapToScene(pos)
+        item = self.itemAt(pos)
+        img_pos = item.mapFromScene(scene_pos)
+        pixmap = item.pixmap()
+
+        x = max(0, min(int(img_pos.x()), pixmap.width() - 1))
+        y = max(0, min(int(img_pos.y()), pixmap.height() - 1))
+
+        self.coordinates_clicked.emit(x, y)
+
+    def update_current_box(self, event):
+        end_point = self.mapToScene(event.pos())
+        rect = QtCore.QRectF(self.start_point, end_point).normalized()
+        self.current_box.setRect(rect)
+
+    def start_drawing(self, event):
+        self.drawing = True
+        self.start_point = self.mapToScene(event.pos())
+        self.current_box = Box()
+        self.image_model.addItem(self.current_box)
+
+    def finish_drawing(self):
+        self.drawing = False
+
+        if not self.current_box:
+            return
+
+        label, ok = self.get_label_from_user()
+        if not ok:
+            self.cancel_drawing()
+            return
+
+        self.save_box(label)
+
+    def get_label_from_user(self):
+        return QtWidgets.QInputDialog.getText(self, "Label", "Enter label:")
+
+    def cancel_drawing(self):
+        self.image_model.removeItem(self.current_box)
+        self.current_box = None
+
+    def save_box(self, label):
+        rect = self.current_box.rect().toRect()
+        path = self.image_model.current_image_path
+
+        self.current_box.label = label
+        self.current_box.image_path = path
+
+        name = path.split("/")[-1].split(".")[0]
+        State().box_saver.add_bbox(rect, label, name)
+        self.current_box = None
 
     def leaveEvent(self, event):
         self.setCursor(self.default_cursor)
         super().leaveEvent(event)
-
-    def mousePressEvent(self, event):
-        if event.button() == QtCore.Qt.MouseButton.LeftButton:
-            self.drawing = True
-            self.start_point = self.mapToScene(event.pos())
-            self.current_box = QtWidgets.QGraphicsRectItem()
-            self.current_box.setPen(self.box_pen)
-            self.image_model.addItem(self.current_box)
-        super().mousePressEvent(event)
-
-    def mouseReleaseEvent(self, event):
-        if event.button() == QtCore.Qt.MouseButton.LeftButton and self.drawing:
-            self.drawing = False
-            if self.current_box:
-                label, ok = QtWidgets.QInputDialog.getText(self, "Label", "Enter label:")
-                if not ok:
-                    self.image_model.removeItem(self.current_box)
-                    self.current_box = None
-                    return
-
-                rect = self.current_box.rect().toRect()
-                path = self.image_model.current_image_path
-                self.box_created.emit(rect, label, path)
-
-        self.image_model.removeItem(self.current_box)
-        self.current_box = None
-        super().mouseReleaseEvent(event)

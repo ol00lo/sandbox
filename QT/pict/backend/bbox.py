@@ -1,25 +1,39 @@
 from typing import Dict, List, Tuple
 from pathlib import Path
-from PyQt6 import QtCore
+from PyQt6 import QtCore, QtWidgets, QtGui
+import os
+
+class Box(QtWidgets.QGraphicsRectItem):
+    def __init__(self, rect=None, label="", image_path="", parent=None):
+        rect = rect if rect else QtCore.QRectF()
+        super().__init__(rect, parent)
+        self.label = label
+        self.image_path = image_path
+
+        self.setPen(QtGui.QPen(QtCore.Qt.GlobalColor.yellow, 2, QtCore.Qt.PenStyle.SolidLine))
+        self.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
+
+    def update_label(self, new_label):
+        self.label = new_label
 
 class BBoxList:
-    def __init__(self, output_file: str = "bbox_output.csv") -> None:
-        self.output_file: str = output_file
-        self.bbox_data: Dict[str, List[Tuple[str, QtCore.QRect]]] = {}
+    def __init__(self, folder: str = "", output_file: str = "") -> None:
+        if not output_file == "":
+            abs_folder = os.path.abspath(folder)
+            self.output_file = os.path.join(abs_folder, output_file)
+            self.bbox_data: Dict[str, List[Tuple[str, QtCore.QRect]]] = {}
+            with open(self.output_file, 'w') as f:
+                f.write("Path,n_boxes,Label,x1,y1,x2,y2\n")
 
-        with open(self.output_file, 'w') as f:
-            f.write("Path,n_boxes,Label,x1,y1,x2,y2\n")
-
-    
-    def add_bbox(self, bbox: QtCore.QRect, label: str, image_path: str):
-        if image_path not in self.bbox_data:
-            self.bbox_data[image_path] = []
-        self.bbox_data[image_path].append((label, bbox))
+    def add_bbox(self, bbox: QtCore.QRect, label: str, image_name: str):
+        if image_name not in self.bbox_data:
+            self.bbox_data[image_name] = []
+        self.bbox_data[image_name].append((label, bbox))
 
         with open(self.output_file, 'a') as f:
-            n_boxes = len(self.bbox_data[image_path])
+            n_boxes = len(self.bbox_data[image_name])
             line = (
-                f'"{image_path}",{n_boxes},"{label}",'
+                f'"{image_name}",{n_boxes},"{label}",'
                 f'{bbox.left()},{bbox.top()},'
                 f'{bbox.right()},{bbox.bottom()}\n'
             )

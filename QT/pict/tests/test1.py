@@ -23,5 +23,5 @@ class Test1(unittest.TestCase):
         tester.eval_and_wait_true(guicom.press_enter,(), 'text()!=""', {'text': self.get_string_from_file})
 
     def get_string_from_file(self):
-        with open("bbox_output.csv", "r") as f:
+        with open("tests/test_images/bbox_output.csv", "r") as f:
            return f.read()
