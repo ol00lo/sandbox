@@ -32,20 +32,29 @@ class ImageViewer(QtWidgets.QGraphicsView):
             self.fitInView(self.image_model.sceneRect(), QtCore.Qt.AspectRatioMode.KeepAspectRatio)
 
     def mousePressEvent(self, event):
+        item = self.itemAt(event.pos())
         if event.button() == QtCore.Qt.MouseButton.LeftButton:
-            self.start_drawing(event)
+            if isinstance(item, Box) and item.is_on_border(event.pos()):
+                item.mousePressEvent(event)
+            else:
+                self.start_drawing(event)
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
         item = self.itemAt(event.pos())
-        if isinstance(item, QtWidgets.QGraphicsPixmapItem):
-            self.setCursor(self.cross_cursor)
-            self.track_coordinates(event)
-        if self.drawing and self.current_box:
-            self.update_current_box(event)
-        if not isinstance(item, QtWidgets.QGraphicsPixmapItem):
-            self.setCursor(self.default_cursor)
-        super().mouseMoveEvent(event)
+        if isinstance(item, Box) and item.is_on_border(event.pos()):
+            item.mouseMoveEvent(event)
+        else:
+            if isinstance(item, QtWidgets.QGraphicsPixmapItem):
+                self.setCursor(self.cross_cursor)
+                self.track_coordinates(event)
+            if self.drawing and self.current_box:
+                self.update_current_box(event)
+            if not isinstance(item, QtWidgets.QGraphicsPixmapItem):
+                self.setCursor(self.default_cursor)
+            super().mouseMoveEvent(event)
+
+
 
     def mouseReleaseEvent(self, event):
         if event.button() == QtCore.Qt.MouseButton.LeftButton and self.drawing:
