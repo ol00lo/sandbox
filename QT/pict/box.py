@@ -34,3 +34,8 @@ class Box(QtWidgets.QGraphicsRectItem):
                 return False 
             return True
         return False
+
+    def is_box(self):
+        if self.rect().width() >= 5 and self.rect().height() >= 5:
+            return True
+        return False

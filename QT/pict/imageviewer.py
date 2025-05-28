@@ -91,7 +91,8 @@ class ImageViewer(QtWidgets.QGraphicsView):
     def finish_drawing(self):
         self.drawing = False
 
-        if not self.current_box:
+        if not self.current_box or not self.current_box.is_box():
+            self.cancel_drawing()
             return
 
         label, ok = QtWidgets.QInputDialog.getText(self, "Label", "Enter label:")
@@ -100,6 +101,7 @@ class ImageViewer(QtWidgets.QGraphicsView):
             return
         self.current_box.update_label(label)
         State().actions["CreateBox"].do(self.current_box)
+        self.image_model.add_labels(self.current_box, label)
         self.current_box = None
 
     def cancel_drawing(self):

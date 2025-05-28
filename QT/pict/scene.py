@@ -18,11 +18,24 @@ class ImageModel(QtWidgets.QGraphicsScene):
         self.setSceneRect(pixmap_item.boundingRect())
         self.draw_boxes()
 
-    def draw_boxes(self):
+    def draw_boxes(self, need_labels = True):
         boxes = self.find_rects(os.path.dirname(self.current_image_path))
         for x1, y1, x2, y2, label in boxes:
             rect = QtCore.QRectF(x1, y1, x2 - x1, y2 - y1)
-            self.addItem(Box(rect=rect, label=label, image_path=self.current_image_path))
+            box_item = Box(rect=rect, label=label, image_path=self.current_image_path)
+            self.addItem(box_item)
+
+            if need_labels:
+                self.add_labels(box_item, label)
+
+    def add_labels(self, box, label):
+        font = QtGui.QFont("times", 8)
+
+        text_item = QtWidgets.QGraphicsSimpleTextItem(label, box)
+        text_item.setPos(box.rect().right() + 2, box.rect().top() - 5)
+        text_item.setPen(QtGui.QPen(QtCore.Qt.GlobalColor.black, 1, QtCore.Qt.PenStyle.SolidLine))
+        text_item.setFont(font)
+        self.addItem(text_item)
 
     def find_rects(self, directory):
         if directory == '': return []
