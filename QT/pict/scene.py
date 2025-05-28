@@ -1,6 +1,6 @@
 from PyQt6 import QtWidgets, QtGui, QtCore
 from backend.state import State
-from backend.bbox import Box
+from box import Box
 import os
 
 class ImageModel(QtWidgets.QGraphicsScene):

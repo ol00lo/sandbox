@@ -5,7 +5,7 @@ import traceback
 from qt_common import show_message, SUPPORTED_IMAGE_EXTENSIONS, SUPPORTED_IMAGE_FILTER
 from .table import ImageInfo
 from .state import State
-from .bbox import Box
+from box import Box
 
 class BaseAction(QtGui.QAction):
     _action_name = "BaseAction"

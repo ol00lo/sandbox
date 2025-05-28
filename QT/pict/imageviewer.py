@@ -1,6 +1,6 @@
 from PyQt6 import QtCore, QtWidgets, QtGui
 from scene import ImageModel
-from backend.bbox import Box
+from box import Box
 from backend.state import State
 
 class ImageViewer(QtWidgets.QGraphicsView):
@@ -34,10 +34,6 @@ class ImageViewer(QtWidgets.QGraphicsView):
     def mousePressEvent(self, event):
         if event.button() == QtCore.Qt.MouseButton.LeftButton:
             self.start_drawing(event)
-        elif event.button() == QtCore.Qt.MouseButton.RightButton:
-            item = self.itemAt(event.pos())
-            if isinstance(item, Box):
-                State().actions["DeleteBox"].do(item)
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):

@@ -1,21 +1,8 @@
 from typing import Dict, List, Tuple
 from pathlib import Path
-from PyQt6 import QtCore, QtWidgets, QtGui
+from PyQt6 import QtCore
 import os
-
-class Box(QtWidgets.QGraphicsRectItem):
-    def __init__(self, rect=None, label="", image_path="", parent=None):
-        rect = rect if rect else QtCore.QRectF()
-        super().__init__(rect, parent)
-        self.label = label
-        self.image_path = image_path
-        self.name = image_path.split("\\")[-1].split(".")[0]
-
-        self.setPen(QtGui.QPen(QtCore.Qt.GlobalColor.yellow, 2, QtCore.Qt.PenStyle.SolidLine))
-        self.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
-
-    def update_label(self, new_label):
-        self.label = new_label
+from box import Box
 
 class BBoxList:
     def __init__(self, folder: str = "", output_file: str = "") -> None:
