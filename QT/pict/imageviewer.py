@@ -72,7 +72,6 @@ class ImageViewer(QtWidgets.QGraphicsView):
                         return
         super().mousePressEvent(event)
 
-
     def mouseMoveEvent(self, event):
         pos = event.pos()
         scene_pos = self.mapToScene(pos)
@@ -145,7 +144,8 @@ class ImageViewer(QtWidgets.QGraphicsView):
             return
         self.current_box.update_label(label)
         State().actions["CreateBox"].do(self.current_box)
-        self.image_model.add_labels(self.current_box, label)
+        if self.image_model.need_labels:
+            self.image_model.add_labels(self.current_box, label)
         self.current_box = None
 
     def cancel_drawing(self):

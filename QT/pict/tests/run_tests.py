@@ -6,6 +6,8 @@ import test1
 from mainwin import MainWindow
 from tester import tester
 
+# python tests/run_tests.py
+
 app = QtWidgets.QApplication(sys.argv)
 start_screen = MainWindow()
 start_screen.show()

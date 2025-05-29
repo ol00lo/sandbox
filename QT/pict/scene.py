@@ -8,6 +8,7 @@ class ImageModel(QtWidgets.QGraphicsScene):
         super().__init__(parent)
         self.current_image_path = ""
         State().signals.change_boxes.connect(self.display_image)
+        self.need_labels = False
 
     def display_image(self, image_path):
         self.clear()
@@ -18,14 +19,13 @@ class ImageModel(QtWidgets.QGraphicsScene):
         self.setSceneRect(pixmap_item.boundingRect())
         self.draw_boxes()
 
-    def draw_boxes(self, need_labels = True):
+    def draw_boxes(self):
         boxes = self.find_rects(os.path.dirname(self.current_image_path))
         for x1, y1, x2, y2, label in boxes:
             rect = QtCore.QRectF(x1, y1, x2 - x1, y2 - y1)
             box_item = Box(rect=rect, label=label, image_path=self.current_image_path)
             self.addItem(box_item)
-
-            if need_labels:
+            if self.need_labels:
                 self.add_labels(box_item, label)
 
     def add_labels(self, box, label):

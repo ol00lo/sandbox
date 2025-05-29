@@ -10,8 +10,13 @@ class BBoxList:
             abs_folder = os.path.abspath(folder)
             self.output_file = os.path.join(abs_folder, output_file)
             self.bbox_data: Dict[str, List[Tuple[str, QtCore.QRect]]] = {}
-            with open(self.output_file, 'w') as f:
-                f.write("Path,n_boxes,Label,x1,y1,x2,y2\n")
+            
+            csv_files = [f for f in os.listdir(os.path.abspath(folder)) if f.lower().endswith('.csv')]
+            if csv_files:
+                self.output_file = os.path.join(abs_folder, csv_files[0])
+            else:
+                with open(self.output_file, 'w') as f:
+                    f.write("Path,n_boxes,Label,x1,y1,x2,y2\n")
 
     def add_bbox(self, box: Box):
         image_name = box.name
