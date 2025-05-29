@@ -13,7 +13,9 @@ class ImageViewer(QtWidgets.QGraphicsView):
         self.image_model = ImageModel(self)
         self.setScene(self.image_model)
         self.setMouseTracking(True)
+        self.set_f()
 
+    def set_f(self):
         self.cross_cursor = QtGui.QCursor(QtCore.Qt.CursorShape.CrossCursor)
         self.default_cursor = QtGui.QCursor()
         self.setCursor(self.default_cursor)
@@ -21,45 +23,78 @@ class ImageViewer(QtWidgets.QGraphicsView):
         self.drawing = False
         self.start_point = QtCore.QPoint()
         self.current_box = None
+        self.resizing = False
+        self.resizing_box: Box = None
+        self.old_box= None
 
     def display_image(self, image_path):
         self.image_model.display_image(image_path)
         self.fitInView(self.image_model.sceneRect(), QtCore.Qt.AspectRatioMode.KeepAspectRatio)
 
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-        if self.image_model.items():
-            self.fitInView(self.image_model.sceneRect(), QtCore.Qt.AspectRatioMode.KeepAspectRatio)
+    def finish_resize(self):
+        self.resizing = False
+        State().actions["ResizeBox"].do(self.old_box, self.resizing_box)
+        self.resizing_box = None
+        self.old_box = None
+
+    def start_resize(self, item , img_pos):
+        if item.is_on_border(img_pos):
+            self.setCursor(item.resize_cursors(img_pos))
+            item.start_resizing(img_pos)
+            self.resizing = True
+            self.old_box = item.rect()
+            self.resizing_box = item
+            return True
+        return False
 
     def mousePressEvent(self, event):
-        item = self.itemAt(event.pos())
+        scene_pos = self.mapToScene(event.pos())
+        items_under_cursor = self.items(event.pos())
+
         if event.button() == QtCore.Qt.MouseButton.LeftButton:
-            if isinstance(item, Box) and item.is_on_border(event.pos()):
-                item.mousePressEvent(event)
-            else:
-                self.start_drawing(event)
+            for item in items_under_cursor:
+                if isinstance(item, Box):
+                    img_pos = item.mapFromScene(scene_pos)
+                    if self.start_resize(item, img_pos):
+                        event.accept()
+                        return
+            self.start_drawing(event)
+            event.accept()
+            return
+
+        if event.button() == QtCore.Qt.MouseButton.RightButton:
+            for item in items_under_cursor:
+                if isinstance(item, Box):
+                    img_pos = item.mapFromScene(scene_pos)
+                    if item.is_on_border(img_pos):
+                        State().actions["DeleteBox"].do(item)
+                        event.accept()
+                        return
         super().mousePressEvent(event)
 
+
     def mouseMoveEvent(self, event):
+        pos = event.pos()
+        scene_pos = self.mapToScene(pos)
         item = self.itemAt(event.pos())
-        if isinstance(item, Box) and item.is_on_border(event.pos()):
-            item.mouseMoveEvent(event)
-        else:
-            if isinstance(item, QtWidgets.QGraphicsPixmapItem):
-                self.setCursor(self.cross_cursor)
-                self.track_coordinates(event)
-            if self.drawing and self.current_box:
-                self.update_current_box(event)
-            if not isinstance(item, QtWidgets.QGraphicsPixmapItem):
-                self.setCursor(self.default_cursor)
-            super().mouseMoveEvent(event)
-
-
+        if isinstance(item, QtWidgets.QGraphicsPixmapItem):
+            self.setCursor(self.cross_cursor)
+            self.track_coordinates(event)
+        if not self.drawing and not self.resizing:
+            self.set_cursor(scene_pos, item)
+        if self.drawing and self.current_box:
+            self.update_current_box(event)
+        elif self.resizing:
+            self.resizing_box.resize_box(scene_pos)
+            self.setCursor(self.resizing_box.resize_cursors(scene_pos))
+        super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
         if event.button() == QtCore.Qt.MouseButton.LeftButton and self.drawing:
             self.finish_drawing()
 
+        if event.button() == QtCore.Qt.MouseButton.LeftButton and self.resizing:
+            self.finish_resize()
         super().mouseReleaseEvent(event)
 
     def track_coordinates(self, event):
@@ -117,6 +152,10 @@ class ImageViewer(QtWidgets.QGraphicsView):
         self.image_model.removeItem(self.current_box)
         self.current_box = None
 
-    def leaveEvent(self, event):
-        self.setCursor(self.default_cursor)
-        super().leaveEvent(event)
+    def set_cursor(self, pos, item):
+        if isinstance(item, QtWidgets.QGraphicsPixmapItem):
+            self.setCursor(self.cross_cursor)
+        elif isinstance(item, Box) and item.is_on_border(pos):
+            self.setCursor(item.resize_cursors(pos))
+        else:
+            self.setCursor(self.default_cursor)

@@ -27,7 +27,7 @@ class BBoxList:
             line = (
                 f'"{image_name}",{n_boxes},"{label}",'
                 f'{bbox.left()},{bbox.top()},'
-                f'{bbox.right()},{bbox.bottom()}\n'
+                f'{bbox.left() + bbox.width()},{bbox.top() + bbox.height()}\n'
             )
             f.write(line)
 
@@ -63,11 +63,18 @@ class BBoxList:
                     )
                     f.write(line)
 
+    def update_bbox(self, old_box: QtCore.QRect, new_box: Box):
+        self.delete_bbox(Box(old_box, new_box.label, new_box.name))
+        self.add_bbox(new_box)
 
-def rectangles_are_similar(rect1: QtCore.QRect, rect2: QtCore.QRect, tolerance: int = 2) -> bool:
-        expanded_rect1 = rect1.adjusted(-tolerance, -tolerance, tolerance, tolerance)
-        expanded_rect2 = rect2.adjusted(-tolerance, -tolerance, tolerance, tolerance)
-        return expanded_rect1.intersects(expanded_rect2)
+def rectangles_are_similar(rect1: QtCore.QRect, rect2: QtCore.QRect, tolerance = 1) -> bool:
+    left1, top1, right1, bottom1 = rect1.left(), rect1.top(), rect1.right(), rect1.bottom()
+    left2, top2, right2, bottom2 = rect2.left(), rect2.top(), rect2.right(), rect2.bottom()
+    return (
+        abs(left1 - left2) <= tolerance and abs(top1 - top2) <= tolerance and
+        abs(right1 - right2) <= tolerance and abs(bottom1 - bottom2) <= tolerance
+    )
+
 
 if __name__ == "__main__":
     bbox_list = BBoxList()

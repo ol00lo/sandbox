@@ -218,4 +218,13 @@ class DeleteBoxAction(BaseAction):
 
         if reply == QtWidgets.QMessageBox.StandardButton.Yes:
             ok = State().box_saver.delete_bbox(box) 
-            if ok: State().signals.delete_box_signal.emit(box.image_path)
+            if ok: State().signals.change_boxes.emit(box.image_path)
+
+class ResizeBoxAction(BaseAction):
+    _action_name = "ResizeBox"
+    def __init__(self):
+        super().__init__()
+
+    def do_impl(self, old_box: QtCore.QRect, new_box: Box):
+        State().box_saver.update_bbox(old_box, new_box)
+        State().signals.change_boxes.emit(new_box.image_path)
