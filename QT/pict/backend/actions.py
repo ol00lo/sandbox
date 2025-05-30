@@ -220,7 +220,7 @@ class DeleteBoxAction(BaseAction):
         if reply == QtWidgets.QMessageBox.StandardButton.Yes:
             name = path.split("\\")[-1].split(".")[0]
             ok = State().box_saver.delete_bbox(box, name) 
-            if ok: State().signals.change_boxes.emit(path)
+            if ok: State().signals.change_boxes_signal.emit(path)
 
 class ResizeBoxAction(BaseAction):
     _action_name = "ResizeBox"
@@ -230,4 +230,4 @@ class ResizeBoxAction(BaseAction):
     def do_impl(self, old_box: Box, new_box: Box, path):
         name = path.split("\\")[-1].split(".")[0]
         State().box_saver.update_bbox(old_box, new_box, name)
-        State().signals.change_boxes.emit(path)
+        State().signals.change_boxes_signal.emit(path)

@@ -2,12 +2,15 @@ from .table import TableModel
 import os
 from PyQt6 import QtCore, QtWidgets
 from backend.bboxlist import BBoxList
+from backend.box import Box
 
 class Signals(QtCore.QObject):
     rename_image_signal = QtCore.pyqtSignal(str)
     all_image_deleted_signal =  QtCore.pyqtSignal()
     load_images_signal = QtCore.pyqtSignal()
-    change_boxes = QtCore.pyqtSignal(str)
+    create_box_signal = QtCore.pyqtSignal(str, Box)
+    change_boxes_signal = QtCore.pyqtSignal(str)
+    delete_box_signal = QtCore.pyqtSignal(str, Box)
 
 class State:
     _instance = None

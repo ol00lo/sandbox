@@ -42,7 +42,6 @@ class ImageViewer(QtWidgets.QGraphicsView):
         if item.is_on_border(img_pos):
             self.setCursor(item.resize_cursors(img_pos))
             self.old_box = item.box
-            item.update_box(Box(self.old_box.label, self.old_box))
             item.start_resizing(img_pos)
             self.resizing_box = item
             self.resizing = True
@@ -160,3 +159,8 @@ class ImageViewer(QtWidgets.QGraphicsView):
             self.setCursor(item.resize_cursors(pos))
         else:
             self.setCursor(self.default_cursor)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        if self.image_model.items():
+            self.fitInView(self.image_model.sceneRect(), QtCore.Qt.AspectRatioMode.KeepAspectRatio)

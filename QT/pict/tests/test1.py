@@ -44,6 +44,11 @@ class Test1(unittest.TestCase):
             guicom.press_key, (QtCore.Qt.Key.Key_Delete), 'a() == 0', {'a': State().box_saver.bbox_data.__len__}
         )
 
+        # rescale window
+        before = mwin.image_model_viewer.transform().m11()
+        tester.eval_and_wait_true(mwin.resize, (1100, 800), 'a() == True', 
+                                  {'a': lambda: mwin.image_model_viewer.transform().m11()!= before})
+
 
     def action(self):
         guicom.press_key(QtCore.Qt.Key.Key_Left)

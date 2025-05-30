@@ -8,7 +8,7 @@ class ImageModel(QtWidgets.QGraphicsScene):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.current_image_path = ""
-        State().signals.change_boxes.connect(self.display_image)
+        State().signals.change_boxes_signal.connect(self.display_image)
         self.need_labels = False
 
     def display_image(self, image_path):
