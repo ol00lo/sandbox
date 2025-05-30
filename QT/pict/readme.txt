@@ -1,0 +1,1 @@
+запуск тестов из основной папки: python tests/run_tests.py

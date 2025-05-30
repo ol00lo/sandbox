@@ -42,7 +42,7 @@ class BBoxList:
             return False
 
         for c in self.bbox_data[name]:
-            if box.label == c.label and rectangles_are_similar(box, c):
+            if box == c:
                 self.bbox_data[name].remove(c)
                 self._write_bbox_data_to_file()
                 print(f"BBox deleted from: {Path(self.output_file).absolute()}")
@@ -64,24 +64,24 @@ class BBoxList:
                     f.write(line)
 
     def update_bbox(self, old_box: Box, new_box: Box, name):
-        self.delete_bbox(old_box, name)
-        new_box.label = old_box.label
-        self.add_bbox(new_box, name)
+        if name not in self.bbox_data:
+            return False
+
+        for c in self.bbox_data[name]:
+            if old_box == c:
+                c.setCoords(new_box.left(), new_box.top(), new_box.right(), new_box.bottom())
+                self._write_bbox_data_to_file()
+                print(f"BBox updated in: {Path(self.output_file).absolute()}")
+                return True
+
+        return False
+
 
     def delete_boxes_on_image(self, image_name: str):
         name = image_name.split(".")[0]
         if name in self.bbox_data:
             del self.bbox_data[name]
         self._write_bbox_data_to_file()
-
-def rectangles_are_similar(rect1: QtCore.QRect, rect2: QtCore.QRect, tolerance = 1) -> bool:
-    left1, top1, right1, bottom1 = rect1.left(), rect1.top(), rect1.right(), rect1.bottom()
-    left2, top2, right2, bottom2 = rect2.left(), rect2.top(), rect2.right(), rect2.bottom()
-    return (
-        abs(left1 - left2) <= tolerance and abs(top1 - top2) <= tolerance and
-        abs(right1 - right2) <= tolerance and abs(bottom1 - bottom2) <= tolerance
-    )
-
 
 if __name__ == "__main__":
     bbox_list = BBoxList()
