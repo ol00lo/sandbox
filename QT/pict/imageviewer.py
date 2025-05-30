@@ -1,7 +1,8 @@
 from PyQt6 import QtCore, QtWidgets, QtGui
 from scene import ImageModel
-from box import Box
+from boxgritem import BoxGraphicsItem
 from backend.state import State
+from backend.box import Box
 
 class ImageViewer(QtWidgets.QGraphicsView):
     coordinates_clicked = QtCore.pyqtSignal(int, int)
@@ -24,8 +25,8 @@ class ImageViewer(QtWidgets.QGraphicsView):
         self.start_point = QtCore.QPoint()
         self.current_box = None
         self.resizing = False
-        self.resizing_box: Box = None
-        self.old_box= None
+        self.resizing_box: BoxGraphicsItem = None
+        self.old_box : Box= None
 
     def display_image(self, image_path):
         self.image_model.display_image(image_path)
@@ -33,17 +34,18 @@ class ImageViewer(QtWidgets.QGraphicsView):
 
     def finish_resize(self):
         self.resizing = False
-        State().actions["ResizeBox"].do(self.old_box, self.resizing_box)
+        State().actions["ResizeBox"].do(self.old_box, self.resizing_box.box, self.image_model.current_image_path)
         self.resizing_box = None
         self.old_box = None
 
     def start_resize(self, item , img_pos):
         if item.is_on_border(img_pos):
             self.setCursor(item.resize_cursors(img_pos))
+            self.old_box = item.box
+            item.update_box(Box(self.old_box.label, self.old_box))
             item.start_resizing(img_pos)
-            self.resizing = True
-            self.old_box = item.rect()
             self.resizing_box = item
+            self.resizing = True
             return True
         return False
 
@@ -53,7 +55,7 @@ class ImageViewer(QtWidgets.QGraphicsView):
 
         if event.button() == QtCore.Qt.MouseButton.LeftButton:
             for item in items_under_cursor:
-                if isinstance(item, Box):
+                if isinstance(item, BoxGraphicsItem):
                     img_pos = item.mapFromScene(scene_pos)
                     if self.start_resize(item, img_pos):
                         event.accept()
@@ -64,10 +66,10 @@ class ImageViewer(QtWidgets.QGraphicsView):
 
         if event.button() == QtCore.Qt.MouseButton.RightButton:
             for item in items_under_cursor:
-                if isinstance(item, Box):
+                if isinstance(item, BoxGraphicsItem):
                     img_pos = item.mapFromScene(scene_pos)
                     if item.is_on_border(img_pos):
-                        State().actions["DeleteBox"].do(item)
+                        State().actions["DeleteBox"].do(item.box, self.image_model.current_image_path)
                         event.accept()
                         return
         super().mousePressEvent(event)
@@ -116,8 +118,7 @@ class ImageViewer(QtWidgets.QGraphicsView):
         y = max(scene_rect.top(), min(end_point.y(), scene_rect.bottom()))
         clamped_end_point = QtCore.QPointF(x, y)
 
-        rect = QtCore.QRectF(self.start_point, clamped_end_point).normalized()
-        self.current_box.setRect(rect)
+        self.current_box.update_box(QtCore.QRectF(self.start_point, clamped_end_point).normalized())
 
     def start_drawing(self, event):
         self.drawing = True
@@ -128,7 +129,7 @@ class ImageViewer(QtWidgets.QGraphicsView):
         y = max(scene_rect.top(), min(start_point.y(), scene_rect.bottom()))
         self.start_point = QtCore.QPointF(x, y)
 
-        self.current_box = Box(image_path=self.image_model.current_image_path)
+        self.current_box = BoxGraphicsItem(box = scene_rect, image_path=self.image_model.current_image_path)
         self.image_model.addItem(self.current_box)
 
     def finish_drawing(self):
@@ -143,7 +144,7 @@ class ImageViewer(QtWidgets.QGraphicsView):
             self.cancel_drawing()
             return
         self.current_box.update_label(label)
-        State().actions["CreateBox"].do(self.current_box)
+        State().actions["CreateBox"].do(self.current_box.box, self.current_box.name)
         if self.image_model.need_labels:
             self.image_model.add_labels(self.current_box, label)
         self.current_box = None
@@ -155,7 +156,7 @@ class ImageViewer(QtWidgets.QGraphicsView):
     def set_cursor(self, pos, item):
         if isinstance(item, QtWidgets.QGraphicsPixmapItem):
             self.setCursor(self.cross_cursor)
-        elif isinstance(item, Box) and item.is_on_border(pos):
+        elif isinstance(item, BoxGraphicsItem) and item.is_on_border(pos):
             self.setCursor(item.resize_cursors(pos))
         else:
             self.setCursor(self.default_cursor)

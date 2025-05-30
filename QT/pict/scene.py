@@ -1,7 +1,8 @@
 from PyQt6 import QtWidgets, QtGui, QtCore
 from backend.state import State
-from box import Box
+from boxgritem import BoxGraphicsItem
 import os
+from backend.box import Box
 
 class ImageModel(QtWidgets.QGraphicsScene):
     def __init__(self, parent=None):
@@ -21,12 +22,11 @@ class ImageModel(QtWidgets.QGraphicsScene):
 
     def draw_boxes(self):
         boxes = self.find_rects(os.path.dirname(self.current_image_path))
-        for x1, y1, x2, y2, label in boxes:
-            rect = QtCore.QRectF(x1, y1, x2 - x1, y2 - y1)
-            box_item = Box(rect=rect, label=label, image_path=self.current_image_path)
+        for box in boxes:
+            box_item = BoxGraphicsItem(box=box, image_path=self.current_image_path)
             self.addItem(box_item)
             if self.need_labels:
-                self.add_labels(box_item, label)
+                self.add_labels(box_item, box.label)
 
     def add_labels(self, box, label):
         font = QtGui.QFont("times", 8)
@@ -54,8 +54,9 @@ class ImageModel(QtWidgets.QGraphicsScene):
                     continue
                 try:
                     label = parts[2][1:-1]
-                    coords = list(map(int, parts[3:7]))
-                    rects.append((*coords, label))
+                    coords = list(map(float, parts[3:7]))
+                    rect = QtCore.QRectF(coords[0], coords[1], coords[2] - coords[0], coords[3] - coords[1])
+                    rects.append(Box( label, rect))
                 except ValueError:
                     continue
         return rects

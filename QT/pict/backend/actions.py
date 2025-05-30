@@ -5,7 +5,7 @@ import traceback
 from qt_common import show_message, SUPPORTED_IMAGE_EXTENSIONS, SUPPORTED_IMAGE_FILTER
 from .table import ImageInfo
 from .state import State
-from box import Box
+from .box import Box
 
 class BaseAction(QtGui.QAction):
     _action_name = "BaseAction"
@@ -189,6 +189,7 @@ class DeleteImageAction(BaseAction):
             os.remove(image_path)
         model.images.pop(current_row)
         model.endRemoveRows()
+        State().box_saver.delete_boxes_on_image(image_info.name)
 
 
 class CreateBoxAction(BaseAction):
@@ -196,15 +197,15 @@ class CreateBoxAction(BaseAction):
     def __init__(self):
         super().__init__()
 
-    def do_impl(self, box: Box):
-        State().box_saver.add_bbox(box)
+    def do_impl(self, box: Box, img_name: str):
+        State().box_saver.add_bbox(box, img_name)
 
 class DeleteBoxAction(BaseAction):
     _action_name = "DeleteBox"
     def __init__(self):
         super().__init__()
 
-    def do_impl(self, box: Box):
+    def do_impl(self, box: Box, path: str):
         question = QtWidgets.QMessageBox()
         question.setIcon(QtWidgets.QMessageBox.Icon.Question)
         question.setWindowTitle('Delete All Images')
@@ -217,14 +218,16 @@ class DeleteBoxAction(BaseAction):
         reply = question.exec()
 
         if reply == QtWidgets.QMessageBox.StandardButton.Yes:
-            ok = State().box_saver.delete_bbox(box) 
-            if ok: State().signals.change_boxes.emit(box.image_path)
+            name = path.split("\\")[-1].split(".")[0]
+            ok = State().box_saver.delete_bbox(box, name) 
+            if ok: State().signals.change_boxes.emit(path)
 
 class ResizeBoxAction(BaseAction):
     _action_name = "ResizeBox"
     def __init__(self):
         super().__init__()
 
-    def do_impl(self, old_box: QtCore.QRect, new_box: Box):
-        State().box_saver.update_bbox(old_box, new_box)
-        State().signals.change_boxes.emit(new_box.image_path)
+    def do_impl(self, old_box: Box, new_box: Box, path):
+        name = path.split("\\")[-1].split(".")[0]
+        State().box_saver.update_bbox(old_box, new_box, name)
+        State().signals.change_boxes.emit(path)

@@ -1,10 +1,11 @@
 from PyQt6 import QtWidgets, QtGui, QtCore
+from backend.box import Box
 
-class Box(QtWidgets.QGraphicsRectItem):
-    def __init__(self, rect=None, label="", image_path="", parent=None):
-        rect = rect if rect else QtCore.QRectF()
+class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
+    def __init__(self, box:Box = None, image_path="", parent=None):
+        rect = box if box else QtCore.QRectF()
         super().__init__(rect, parent)
-        self.label = label
+        self.box = box
         self.image_path = image_path
         self.name = image_path.split("\\")[-1].split(".")[0]
 
@@ -28,10 +29,14 @@ class Box(QtWidgets.QGraphicsRectItem):
         }
 
     def update_label(self, label):
-        self.label = label
+        self.box.label = label
+
+    def update_box(self, rect):
+        self.box = rect
+        self.setRect(rect)
 
     def is_on_border(self, pos):
-        rect = self.rect()
+        rect = self.box
         border_width = self.resize_margin
 
         if (rect.left() - border_width <= pos.x() <= rect.right() + border_width and
@@ -45,7 +50,7 @@ class Box(QtWidgets.QGraphicsRectItem):
 
     def start_resizing(self, pos):
         self.resize_start_pos = pos
-        self.resize_start_rect = self.rect()
+        self.resize_start_rect = self.box
 
     def resize_box(self, pos):
         dx = pos.x() - self.resize_start_pos.x()
@@ -62,18 +67,18 @@ class Box(QtWidgets.QGraphicsRectItem):
             rect.setBottom(min(rect.bottom() + dy, self.scene().sceneRect().bottom()))
 
         if rect.width() > 5 and rect.height() > 5:
-            self.setRect(rect)
+            self.update_box(rect)
             self.resize_start_rect = rect
             self.resize_start_pos = pos
 
     def is_box(self):
-        return self.rect().width() >= 5 and self.rect().height() >= 5
+        return self.box.width() >= 5 and self.box.height() >= 5
 
     def resize_cursors(self, pos):
-        left_dist = abs(pos.x() - self.rect().left())
-        right_dist = abs(pos.x() - self.rect().right())
-        top_dist = abs(pos.y() - self.rect().top())
-        bottom_dist = abs(pos.y() - self.rect().bottom())
+        left_dist = abs(pos.x() - self.box.left())
+        right_dist = abs(pos.x() - self.box.right())
+        top_dist = abs(pos.y() - self.box.top())
+        bottom_dist = abs(pos.y() - self.box.bottom())
 
         if left_dist < self.resize_margin and top_dist < self.resize_margin: edge = 'top_left'
         elif right_dist < self.resize_margin and top_dist < self.resize_margin: edge = 'top_right'

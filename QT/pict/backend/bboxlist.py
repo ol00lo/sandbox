@@ -2,14 +2,14 @@ from typing import Dict, List, Tuple
 from pathlib import Path
 from PyQt6 import QtCore
 import os
-from box import Box
+from backend.box import Box
 
 class BBoxList:
     def __init__(self, folder: str = "", output_file: str = "") -> None:
         if not output_file == "":
             abs_folder = os.path.abspath(folder)
             self.output_file = os.path.join(abs_folder, output_file)
-            self.bbox_data: Dict[str, List[Tuple[str, QtCore.QRect]]] = {}
+            self.bbox_data: Dict[str, List[Box]] = {}
             
             csv_files = [f for f in os.listdir(os.path.abspath(folder)) if f.lower().endswith('.csv')]
             if csv_files:
@@ -18,19 +18,18 @@ class BBoxList:
                 with open(self.output_file, 'w') as f:
                     f.write("Path,n_boxes,Label,x1,y1,x2,y2\n")
 
-    def add_bbox(self, box: Box):
-        image_name = box.name
-        label = box.label
-        bbox = box.rect().toRect()
+    def add_bbox(self, bbox: Box, name):
+        image_name = name
 
         if image_name not in self.bbox_data:
             self.bbox_data[image_name] = []
-        self.bbox_data[image_name].append((label, bbox))
+
+        self.bbox_data[image_name].append(bbox)
 
         with open(self.output_file, 'a') as f:
             n_boxes = len(self.bbox_data[image_name])
             line = (
-                f'"{image_name}",{n_boxes},"{label}",'
+                f'"{image_name}",{n_boxes},"{bbox.label}",'
                 f'{bbox.left()},{bbox.top()},'
                 f'{bbox.left() + bbox.width()},{bbox.top() + bbox.height()}\n'
             )
@@ -38,17 +37,13 @@ class BBoxList:
 
         print(f"BBox appended to: {Path(self.output_file).absolute()}")
 
-    def delete_bbox(self, box: Box):
-        name = box.name
-        label = box.label
-        rect = box.rect().toRect()
-
+    def delete_bbox(self, box: Box, name):
         if name not in self.bbox_data:
             return False
 
-        for bbox_label, bbox_rect in self.bbox_data[name]:
-            if label == bbox_label and rectangles_are_similar(rect, bbox_rect):
-                self.bbox_data[name].remove((bbox_label, bbox_rect))
+        for c in self.bbox_data[name]:
+            if box.label == c.label and rectangles_are_similar(box, c):
+                self.bbox_data[name].remove(c)
                 self._write_bbox_data_to_file()
                 print(f"BBox deleted from: {Path(self.output_file).absolute()}")
                 return True
@@ -60,17 +55,24 @@ class BBoxList:
             f.write("Path,n_boxes,Label,x1,y1,x2,y2\n")
             for bbox_name, bboxes in self.bbox_data.items():
                 n_boxes = len(bboxes)
-                for bbox_label, bbox_rect in bboxes:
+                for bbox in bboxes:
                     line = (
-                        f'"{bbox_name}",{n_boxes},"{bbox_label}",'
-                        f'{bbox_rect.left()},{bbox_rect.top()},'
-                        f'{bbox_rect.right()},{bbox_rect.bottom()}\n'
+                        f'"{bbox_name}",{n_boxes},"{bbox.label}",'
+                        f'{bbox.left()},{bbox.top()},'
+                        f'{bbox.right()},{bbox.bottom()}\n'
                     )
                     f.write(line)
 
-    def update_bbox(self, old_box: QtCore.QRect, new_box: Box):
-        self.delete_bbox(Box(old_box, new_box.label, new_box.name))
-        self.add_bbox(new_box)
+    def update_bbox(self, old_box: Box, new_box: Box, name):
+        self.delete_bbox(old_box, name)
+        new_box.label = old_box.label
+        self.add_bbox(new_box, name)
+
+    def delete_boxes_on_image(self, image_name: str):
+        name = image_name.split(".")[0]
+        if name in self.bbox_data:
+            del self.bbox_data[name]
+        self._write_bbox_data_to_file()
 
 def rectangles_are_similar(rect1: QtCore.QRect, rect2: QtCore.QRect, tolerance = 1) -> bool:
     left1, top1, right1, bottom1 = rect1.left(), rect1.top(), rect1.right(), rect1.bottom()

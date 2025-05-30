@@ -1,7 +1,7 @@
 from .table import TableModel
 import os
 from PyQt6 import QtCore, QtWidgets
-from backend.bbox import BBoxList
+from backend.bboxlist import BBoxList
 
 class Signals(QtCore.QObject):
     rename_image_signal = QtCore.pyqtSignal(str)
