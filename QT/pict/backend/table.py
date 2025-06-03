@@ -2,6 +2,7 @@ from PyQt6 import QtCore
 import os
 import shutil
 import imagesize
+from typing import Dict
 
 class ImageInfo:
     def __init__(self, path):
@@ -16,7 +17,7 @@ class ImageInfo:
         self.area = (self.width * self.height) / 1_000_000  
 
 class TableModel(QtCore.QAbstractTableModel):
-    columns = ["Name", "File Size", "Width", "Height", "Area"]
+    columns = ["Name", "N Boxes", "File Size", "Width", "Height", "Area"]
 
     def __init__(self, images=[], dir_path=None, parent=None):
         super().__init__(parent)
@@ -26,6 +27,9 @@ class TableModel(QtCore.QAbstractTableModel):
         self.layoutAboutToBeChanged.emit()
         self.images = images
         self.dir_path = dir_path
+        self.n_boxes: Dict[str, int]  = {}
+        if self.dir_path:
+            self.read_boxes()
         self.layoutChanged.emit()
 
     def add_image(self, image_info, source_path):
@@ -57,12 +61,14 @@ class TableModel(QtCore.QAbstractTableModel):
             if index.column() == 0:
                 return image_info.name
             elif index.column() == 1:
-                return image_info.size  
+                return self.get_boxes(image_info.name)
             elif index.column() == 2:
-                return image_info.width
+                return image_info.size  
             elif index.column() == 3:
-                return image_info.height
+                return image_info.width
             elif index.column() == 4:
+                return image_info.height
+            elif index.column() == 5:
                 return round(image_info.area, 2)
         return None
 
@@ -103,5 +109,39 @@ class TableModel(QtCore.QAbstractTableModel):
         ret |= QtCore.Qt.ItemFlag.ItemIsEnabled
         ret |= QtCore.Qt.ItemFlag.ItemIsSelectable
         return ret
+
     def get_len(self):
         return len(self.images)
+
+    def index_by_imagename(self, name):
+        for i in range(len(self.images)):
+            if self.images[i].name == name:
+                return self.createIndex(i, 0)
+
+    def rowCount(self, parent=None):
+        return len(self.images)
+
+    def read_boxes(self):
+        file_path = self.dir_path + "/bbox_output.csv"
+        if os.path.exists(file_path):
+            with open(file_path, "r") as f:
+                for line in f.readlines():
+                    if not line.startswith("Path"):
+                        name = line.split(",")[0]
+                        if name not in self.n_boxes:
+                            self.n_boxes[name] = 1
+                        else :
+                            self.n_boxes[name] += 1
+
+    def get_boxes(self, name):
+        if name in self.n_boxes:
+            return self.n_boxes[name]
+        return 0
+
+    def add_box(self, name, box):
+        if name in self.n_boxes:
+            self.n_boxes[name] += 1
+        else :
+            self.n_boxes[name] = 1
+
+        self.dataChanged.emit(self.index_by_imagename(name), self.index_by_imagename(name))

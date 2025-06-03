@@ -27,7 +27,7 @@ class TableViewer (QtWidgets.QWidget):
         self.load_images_button.clicked.connect(State().actions["LoadImages"].do)
 
         State().signals.load_images_signal.connect(self.init_connections)
-        State().signals.all_image_deleted_signal.connect(lambda: self.image_selected.emit(None))
+        State().signals.all_images_deleted_signal.connect(lambda: self.image_selected.emit(None))
 
         self.delete_images_button = QtWidgets.QPushButton("Delete All Images")
         self.delete_images_button.clicked.connect(State().actions["DeleteAllImages"].do)

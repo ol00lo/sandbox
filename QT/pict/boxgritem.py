@@ -1,5 +1,6 @@
 from PyQt6 import QtWidgets, QtGui, QtCore
 from backend.box import Box
+import os
 
 class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
     def __init__(self, box:Box = None, image_path="", parent=None):
@@ -7,7 +8,7 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
         super().__init__(rect, parent)
         self.box = box
         self.image_path = image_path
-        self.name = image_path.split("\\")[-1].split(".")[0]
+        self.name = os.path.basename(image_path)
 
         self.setPen(QtGui.QPen(QtCore.Qt.GlobalColor.yellow, 2, QtCore.Qt.PenStyle.SolidLine))
         self.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)

@@ -6,11 +6,11 @@ from backend.box import Box
 
 class Signals(QtCore.QObject):
     rename_image_signal = QtCore.pyqtSignal(str)
-    all_image_deleted_signal =  QtCore.pyqtSignal()
+    all_images_deleted_signal =  QtCore.pyqtSignal()
     load_images_signal = QtCore.pyqtSignal()
-    create_box_signal = QtCore.pyqtSignal(str, Box)
+    create_box_signal = QtCore.pyqtSignal(str, QtCore.QRectF)
     change_boxes_signal = QtCore.pyqtSignal(str)
-    delete_box_signal = QtCore.pyqtSignal(str, Box)
+    delete_box_signal = QtCore.pyqtSignal(str, QtCore.QRectF)
 
 class State:
     _instance = None
@@ -26,6 +26,7 @@ class State:
         self.signals = Signals()
         self.model = TableModel()
 
+        self.signals.create_box_signal.connect(self.model.add_box)
         self.selected_image = None
         self.current_dir = None
         self.actions = {}

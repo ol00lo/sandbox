@@ -57,9 +57,8 @@ class LoadImagesAction(BaseAction):
                 images.append(ImageInfo(image_path))
 
         State().model.set_data(images, dir_path=folder)
-        State().signals.load_images_signal.emit()
-        State().current_dir = folder
         State().set_current_dir(folder)
+        State().signals.load_images_signal.emit()
 
 class DeleteAllImagesAction(BaseAction):
     _action_name = "DeleteAllImages"
@@ -92,7 +91,7 @@ class DeleteAllImagesAction(BaseAction):
                     State().model.clear_data()
                     State().cleanup()
                     show_message("Success", f"Deleted {deleted_files} images.", is_error=False)
-                    State().signals.all_image_deleted_signal.emit()
+                    State().signals.all_images_deleted_signal.emit()
         else:
             raise Exception("No directory selected.")
 
@@ -199,6 +198,7 @@ class CreateBoxAction(BaseAction):
 
     def do_impl(self, box: Box, img_name: str):
         State().box_saver.add_bbox(box, img_name)
+        State().signals.create_box_signal.emit(img_name, box)
 
 class DeleteBoxAction(BaseAction):
     _action_name = "DeleteBox"
@@ -218,7 +218,7 @@ class DeleteBoxAction(BaseAction):
         reply = question.exec()
 
         if reply == QtWidgets.QMessageBox.StandardButton.Yes:
-            name = path.split("\\")[-1].split(".")[0]
+            name = os.path.basename(path)
             ok = State().box_saver.delete_bbox(box, name) 
             if ok: State().signals.change_boxes_signal.emit(path)
 
@@ -228,6 +228,6 @@ class ResizeBoxAction(BaseAction):
         super().__init__()
 
     def do_impl(self, old_box: Box, new_box: Box, path):
-        name = path.split("\\")[-1].split(".")[0]
+        name = os.path.basename(path)
         State().box_saver.update_bbox(old_box, new_box, name)
         State().signals.change_boxes_signal.emit(path)

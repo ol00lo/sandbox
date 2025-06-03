@@ -6,33 +6,29 @@ from backend.box import Box
 
 class BBoxList:
     def __init__(self, folder: str = "", output_file: str = "") -> None:
+        self.first_line = "Path,Label,x1,y1,x2,y2\n"
         if not output_file == "":
             abs_folder = os.path.abspath(folder)
             self.output_file = os.path.join(abs_folder, output_file)
             self.bbox_data: Dict[str, List[Box]] = {}
-            
+            self._check_out_file()
+
+        else:
             csv_files = [f for f in os.listdir(os.path.abspath(folder)) if f.lower().endswith('.csv')]
             if csv_files:
                 self.output_file = os.path.join(abs_folder, csv_files[0])
-            else:
-                with open(self.output_file, 'w') as f:
-                    f.write("Path,n_boxes,Label,x1,y1,x2,y2\n")
+                self._check_out_file()
+
 
     def add_bbox(self, bbox: Box, name):
         image_name = name
-
         if image_name not in self.bbox_data:
             self.bbox_data[image_name] = []
 
         self.bbox_data[image_name].append(bbox)
 
         with open(self.output_file, 'a') as f:
-            n_boxes = len(self.bbox_data[image_name])
-            line = (
-                f'"{image_name}",{n_boxes},"{bbox.label}",'
-                f'{bbox.left()},{bbox.top()},'
-                f'{bbox.left() + bbox.width()},{bbox.top() + bbox.height()}\n'
-            )
+            line = self.get_line(image_name, bbox)
             f.write(line)
 
         print(f"BBox appended to: {Path(self.output_file).absolute()}")
@@ -52,16 +48,24 @@ class BBoxList:
 
     def _write_bbox_data_to_file(self):
         with open(self.output_file, 'w') as f:
-            f.write("Path,n_boxes,Label,x1,y1,x2,y2\n")
+            f.write(self.first_line)
             for bbox_name, bboxes in self.bbox_data.items():
                 n_boxes = len(bboxes)
                 for bbox in bboxes:
-                    line = (
-                        f'"{bbox_name}",{n_boxes},"{bbox.label}",'
-                        f'{bbox.left()},{bbox.top()},'
-                        f'{bbox.right()},{bbox.bottom()}\n'
-                    )
+                    line = self.get_line(bbox_name, bbox)
                     f.write(line)
+
+    def get_line(self, name, bbox):
+        return f'{name},{bbox.label}, {bbox.left()}, {bbox.top()}, {bbox.right()}, {bbox.bottom()}\n'
+
+    def _check_out_file(self):
+        if  os.path.exists(self.output_file):
+            with open(self.output_file, 'r') as f:
+                line = f.readline()
+                if line ==  self.first_line:
+                    return
+        with open(self.output_file, 'w') as f:
+            f.write(self.first_line)
 
     def update_bbox(self, old_box: Box, new_box: Box, name):
         if name not in self.bbox_data:
@@ -76,9 +80,7 @@ class BBoxList:
 
         return False
 
-
-    def delete_boxes_on_image(self, image_name: str):
-        name = image_name.split(".")[0]
+    def delete_boxes_on_image(self, name: str):
         if name in self.bbox_data:
             del self.bbox_data[name]
         self._write_bbox_data_to_file()

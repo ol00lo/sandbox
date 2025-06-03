@@ -47,14 +47,14 @@ class ImageModel(QtWidgets.QGraphicsScene):
         with open(csv_file_path, "r", encoding="utf-8") as f:
             for line in f.readlines()[1:]:
                 parts = line.strip().split(",")
-                if len(parts) < 7:
+                if len(parts) < 6:
                     continue
-                image_name = parts[0][1:-1]
-                if image_name != os.path.splitext(os.path.basename(self.current_image_path))[0]:
+                image_name = parts[0]
+                if image_name != os.path.basename(self.current_image_path):
                     continue
                 try:
-                    label = parts[2][1:-1]
-                    coords = list(map(float, parts[3:7]))
+                    label = parts[2]
+                    coords = list(map(float, parts[2:6]))
                     rect = QtCore.QRectF(coords[0], coords[1], coords[2] - coords[0], coords[3] - coords[1])
                     rects.append(Box( label, rect))
                 except ValueError:

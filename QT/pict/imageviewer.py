@@ -23,7 +23,7 @@ class ImageViewer(QtWidgets.QGraphicsView):
 
         self.drawing = False
         self.start_point = QtCore.QPoint()
-        self.current_box = None
+        self.current_box: Box = None
         self.resizing = False
         self.resizing_box: BoxGraphicsItem = None
         self.old_box : Box= None
@@ -138,10 +138,23 @@ class ImageViewer(QtWidgets.QGraphicsView):
             self.cancel_drawing()
             return
 
-        label, ok = QtWidgets.QInputDialog.getText(self, "Label", "Enter label:")
-        if not ok or label == "":
+        dialog = QtWidgets.QInputDialog(self)
+        dialog.setInputMode(QtWidgets.QInputDialog.InputMode.TextInput)
+        dialog.setLabelText("Enter label:")
+        line_edit = dialog.findChild(QtWidgets.QLineEdit)
+        if line_edit:
+            validator = QtGui.QRegularExpressionValidator(QtCore.QRegularExpression("[a-zA-Z0-9]*"), self)
+            line_edit.setValidator(validator)
+        dialog.accepted.connect(lambda: self.end_drawing(dialog.textValue()))
+        dialog.rejected.connect(self.cancel_drawing)
+        dialog.open()
+        label, ok = dialog.textValue(), dialog.result()
+
+    def end_drawing(self, label):
+        if label == "":
             self.cancel_drawing()
             return
+
         self.current_box.update_label(label)
         State().actions["CreateBox"].do(self.current_box.box, self.current_box.name)
         if self.image_model.need_labels:
