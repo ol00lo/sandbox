@@ -5,10 +5,10 @@ from pynput import mouse
 
 class MouseSensor(Node):
     def __init__(self):
-        super().__init__('mouse_sensor')
+        super().__init__('MouseSensor')
         self._publisher_mouse_moved = self.create_publisher(Point, 'mouse_moved', 10)
-        self.listener = mouse.Listener(on_move=self.on_move)
-        self.listener.start()
+        self._listener = mouse.Listener(on_move=self.on_move)
+        self._listener.start()
 
     def on_move(self, x, y):
         msg = Point()
