@@ -19,18 +19,18 @@ class MouseSensor(Node):
         roi_description = ParameterDescriptor(
             name= "region_of_interest",
             type= ParameterType.PARAMETER_INTEGER_ARRAY,
-            description= "Region of interest as [x0, y0, x1, y1] coordinates",
-            integer_range= [IntegerRange(from_value= 0, to_value= 2000)]
+            description= "Region of interest as [x0, y0, x1, y1] screen pixel coordinates",
+            integer_range= [IntegerRange(from_value= 0, to_value= 100000)]
         )
-
-        self.declare_parameter("minimum_time_interval_ms", 10000, interval_description)
-        self.declare_parameter("region_of_interest", [0, 0, 0, 0], roi_description)
+        self.declare_parameter("minimum_time_interval_ms", value=10, descriptor=interval_description)
+        self.declare_parameter("region_of_interest", value=[], descriptor=roi_description)
 
         self.interval = self.get_parameter("minimum_time_interval_ms").value/1000
         self.roi = self.get_parameter("region_of_interest").value
 
         self.add_on_set_parameters_callback(self.parameters_callback)
         self.update_time_interval()
+        self.update_roi()
 
         self._publisher_mouse_moved = self.create_publisher(Point, 'mouse_moved', 10)
         self._listener = mouse.Listener(on_move=self.on_move)
@@ -40,12 +40,16 @@ class MouseSensor(Node):
 
     def parameters_callback(self, params):
         result = SetParametersResult(successful=True)
-        for p in params:
-            if p.name == "minimum_time_interval_ms":
-                self.update_time_interval(p.value)
-            elif p.name == "region_of_interest":
-                self.update_roi(p.value)
-
+        try:
+            for p in params:
+                if p.name == "minimum_time_interval_ms":
+                    self.update_time_interval(p.value)
+                elif p.name == "region_of_interest":
+                    self.update_roi(p.value)
+        except Exception as e:
+            result.successful = False
+            result.reason = f"Parameter update failed: {str(e)}"
+            self.get_logger().error(f"Parameter error: {e}")
         return result
 
     def on_move(self, x, y):
@@ -70,10 +74,16 @@ class MouseSensor(Node):
         self.interval = value / 1000
         self.get_logger().info(f"Listen to mouse move with interval={int(self.interval*1000)}ms")
 
-    def update_roi(self, value):
-        if len(value)==4:
-            self.roi = value
-            self.get_logger().info(f"ROI update {self.roi}")
+    def update_roi(self, value=None):
+        if value is None or len(value) == 0:
+            value = [0, 0, 100000, 100000]
+        if len(value) != 4:
+            raise ValueError("ROI must contain exactly 4 values [x0,y0,x1,y1]")
+        if value[0] >= value[2] or value[1] >= value[3]:
+            raise ValueError(f"Invalid coordinates: x0({value[0]}) >= x1({value[2]}) or y0({value[1]}) >= y1({value[3]})")
+        self.roi = value
+        self.get_logger().info(f"ROI updated to {self.roi}")
+
 
 def main(args=None):
     rclpy.init(args=args)
