@@ -1,0 +1,4 @@
+mouse_sensor:
+    ros__parameters:
+        minimum_time_interval_ms: 100
+        region_of_interest: []
