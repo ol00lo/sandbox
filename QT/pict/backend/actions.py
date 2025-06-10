@@ -5,6 +5,7 @@ import traceback
 from qt_common import show_message, SUPPORTED_IMAGE_EXTENSIONS, SUPPORTED_IMAGE_FILTER
 from .table import ImageInfo
 from .state import State
+from .box import Box
 
 class BaseAction(QtGui.QAction):
     _action_name = "BaseAction"
@@ -44,6 +45,9 @@ class LoadImagesAction(BaseAction):
 
     def do_impl(self, *args):
         folder = QtWidgets.QFileDialog.getExistingDirectory(None, "Select Folder")
+        self.openfolder(folder)
+
+    def openfolder(self, folder):
         if not folder:
             return
         images = []
@@ -55,6 +59,7 @@ class LoadImagesAction(BaseAction):
         State().model.set_data(images, dir_path=folder)
         State().signals.load_images_signal.emit()
         State().current_dir = folder
+        State().set_current_dir(folder)
 
 class DeleteAllImagesAction(BaseAction):
     _action_name = "DeleteAllImages"
@@ -184,3 +189,45 @@ class DeleteImageAction(BaseAction):
             os.remove(image_path)
         model.images.pop(current_row)
         model.endRemoveRows()
+        State().box_saver.delete_boxes_on_image(image_info.name)
+
+
+class CreateBoxAction(BaseAction):
+    _action_name = "CreateBox"
+    def __init__(self):
+        super().__init__()
+
+    def do_impl(self, box: Box, img_name: str):
+        State().box_saver.add_bbox(box, img_name)
+
+class DeleteBoxAction(BaseAction):
+    _action_name = "DeleteBox"
+    def __init__(self):
+        super().__init__()
+
+    def do_impl(self, box: Box, path: str):
+        question = QtWidgets.QMessageBox()
+        question.setIcon(QtWidgets.QMessageBox.Icon.Question)
+        question.setWindowTitle('Delete All Images')
+        question.setText('Are you sure you want to delete this box?')
+        question.setStandardButtons(
+            QtWidgets.QMessageBox.StandardButton.Yes | 
+            QtWidgets.QMessageBox.StandardButton.No
+        )
+        question.setDefaultButton(QtWidgets.QMessageBox.StandardButton.No)
+        reply = question.exec()
+
+        if reply == QtWidgets.QMessageBox.StandardButton.Yes:
+            name = path.split("\\")[-1].split(".")[0]
+            ok = State().box_saver.delete_bbox(box, name) 
+            if ok: State().signals.change_boxes_signal.emit(path)
+
+class ResizeBoxAction(BaseAction):
+    _action_name = "ResizeBox"
+    def __init__(self):
+        super().__init__()
+
+    def do_impl(self, old_box: Box, new_box: Box, path):
+        name = path.split("\\")[-1].split(".")[0]
+        State().box_saver.update_bbox(old_box, new_box, name)
+        State().signals.change_boxes_signal.emit(path)

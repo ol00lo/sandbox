@@ -1,11 +1,16 @@
 from .table import TableModel
 import os
 from PyQt6 import QtCore, QtWidgets
+from backend.bboxlist import BBoxList
+from backend.box import Box
 
 class Signals(QtCore.QObject):
     rename_image_signal = QtCore.pyqtSignal(str)
     all_image_deleted_signal =  QtCore.pyqtSignal()
     load_images_signal = QtCore.pyqtSignal()
+    create_box_signal = QtCore.pyqtSignal(str, Box)
+    change_boxes_signal = QtCore.pyqtSignal(str)
+    delete_box_signal = QtCore.pyqtSignal(str, Box)
 
 class State:
     _instance = None
@@ -25,6 +30,7 @@ class State:
         self.current_dir = None
         self.actions = {}
         self.init_actions()
+        self.box_saver = BBoxList()
 
     @classmethod
     def register_action(cls, action_name, action_class):
@@ -41,6 +47,7 @@ class State:
     def set_current_dir(self, dir_path):
         if os.path.isdir(dir_path):
             self.current_dir = dir_path
+            self.box_saver = BBoxList(dir_path, "bbox_output.csv")
             return True
         return False
 
