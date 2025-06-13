@@ -5,9 +5,9 @@ import os
 
 class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
     def __init__(self, box:Box = None, image_path="", parent=None):
-        rect = box if box else QtCore.QRectF()
-        super().__init__(rect, parent)
-        self.box = box
+        super().__init__(box if box else QtCore.QRectF(), parent)
+        self.original_box = box
+        self.temp_box = None
         self.image_path = image_path
         self.name = os.path.basename(image_path)
 
@@ -32,22 +32,26 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
         }
 
     def update_label(self, label):
-        self.box.label = label
+        self.original_box.label = label
 
     def update_box(self, rect):
-        self.box = rect
+        self.original_box = rect
         self.setRect(rect)
 
     def start_resizing(self, pos):
         self.resizing = True
         self.resize_start_pos = pos
-        self.old_box = self.box
-        self.resize_start_rect = self.box
+        self.temp_box = QtCore.QRectF(self.original_box)
+        self.resize_start_rect = QtCore.QRectF(self.original_box)
+        self.setRect(self.temp_box)
 
     def resize_box(self, pos):
+        if not self.resizing or not self.temp_box:
+            return
+
         dx = pos.x() - self.resize_start_pos.x()
         dy = pos.y() - self.resize_start_pos.y()
-        rect = QtCore.QRectF(self.resize_start_rect)
+        rect = QtCore.QRectF(self.temp_box)
 
         if abs(pos.x() - rect.left()) < self.resize_margin:
             rect.setLeft(max(0, rect.left() + dx))
@@ -59,22 +63,32 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
             rect.setBottom(min(rect.bottom() + dy, self.scene().sceneRect().bottom()))
 
         if rect.width() > 5 and rect.height() > 5:
-            self.update_box(rect)
-            self.resize_start_rect = rect
+            self.temp_box = rect
+            self.setRect(rect)
             self.resize_start_pos = pos
 
     def end_resizing(self):
-        self.resizing = False
-        State().actions["ResizeBox"].do(self.old_box, self.box, self.image_path)
+        if not self.resizing or not self.temp_box:
+            return
+
+        old_box = self.original_box
+        new_box = QtCore.QRectF(self.temp_box)
+        if new_box.width() >= 5 and new_box.height() >= 5:
+            self.original_box = new_box
+            self.resizing = False
+            self.temp_box = None
+            self.setRect(self.original_box)
+            State().actions["ResizeBox"].do(old_box, new_box, self.image_path)
+
 
     def is_box(self):
-        return self.box.width() >= 5 and self.box.height() >= 5
+        return self.original_box.width() >= 5 and self.original_box.height() >= 5
 
     def resize_cursors(self, pos):
-        left_dist = abs(pos.x() - self.box.left())
-        right_dist = abs(pos.x() - self.box.right())
-        top_dist = abs(pos.y() - self.box.top())
-        bottom_dist = abs(pos.y() - self.box.bottom())
+        left_dist = abs(pos.x() - self.original_box.left())
+        right_dist = abs(pos.x() - self.original_box.right())
+        top_dist = abs(pos.y() - self.original_box.top())
+        bottom_dist = abs(pos.y() - self.original_box.bottom())
 
         if left_dist < self.resize_margin and top_dist < self.resize_margin: edge = 'top_left'
         elif right_dist < self.resize_margin and top_dist < self.resize_margin: edge = 'top_right'
