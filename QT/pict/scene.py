@@ -53,7 +53,7 @@ class ImageModel(QtWidgets.QGraphicsScene):
                 if image_name != os.path.basename(self.current_image_path):
                     continue
                 try:
-                    label = parts[2]
+                    label = parts[1]
                     coords = list(map(float, parts[2:6]))
                     rect = QtCore.QRectF(coords[0], coords[1], coords[2] - coords[0], coords[3] - coords[1])
                     rects.append(Box( label, rect))

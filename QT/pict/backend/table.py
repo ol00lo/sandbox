@@ -49,7 +49,7 @@ class TableModel(QtCore.QAbstractTableModel):
 
         self.dataChanged.emit(self.index(len(self.images) - 1, 0), self.index(len(self.images) - 1, 0))
 
-    def rowCount(self, parent):
+    def rowCount(self, parent=None):
         return len(self.images)
 
     def columnCount(self, parent):
@@ -118,9 +118,6 @@ class TableModel(QtCore.QAbstractTableModel):
             if self.images[i].name == name:
                 return self.createIndex(i, 0)
 
-    def rowCount(self, parent=None):
-        return len(self.images)
-
     def read_boxes(self):
         file_path = self.dir_path + "/bbox_output.csv"
         if os.path.exists(file_path):
@@ -132,6 +129,10 @@ class TableModel(QtCore.QAbstractTableModel):
                             self.n_boxes[name] = 1
                         else :
                             self.n_boxes[name] += 1
+
+    def update_boxes(self):
+        self.n_boxes = {}
+        self.read_boxes()
 
     def get_boxes(self, name):
         if name in self.n_boxes:

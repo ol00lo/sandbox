@@ -1,5 +1,6 @@
 from PyQt6 import QtWidgets, QtGui, QtCore
 from backend.box import Box
+from backend.state import State
 import os
 
 class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
@@ -13,6 +14,7 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
         self.setPen(QtGui.QPen(QtCore.Qt.GlobalColor.yellow, 2, QtCore.Qt.PenStyle.SolidLine))
         self.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
         self.set_resizing()
+        self.resizing = False
 
     def set_resizing(self):
         self.resize_edge = None
@@ -36,21 +38,10 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
         self.box = rect
         self.setRect(rect)
 
-    def is_on_border(self, pos):
-        rect = self.box
-        border_width = self.resize_margin
-
-        if (rect.left() - border_width <= pos.x() <= rect.right() + border_width and
-            rect.top() - border_width <= pos.y() <= rect.bottom() + border_width):
-
-            if (rect.left() < pos.x() < rect.right() and
-                rect.top() < pos.y() < rect.bottom()):
-                return False 
-            return True
-        return False
-
     def start_resizing(self, pos):
+        self.resizing = True
         self.resize_start_pos = pos
+        self.old_box = self.box
         self.resize_start_rect = self.box
 
     def resize_box(self, pos):
@@ -72,6 +63,10 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
             self.resize_start_rect = rect
             self.resize_start_pos = pos
 
+    def end_resizing(self):
+        self.resizing = False
+        State().actions["ResizeBox"].do(self.old_box, self.box, self.image_path)
+
     def is_box(self):
         return self.box.width() >= 5 and self.box.height() >= 5
 
@@ -92,3 +87,49 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
         else:
             return  QtCore.Qt.CursorShape.ArrowCursor
         return self.resize_cursor_map[edge]
+
+    def mousePressEvent(self, event):
+        if event.button() == QtCore.Qt.MouseButton.LeftButton:
+            self.start_resizing(event.pos())
+        if event.button() == QtCore.Qt.MouseButton.RightButton:
+            State().actions["DeleteBox"].do(self.rect(), self.image_path)
+            event.accept()
+            return
+        super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event):
+        if self.resizing:
+            self.resize_box(event.pos())
+        super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        if event.button() == QtCore.Qt.MouseButton.LeftButton:
+            self.end_resizing()
+            event.accept()
+            return
+        super().mouseReleaseEvent(event)
+
+    def contains(self, point: QtCore.QPointF) -> bool:
+        rect = self.rect()
+        margin = self.resize_margin
+
+        outer_rect = rect.adjusted(-margin, -margin, margin, margin)
+
+        inner_rect = rect.adjusted(margin, margin, -margin, -margin)
+
+        return outer_rect.contains(point) and not inner_rect.contains(point)
+
+    def shape(self) -> QtGui.QPainterPath:
+        path = QtGui.QPainterPath()
+        rect = self.rect()
+        margin = self.resize_margin
+
+        outer_rect = rect.adjusted(-margin, -margin, margin, margin)
+        path.addRect(outer_rect)
+
+        inner_rect = rect.adjusted(margin, margin, -margin, -margin)
+        inner_path = QtGui.QPainterPath()
+        inner_path.addRect(inner_rect)
+        path = path.subtracted(inner_path)
+
+        return path

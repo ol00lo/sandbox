@@ -25,6 +25,7 @@ class State:
     def _init_state(self):
         self.signals = Signals()
         self.model = TableModel()
+        self.signals.change_boxes_signal.connect(self.model.update_boxes)
 
         self.signals.create_box_signal.connect(self.model.add_box)
         self.selected_image = None

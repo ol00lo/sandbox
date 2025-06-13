@@ -19,16 +19,15 @@ class BBoxList:
                 self.output_file = os.path.join(abs_folder, csv_files[0])
                 self._check_out_file()
 
-
     def add_bbox(self, bbox: Box, name):
-        image_name = name
-        if image_name not in self.bbox_data:
-            self.bbox_data[image_name] = []
+        if name not in self.bbox_data:
+            self.bbox_data[name] = []
+        self.bbox_data[name].append(bbox)
 
-        self.bbox_data[image_name].append(bbox)
-
+    def new_bbox(self, bbox: Box, name, ):
+        self.add_bbox(bbox, name)
         with open(self.output_file, 'a') as f:
-            line = self.get_line(image_name, bbox)
+            line = self.get_line(name, bbox)
             f.write(line)
 
         print(f"BBox appended to: {Path(self.output_file).absolute()}")
@@ -46,11 +45,19 @@ class BBoxList:
 
         return False
 
+    def _read_bbox_data_from_file(self, lines):
+        for line in lines:
+            line = line.strip()
+            if line == self.first_line:
+                continue
+            name, label, x1, y1, x2, y2 = line.split(',')
+            bbox = Box(label, QtCore.QRectF(float(x1), float(y1), float(x2) - float(x1), float(y2)-float(y1)))
+            self.add_bbox(bbox, name)
+
     def _write_bbox_data_to_file(self):
         with open(self.output_file, 'w') as f:
             f.write(self.first_line)
             for bbox_name, bboxes in self.bbox_data.items():
-                n_boxes = len(bboxes)
                 for bbox in bboxes:
                     line = self.get_line(bbox_name, bbox)
                     f.write(line)
@@ -63,6 +70,7 @@ class BBoxList:
             with open(self.output_file, 'r') as f:
                 line = f.readline()
                 if line ==  self.first_line:
+                    self._read_bbox_data_from_file(f.readlines())
                     return
         with open(self.output_file, 'w') as f:
             f.write(self.first_line)
@@ -92,6 +100,6 @@ if __name__ == "__main__":
     rect2 = QtCore.QRect(50, 60, 70, 80)
     rect3 = QtCore.QRect(15, 25, 35, 45)
 
-    bbox_list.add_bbox(rect1, "cat", "images/img1.jpg")
-    bbox_list.add_bbox(rect2, "dog", "images/img1.jpg")
-    bbox_list.add_bbox(rect3, "cat", "images/img2.jpg")
+    bbox_list.new_bbox(rect1, "cat", "images/img1.jpg")
+    bbox_list.new_bbox(rect2, "dog", "images/img1.jpg")
+    bbox_list.new_bbox(rect3, "cat", "images/img2.jpg")

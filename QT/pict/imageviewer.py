@@ -24,54 +24,24 @@ class ImageViewer(QtWidgets.QGraphicsView):
         self.drawing = False
         self.start_point = QtCore.QPoint()
         self.current_box: Box = None
-        self.resizing = False
-        self.resizing_box: BoxGraphicsItem = None
-        self.old_box : Box= None
 
     def display_image(self, image_path):
         self.image_model.display_image(image_path)
         self.fitInView(self.image_model.sceneRect(), QtCore.Qt.AspectRatioMode.KeepAspectRatio)
 
-    def finish_resize(self):
-        self.resizing = False
-        State().actions["ResizeBox"].do(self.old_box, self.resizing_box.box, self.image_model.current_image_path)
-        self.resizing_box = None
-        self.old_box = None
-
-    def start_resize(self, item , img_pos):
-        if item.is_on_border(img_pos):
-            self.setCursor(item.resize_cursors(img_pos))
-            self.old_box = item.box
-            item.start_resizing(img_pos)
-            self.resizing_box = item
-            self.resizing = True
-            return True
-        return False
-
     def mousePressEvent(self, event):
-        scene_pos = self.mapToScene(event.pos())
-        items_under_cursor = self.items(event.pos())
-
-        if event.button() == QtCore.Qt.MouseButton.LeftButton:
-            for item in items_under_cursor:
-                if isinstance(item, BoxGraphicsItem):
-                    img_pos = item.mapFromScene(scene_pos)
-                    if self.start_resize(item, img_pos):
-                        event.accept()
-                        return
-            self.start_drawing(event)
-            event.accept()
-            return
-
-        if event.button() == QtCore.Qt.MouseButton.RightButton:
-            for item in items_under_cursor:
-                if isinstance(item, BoxGraphicsItem):
-                    img_pos = item.mapFromScene(scene_pos)
-                    if item.is_on_border(img_pos):
-                        State().actions["DeleteBox"].do(item.box, self.image_model.current_image_path)
-                        event.accept()
-                        return
         super().mousePressEvent(event)
+        if event.button() == QtCore.Qt.MouseButton.LeftButton:
+            items_under_cursor = self.items(event.pos())
+            resizing = any(
+                item.resizing 
+                for item in items_under_cursor 
+                if isinstance(item, BoxGraphicsItem)
+            )
+            if not resizing:
+                self.start_drawing(event)
+                event.accept()
+                return
 
     def mouseMoveEvent(self, event):
         pos = event.pos()
@@ -80,21 +50,15 @@ class ImageViewer(QtWidgets.QGraphicsView):
         if isinstance(item, QtWidgets.QGraphicsPixmapItem):
             self.setCursor(self.cross_cursor)
             self.track_coordinates(event)
-        if not self.drawing and not self.resizing:
+        if not self.drawing:
             self.set_cursor(scene_pos, item)
         if self.drawing and self.current_box:
             self.update_current_box(event)
-        elif self.resizing:
-            self.resizing_box.resize_box(scene_pos)
-            self.setCursor(self.resizing_box.resize_cursors(scene_pos))
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
         if event.button() == QtCore.Qt.MouseButton.LeftButton and self.drawing:
             self.finish_drawing()
-
-        if event.button() == QtCore.Qt.MouseButton.LeftButton and self.resizing:
-            self.finish_resize()
         super().mouseReleaseEvent(event)
 
     def track_coordinates(self, event):
@@ -168,7 +132,7 @@ class ImageViewer(QtWidgets.QGraphicsView):
     def set_cursor(self, pos, item):
         if isinstance(item, QtWidgets.QGraphicsPixmapItem):
             self.setCursor(self.cross_cursor)
-        elif isinstance(item, BoxGraphicsItem) and item.is_on_border(pos):
+        elif isinstance(item, BoxGraphicsItem) and item.contains(pos):
             self.setCursor(item.resize_cursors(pos))
         else:
             self.setCursor(self.default_cursor)

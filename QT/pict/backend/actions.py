@@ -197,7 +197,7 @@ class CreateBoxAction(BaseAction):
         super().__init__()
 
     def do_impl(self, box: Box, img_name: str):
-        State().box_saver.add_bbox(box, img_name)
+        State().box_saver.new_bbox(box, img_name)
         State().signals.create_box_signal.emit(img_name, box)
 
 class DeleteBoxAction(BaseAction):
