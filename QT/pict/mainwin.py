@@ -61,6 +61,5 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             self.setWindowTitle("Image Viewer")
 
-    def open_folder(self):
-        dir_path = "tests/test_images"
+    def open_folder(self, dir_path = "tests/test_images"):
         State().actions["LoadImages"].openfolder(dir_path)

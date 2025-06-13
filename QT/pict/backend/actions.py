@@ -68,30 +68,18 @@ class DeleteAllImagesAction(BaseAction):
 
     def do_impl(self, *args):
         if State().model and State().current_dir is not None:
-            question = QtWidgets.QMessageBox()
-            question.setIcon(QtWidgets.QMessageBox.Icon.Question)
-            question.setWindowTitle('Delete All Images')
-            question.setText('Are you sure you want to delete all images?')
-            question.setStandardButtons(
-                 QtWidgets.QMessageBox.StandardButton.Yes | 
-                 QtWidgets.QMessageBox.StandardButton.No
-            )
-            question.setDefaultButton(QtWidgets.QMessageBox.StandardButton.No)
-            reply = question.exec()
+            deleted_files = 0
+            for filename in os.listdir(State().current_dir):
+                file_path = os.path.join(State().current_dir, filename)
+                if os.path.isfile(file_path) and filename.lower().endswith(SUPPORTED_IMAGE_EXTENSIONS):
+                    os.remove(file_path)
+                    deleted_files += 1
 
-            if reply == QtWidgets.QMessageBox.StandardButton.Yes:
-                deleted_files = 0
-                for filename in os.listdir(State().current_dir):
-                    file_path = os.path.join(State().current_dir, filename)
-                    if os.path.isfile(file_path) and filename.lower().endswith(SUPPORTED_IMAGE_EXTENSIONS):
-                        os.remove(file_path)
-                        deleted_files += 1
-
-                if deleted_files > 0:
-                    State().model.clear_data()
-                    State().cleanup()
-                    show_message("Success", f"Deleted {deleted_files} images.", is_error=False)
-                    State().signals.all_images_deleted_signal.emit()
+            if deleted_files > 0:
+                State().model.clear_data()
+                State().cleanup()
+                show_message("Success", f"Deleted {deleted_files} images.", is_error=False)
+                State().signals.all_images_deleted_signal.emit()
         else:
             raise Exception("No directory selected.")
 
@@ -206,21 +194,9 @@ class DeleteBoxAction(BaseAction):
         super().__init__()
 
     def do_impl(self, box: Box, path: str):
-        question = QtWidgets.QMessageBox()
-        question.setIcon(QtWidgets.QMessageBox.Icon.Question)
-        question.setWindowTitle('Delete All Images')
-        question.setText('Are you sure you want to delete this box?')
-        question.setStandardButtons(
-            QtWidgets.QMessageBox.StandardButton.Yes | 
-            QtWidgets.QMessageBox.StandardButton.No
-        )
-        question.setDefaultButton(QtWidgets.QMessageBox.StandardButton.No)
-        reply = question.exec()
-
-        if reply == QtWidgets.QMessageBox.StandardButton.Yes:
-            name = os.path.basename(path)
-            ok = State().box_saver.delete_bbox(box, name) 
-            if ok: State().signals.change_boxes_signal.emit(path)
+        name = os.path.basename(path)
+        ok = State().box_saver.delete_bbox(box, name) 
+        if ok: State().signals.change_boxes_signal.emit(path)
 
 class ResizeBoxAction(BaseAction):
     _action_name = "ResizeBox"

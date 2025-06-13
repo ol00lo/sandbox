@@ -106,7 +106,19 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
         if event.button() == QtCore.Qt.MouseButton.LeftButton:
             self.start_resizing(event.pos())
         if event.button() == QtCore.Qt.MouseButton.RightButton:
-            State().actions["DeleteBox"].do(self.rect(), self.image_path)
+            question = QtWidgets.QMessageBox()
+            question.setIcon(QtWidgets.QMessageBox.Icon.Question)
+            question.setWindowTitle('Delete All Images')
+            question.setText('Are you sure you want to delete all images?')
+            question.setStandardButtons(
+                 QtWidgets.QMessageBox.StandardButton.Yes | 
+                 QtWidgets.QMessageBox.StandardButton.No
+            )
+            question.setDefaultButton(QtWidgets.QMessageBox.StandardButton.No)
+            reply = question.exec()
+
+            if reply == QtWidgets.QMessageBox.StandardButton.Yes:
+                State().actions["DeleteBox"].do(self.rect(), self.image_path)
             event.accept()
             return
         super().mousePressEvent(event)

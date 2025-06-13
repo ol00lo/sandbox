@@ -1,12 +1,13 @@
-from typing import Dict, List, Tuple
+from typing import Dict, List
 from pathlib import Path
 from PyQt6 import QtCore
 import os
+import csv
 from backend.box import Box
 
 class BBoxList:
     def __init__(self, folder: str = "", output_file: str = "") -> None:
-        self.first_line = "Path,Label,x1,y1,x2,y2\n"
+        self.header = ["Path", "Label", "x1", "y1", "x2", "y2"]
         if not output_file == "":
             abs_folder = os.path.abspath(folder)
             self.output_file = os.path.join(abs_folder, output_file)
@@ -24,11 +25,16 @@ class BBoxList:
             self.bbox_data[name] = []
         self.bbox_data[name].append(bbox)
 
-    def new_bbox(self, bbox: Box, name, ):
+    def new_bbox(self, bbox: Box, name):
         self.add_bbox(bbox, name)
-        with open(self.output_file, 'a') as f:
-            line = self.get_line(name, bbox)
-            f.write(line)
+
+        with open(self.output_file, 'a', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow([
+                name, bbox.label,
+                bbox.left(), bbox.top(),
+                bbox.right(), bbox.bottom()
+            ])
 
         print(f"BBox appended to: {Path(self.output_file).absolute()}")
 
@@ -42,38 +48,52 @@ class BBoxList:
                 self._write_bbox_data_to_file()
                 print(f"BBox deleted from: {Path(self.output_file).absolute()}")
                 return True
-
         return False
 
-    def _read_bbox_data_from_file(self, lines):
-        for line in lines:
-            line = line.strip()
-            if line == self.first_line:
-                continue
-            name, label, x1, y1, x2, y2 = line.split(',')
-            bbox = Box(label, QtCore.QRectF(float(x1), float(y1), float(x2) - float(x1), float(y2)-float(y1)))
-            self.add_bbox(bbox, name)
+    def _read_bbox_data_from_file(self):
+        with open(self.output_file, 'r', newline='') as csvfile:
+            reader = csv.reader(csvfile)
+            next(reader)
+            for row in reader:
+                if len(row) != 6:
+                    continue
+                name, label, x1, y1, x2, y2 = row
+                bbox = Box(
+                    label,
+                    QtCore.QRectF(
+                        float(x1), float(y1),
+                        float(x2) - float(x1),
+                        float(y2) - float(y1)
+                ))
+                self.add_bbox(bbox, name)
 
     def _write_bbox_data_to_file(self):
-        with open(self.output_file, 'w') as f:
-            f.write(self.first_line)
+        with open(self.output_file, 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(self.header)
             for bbox_name, bboxes in self.bbox_data.items():
                 for bbox in bboxes:
-                    line = self.get_line(bbox_name, bbox)
-                    f.write(line)
-
-    def get_line(self, name, bbox):
-        return f'{name},{bbox.label}, {bbox.left()}, {bbox.top()}, {bbox.right()}, {bbox.bottom()}\n'
+                    writer.writerow([
+                        bbox_name, bbox.label,
+                        bbox.left(), bbox.top(),
+                        bbox.right(), bbox.bottom()
+                    ])
 
     def _check_out_file(self):
-        if  os.path.exists(self.output_file):
-            with open(self.output_file, 'r') as f:
-                line = f.readline()
-                if line ==  self.first_line:
-                    self._read_bbox_data_from_file(f.readlines())
-                    return
-        with open(self.output_file, 'w') as f:
-            f.write(self.first_line)
+        if os.path.exists(self.output_file):
+            with open(self.output_file, 'r', newline='') as csvfile:
+                reader = csv.reader(csvfile)
+                try:
+                    header = next(reader)
+                    if header == self.header:
+                        self._read_bbox_data_from_file()
+                        return
+                except StopIteration:
+                    pass
+
+        with open(self.output_file, 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(self.header)
 
     def update_bbox(self, old_box: Box, new_box: Box, name):
         if name not in self.bbox_data:
@@ -92,14 +112,3 @@ class BBoxList:
         if name in self.bbox_data:
             del self.bbox_data[name]
         self._write_bbox_data_to_file()
-
-if __name__ == "__main__":
-    bbox_list = BBoxList()
-
-    rect1 = QtCore.QRect(10, 20, 30, 40)
-    rect2 = QtCore.QRect(50, 60, 70, 80)
-    rect3 = QtCore.QRect(15, 25, 35, 45)
-
-    bbox_list.new_bbox(rect1, "cat", "images/img1.jpg")
-    bbox_list.new_bbox(rect2, "dog", "images/img1.jpg")
-    bbox_list.new_bbox(rect3, "cat", "images/img2.jpg")

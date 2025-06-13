@@ -30,7 +30,7 @@ class TableViewer (QtWidgets.QWidget):
         State().signals.all_images_deleted_signal.connect(lambda: self.image_selected.emit(None))
 
         self.delete_images_button = QtWidgets.QPushButton("Delete All Images")
-        self.delete_images_button.clicked.connect(State().actions["DeleteAllImages"].do)
+        self.delete_images_button.clicked.connect(self.delete_all)
 
         self.filter_line_edit = QtWidgets.QLineEdit()
         self.filter_line_edit.setPlaceholderText("Filter by name...")
@@ -112,3 +112,18 @@ class TableViewer (QtWidgets.QWidget):
             )
             self.table_view.scrollTo(new_index)
             self.table_view.setFocus()
+
+    def delete_all(self):
+        question = QtWidgets.QMessageBox()
+        question.setIcon(QtWidgets.QMessageBox.Icon.Question)
+        question.setWindowTitle('Delete All Images')
+        question.setText('Are you sure you want to delete all images?')
+        question.setStandardButtons(
+            QtWidgets.QMessageBox.StandardButton.Yes |
+            QtWidgets.QMessageBox.StandardButton.No
+        )
+        question.setDefaultButton(QtWidgets.QMessageBox.StandardButton.No)
+        reply = question.exec()
+
+        if reply == QtWidgets.QMessageBox.StandardButton.Yes:
+            State().actions["DeleteAllImages"].do()
