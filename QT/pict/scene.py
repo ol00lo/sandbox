@@ -8,16 +8,26 @@ class ImageModel(QtWidgets.QGraphicsScene):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.current_image_path = ""
-        State().signals.change_boxes_signal.connect(self.display_image)
-        self.need_labels = False
+        State().signals.change_boxes_signal.connect(self.update_boxes)
+        State().signals.delete_box_signal.connect(self.update_boxes)
+        State().signals.create_box_signal.connect(self.update_boxes)
 
-    def display_image(self, image_path):
+    def display_image(self):
         self.clear()
-        self.current_image_path = image_path
-        pixmap = QtGui.QPixmap(image_path)
+        self.current_image_path = State().get_path()
+        pixmap = QtGui.QPixmap(self.current_image_path)
 
         pixmap_item = self.addPixmap(pixmap)
         self.setSceneRect(pixmap_item.boundingRect())
+        self.draw_boxes()
+
+    def update_boxes(self):
+        for item in self.items():
+            if isinstance(item, BoxGraphicsItem):
+                self.removeItem(item)
+            elif isinstance(item, QtWidgets.QGraphicsSimpleTextItem):
+                if item.parentItem() and isinstance(item.parentItem(), BoxGraphicsItem):
+                    self.removeItem(item)
         self.draw_boxes()
 
     def draw_boxes(self):
@@ -25,7 +35,7 @@ class ImageModel(QtWidgets.QGraphicsScene):
         for box in boxes:
             box_item = BoxGraphicsItem(box=box, image_path=self.current_image_path)
             self.addItem(box_item)
-            if self.need_labels:
+            if State().need_labels:
                 self.add_labels(box_item, box.label)
 
     def add_labels(self, box, label):

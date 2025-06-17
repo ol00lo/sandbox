@@ -11,14 +11,15 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
         self.image_path = image_path
         self.name = os.path.basename(image_path)
 
-        self.setPen(QtGui.QPen(QtCore.Qt.GlobalColor.yellow, 2, QtCore.Qt.PenStyle.SolidLine))
+        pen = QtGui.QPen(QtCore.Qt.GlobalColor.yellow, 4, QtCore.Qt.PenStyle.SolidLine)
+        pen.setCosmetic(True)
+        self.setPen(pen)
         self.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
         self.set_resizing()
-        self.resizing = False
 
     def set_resizing(self):
+        self.resizing = False
         self.resize_edge = None
-        self.resize_margin = 5
 
         self.resize_cursor_map = {
             'left': QtCore.Qt.CursorShape.SizeHorCursor,
@@ -30,6 +31,9 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
             'bottom_left':  QtCore.Qt.CursorShape.SizeBDiagCursor,
             'bottom_right':  QtCore.Qt.CursorShape.SizeFDiagCursor
         }
+
+        img_info = State().model.images[State().model.index_by_imagename(self.name).row()]
+        self.resize_margin = min(img_info.width, img_info.height) * 0.02
 
     def update_label(self, label):
         self.original_box.label = label
@@ -43,6 +47,22 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
         self.resize_start_pos = pos
         self.temp_box = QtCore.QRectF(self.original_box)
         self.resize_start_rect = QtCore.QRectF(self.original_box)
+
+        self.h_resize = None
+        self.v_resize = None
+
+        if abs(pos.x() - self.rect.left()) < self.resize_margin:
+            self.h_resize = 'left'
+        elif abs(pos.x() - self.rect.right()) < self.resize_margin:
+            self.h_resize = 'right'
+
+        if abs(pos.y() - self.rect.top()) < self.resize_margin:
+            self.v_resize = 'top'
+        elif abs(pos.y() -self.rect.bottom()) < self.resize_margin:
+            self.v_resize = 'bottom'
+
+        self.is_corner_resize = (self.h_resize is not None and self.v_resize is not None)
+
         self.setRect(self.temp_box)
 
     def resize_box(self, pos):
@@ -52,15 +72,21 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
         dx = pos.x() - self.resize_start_pos.x()
         dy = pos.y() - self.resize_start_pos.y()
         rect = QtCore.QRectF(self.temp_box)
+        scene_rect = self.scene().sceneRect()
 
-        if abs(pos.x() - rect.left()) < self.resize_margin:
-            rect.setLeft(max(0, rect.left() + dx))
-        elif abs(pos.x() - rect.right()) < self.resize_margin:
-            rect.setRight(min(rect.right() + dx, self.scene().sceneRect().right()))
-        if abs(pos.y() - rect.top()) < self.resize_margin:
-            rect.setTop(max(0, rect.top() + dy))
-        elif abs(pos.y() - rect.bottom()) < self.resize_margin:
-            rect.setBottom(min(rect.bottom() + dy, self.scene().sceneRect().bottom()))
+        if self.h_resize == 'left':
+            new_left = rect.left() + dx
+            rect.setLeft(max(0, new_left))
+        elif self.h_resize == 'right':
+            new_right = rect.right() + dx
+            rect.setRight(min(new_right, scene_rect.right()))
+
+        if self.v_resize == 'top':
+            new_top = rect.top() + dy
+            rect.setTop(max(0, new_top))
+        elif self.v_resize == 'bottom':
+            new_bottom = rect.bottom() + dy
+            rect.setBottom(min(new_bottom, scene_rect.bottom()))
 
         if rect.width() > 5 and rect.height() > 5:
             self.temp_box = rect
@@ -79,7 +105,6 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
             self.temp_box = None
             self.setRect(self.original_box)
             State().actions["ResizeBox"].do(old_box, new_box, self.image_path)
-
 
     def is_box(self):
         return self.original_box.width() >= 5 and self.original_box.height() >= 5

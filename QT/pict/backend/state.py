@@ -8,9 +8,10 @@ class Signals(QtCore.QObject):
     rename_image_signal = QtCore.pyqtSignal(str)
     all_images_deleted_signal =  QtCore.pyqtSignal()
     load_images_signal = QtCore.pyqtSignal()
+
     create_box_signal = QtCore.pyqtSignal(str, QtCore.QRectF)
-    change_boxes_signal = QtCore.pyqtSignal(str)
     delete_box_signal = QtCore.pyqtSignal(str, QtCore.QRectF)
+    change_boxes_signal = QtCore.pyqtSignal(str)
 
 class State:
     _instance = None
@@ -26,13 +27,14 @@ class State:
         self.signals = Signals()
         self.model = TableModel()
         self.signals.change_boxes_signal.connect(self.model.update_boxes)
-
+        self.signals.delete_box_signal.connect(self.model.delete_box)
         self.signals.create_box_signal.connect(self.model.add_box)
         self.selected_image = None
         self.current_dir = None
         self.actions = {}
         self.init_actions()
         self.box_saver = BBoxList()
+        self.need_labels = False
 
     @classmethod
     def register_action(cls, action_name, action_class):

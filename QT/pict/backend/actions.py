@@ -178,7 +178,6 @@ class DeleteImageAction(BaseAction):
         model.endRemoveRows()
         State().box_saver.delete_boxes_on_image(image_info.name)
 
-
 class CreateBoxAction(BaseAction):
     _action_name = "CreateBox"
     def __init__(self):
@@ -196,7 +195,7 @@ class DeleteBoxAction(BaseAction):
     def do_impl(self, box: Box, path: str):
         name = os.path.basename(path)
         ok = State().box_saver.delete_bbox(box, name) 
-        if ok: State().signals.change_boxes_signal.emit(path)
+        if ok: State().signals.delete_box_signal.emit(path, box)
 
 class ResizeBoxAction(BaseAction):
     _action_name = "ResizeBox"

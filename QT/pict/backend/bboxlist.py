@@ -112,3 +112,8 @@ class BBoxList:
         if name in self.bbox_data:
             del self.bbox_data[name]
         self._write_bbox_data_to_file()
+
+    def box_count(self, name: str):
+        if name in self.bbox_data:
+            return len(self.bbox_data[name])
+        return 0
