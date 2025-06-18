@@ -8,8 +8,9 @@ from backend.box import Box
 class BBoxList:
     def __init__(self, folder: str = "", output_file: str = "") -> None:
         self.header = ["Path", "Label", "x1", "y1", "x2", "y2"]
+        abs_folder = os.path.abspath(folder)
+
         if not output_file == "":
-            abs_folder = os.path.abspath(folder)
             self.output_file = os.path.join(abs_folder, output_file)
             self.bbox_data: Dict[str, List[Box]] = {}
             self._check_out_file()

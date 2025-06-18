@@ -145,7 +145,8 @@ class TableModel(QtCore.QAbstractTableModel):
         else :
             self.n_boxes[name] = 1
 
-        self.dataChanged.emit(self.index_by_imagename(name), self.index_by_imagename(name))
+        if name in self.images: 
+            self.dataChanged.emit(self.index_by_imagename(name), self.index_by_imagename(name))
 
     def delete_box(self, name, box):
         name = os.path.basename(name)
