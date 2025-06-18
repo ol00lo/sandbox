@@ -39,11 +39,20 @@ class ImageModel(QtWidgets.QGraphicsScene):
                 self.add_labels(box_item, box.label)
 
     def add_labels(self, box, label):
-        font = QtGui.QFont("times", 8)
+        width = self.sceneRect().width()
+        font_size = max(8, width * 0.05)
+
+        font = QtGui.QFont("Times New Roman")
+        font.setPointSizeF(font_size)
 
         text_item = QtWidgets.QGraphicsSimpleTextItem(label, box)
-        text_item.setPos(box.rect().right() + 2, box.rect().top() - 5)
-        text_item.setPen(QtGui.QPen(QtCore.Qt.GlobalColor.black, 1, QtCore.Qt.PenStyle.SolidLine))
+
+        step = width * 0.01
+        local_pos = QtCore.QPointF(box.rect().right() + step, box.rect().top() - step)
+        text_item.setPos(local_pos)
+
+        pen = QtGui.QPen(QtCore.Qt.GlobalColor.black, 1, QtCore.Qt.PenStyle.SolidLine)
+        text_item.setPen(pen)
         text_item.setFont(font)
         self.addItem(text_item)
 

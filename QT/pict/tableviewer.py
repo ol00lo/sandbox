@@ -82,6 +82,7 @@ class TableViewer (QtWidgets.QWidget):
         for column_index in range(len(State().model.columns)):
             self.table_view.horizontalHeader().setSectionResizeMode(column_index, QtWidgets.QHeaderView.ResizeMode.Stretch)
         self.main_win.show_folder_name(State().current_dir)
+        self.table_view.selectRow(0)
 
     def _on_filter_text_changed(self, text):
         if State().model:

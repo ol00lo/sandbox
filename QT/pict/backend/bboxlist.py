@@ -30,11 +30,7 @@ class BBoxList:
 
         with open(self.output_file, 'a', newline='') as csvfile:
             writer = csv.writer(csvfile)
-            writer.writerow([
-                name, bbox.label,
-                bbox.left(), bbox.top(),
-                bbox.right(), bbox.bottom()
-            ])
+            bbox.write(writer, name)
 
         print(f"BBox appended to: {Path(self.output_file).absolute()}")
 
@@ -55,16 +51,8 @@ class BBoxList:
             reader = csv.reader(csvfile)
             next(reader)
             for row in reader:
-                if len(row) != 6:
-                    continue
-                name, label, x1, y1, x2, y2 = row
-                bbox = Box(
-                    label,
-                    QtCore.QRectF(
-                        float(x1), float(y1),
-                        float(x2) - float(x1),
-                        float(y2) - float(y1)
-                ))
+                bbox = Box()
+                name = bbox.read_and_ret_name(row)
                 self.add_bbox(bbox, name)
 
     def _write_bbox_data_to_file(self):
@@ -73,11 +61,7 @@ class BBoxList:
             writer.writerow(self.header)
             for bbox_name, bboxes in self.bbox_data.items():
                 for bbox in bboxes:
-                    writer.writerow([
-                        bbox_name, bbox.label,
-                        bbox.left(), bbox.top(),
-                        bbox.right(), bbox.bottom()
-                    ])
+                    bbox.write(writer, bbox_name)
 
     def _check_out_file(self):
         if os.path.exists(self.output_file):
@@ -100,8 +84,8 @@ class BBoxList:
             return False
 
         for c in self.bbox_data[name]:
-            if old_box == c:
-                c.setCoords(new_box.left(), new_box.top(), new_box.right(), new_box.bottom())
+            if c == old_box:
+                c.copy_coord(new_box)
                 self._write_bbox_data_to_file()
                 print(f"BBox updated in: {Path(self.output_file).absolute()}")
                 return True

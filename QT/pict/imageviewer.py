@@ -88,13 +88,9 @@ class ImageViewer(QtWidgets.QGraphicsView):
 
     def start_drawing(self, event):
         self.drawing = True
-        scene_rect = self.image_model.sceneRect()
-        start_point = self.mapToScene(event.pos())
+        self.start_point = self.mapToScene(event.pos())
 
-        x = max(scene_rect.left(), min(start_point.x(), scene_rect.right()))
-        y = max(scene_rect.top(), min(start_point.y(), scene_rect.bottom()))
-        self.start_point = QtCore.QPointF(x, y)
-
+        scene_rect = Box("", QtCore.QRectF(self.start_point, self.start_point))
         self.current_box = BoxGraphicsItem(box = scene_rect, image_path=self.image_model.current_image_path)
         self.image_model.addItem(self.current_box)
 
@@ -115,7 +111,6 @@ class ImageViewer(QtWidgets.QGraphicsView):
         dialog.accepted.connect(lambda: self.end_drawing(dialog.textValue()))
         dialog.rejected.connect(self.cancel_drawing)
         dialog.open()
-        label, ok = dialog.textValue(), dialog.result()
 
     def end_drawing(self, label):
         if label == "":

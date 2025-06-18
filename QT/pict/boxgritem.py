@@ -51,14 +51,14 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
         self.h_resize = None
         self.v_resize = None
 
-        if abs(pos.x() - self.rect.left()) < self.resize_margin:
+        if abs(pos.x() - self.rect().left()) < self.resize_margin:
             self.h_resize = 'left'
-        elif abs(pos.x() - self.rect.right()) < self.resize_margin:
+        elif abs(pos.x() - self.rect().right()) < self.resize_margin:
             self.h_resize = 'right'
 
-        if abs(pos.y() - self.rect.top()) < self.resize_margin:
+        if abs(pos.y() - self.rect().top()) < self.resize_margin:
             self.v_resize = 'top'
-        elif abs(pos.y() -self.rect.bottom()) < self.resize_margin:
+        elif abs(pos.y() -self.rect().bottom()) < self.resize_margin:
             self.v_resize = 'bottom'
 
         self.is_corner_resize = (self.h_resize is not None and self.v_resize is not None)
@@ -133,8 +133,8 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
         if event.button() == QtCore.Qt.MouseButton.RightButton:
             question = QtWidgets.QMessageBox()
             question.setIcon(QtWidgets.QMessageBox.Icon.Question)
-            question.setWindowTitle('Delete All Images')
-            question.setText('Are you sure you want to delete all images?')
+            question.setWindowTitle('Delete Box')
+            question.setText('Are you sure you want to delete this box?')
             question.setStandardButtons(
                  QtWidgets.QMessageBox.StandardButton.Yes | 
                  QtWidgets.QMessageBox.StandardButton.No
