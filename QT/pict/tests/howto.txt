@@ -1,0 +1,8 @@
+запуск всех тестов из модуля test1:
+	python3 run_tests.py
+
+запуск конкретного класса:
+	python3 run_tests.py -c {class name}
+
+запуск конкретного кейса:
+	python3 run_tests.py -c {class name} -m {module name}
