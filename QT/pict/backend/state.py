@@ -29,7 +29,6 @@ class State:
         self.signals.change_boxes_signal.connect(self.model.update_boxes)
         self.signals.delete_box_signal.connect(self.model.delete_box)
         self.signals.create_box_signal.connect(self.model.add_box)
-        self.selected_image = None
         self.current_dir = None
         self.actions = {}
         self.init_actions()
@@ -55,12 +54,11 @@ class State:
             return True
         return False
 
-    def get_path(self):
-        if self.current_dir is None or self.selected_image is None:
+    def get_path(self, im_name):
+        if self.current_dir is None:
             return ""
-        path = os.path.join(self.current_dir, self.selected_image)
+        path = os.path.join(self.current_dir, im_name)
         return path
 
     def cleanup(self):
         self.model.set_data([], None)
-        self.selected_image = None

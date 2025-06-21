@@ -34,17 +34,12 @@ class ImageViewer(QtWidgets.QGraphicsView):
 
     def mousePressEvent(self, event):
         super().mousePressEvent(event)
+        if event.isAccepted():
+            return
         if event.button() == QtCore.Qt.MouseButton.LeftButton:
-            items_under_cursor = self.items(event.pos())
-            resizing = any(
-                item.resizing 
-                for item in items_under_cursor 
-                if isinstance(item, BoxGraphicsItem)
-            )
-            if not resizing:
-                self.start_drawing(event)
-                event.accept()
-                return
+            self.start_drawing(event)
+            event.accept()
+            return
 
     def mouseMoveEvent(self, event):
         pos = event.pos()

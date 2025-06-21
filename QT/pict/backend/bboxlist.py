@@ -102,3 +102,9 @@ class BBoxList:
         if name in self.bbox_data:
             return len(self.bbox_data[name])
         return 0
+
+    def all_boxes_count(self):
+        count = 0
+        for name in self.bbox_data:
+            count += self.box_count(name)
+        return count

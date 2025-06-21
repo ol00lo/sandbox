@@ -12,9 +12,11 @@ class ImageModel(QtWidgets.QGraphicsScene):
         State().signals.delete_box_signal.connect(self.update_boxes)
         State().signals.create_box_signal.connect(self.update_boxes)
 
+    def set_selected_image(self, name):
+        self.current_image_path = State().get_path(name)
+
     def display_image(self):
         self.clear()
-        self.current_image_path = State().get_path()
         pixmap = QtGui.QPixmap(self.current_image_path)
 
         pixmap_item = self.addPixmap(pixmap)

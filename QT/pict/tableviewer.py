@@ -93,10 +93,8 @@ class TableViewer (QtWidgets.QWidget):
             if index.isValid() and index.column() == 0:
                 source_index = self.proxy_model.mapToSource(index)
                 if source_index.isValid():
-                    image_info = State().model.images[source_index.row()]
-                    image_name = image_info.name
-                    State().selected_image = image_name
-                    self.image_selected.emit(State().get_path())
+                    im_name = State().model.images[source_index.row()].name
+                    self.image_selected.emit(State().get_path(im_name))
                     self.main_win.show_folder_name(State().current_dir)
 
     def update_row_focus(self, parent, first, last):

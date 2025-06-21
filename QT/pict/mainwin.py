@@ -19,6 +19,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.image_model_viewer = ImageViewer(self)
         self.table_viewer = TableViewer(self)
 
+        self.table_viewer.image_selected.connect(self.image_model_viewer.image_model.set_selected_image)
+
         self.splitter.addWidget(self.image_model_viewer)
         self.splitter.addWidget(self.table_viewer)
 

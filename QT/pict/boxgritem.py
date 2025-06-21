@@ -130,6 +130,9 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
     def mousePressEvent(self, event):
         if event.button() == QtCore.Qt.MouseButton.LeftButton:
             self.start_resizing(event.pos())
+            event.accept()
+            return
+
         if event.button() == QtCore.Qt.MouseButton.RightButton:
             question = QtWidgets.QMessageBox()
             question.setIcon(QtWidgets.QMessageBox.Icon.Question)

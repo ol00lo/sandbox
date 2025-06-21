@@ -13,10 +13,10 @@ class Test1(unittest.TestCase):
         super().__init__(methodName)
         self.mwin = tester.wait_window(MainWindow)
         self.csv_name = "bbox_output.csv"
+        self.path = os.path.dirname(os.path.abspath(__file__)) + "/test_images/"
 
     def setUp(self):
         self.widget = None
-        self.path = os.path.dirname(os.path.abspath(__file__)) + "/test_images/"
         for root, dirs, files in os.walk(self.path, topdown=False):
             for file in files:
                 os.remove(os.path.join(root, file))
@@ -35,26 +35,32 @@ class Test1(unittest.TestCase):
         # draw
         tester.eval(mwin.table_viewer.update_row_focus, (None, 0, 0) )
         self.widget = mwin.image_model_viewer
-        self.draw_box(QtCore.QPoint(100, 100), QtCore.QPoint(300, 300), 1)
-        self.draw_box(QtCore.QPoint(200, 200), QtCore.QPoint(250, 250), 2)
+
+        viewer_size = mwin.image_model_viewer.size()
+        start_point1 = QtCore.QPoint(viewer_size.width() // 5, viewer_size.height() // 5)
+        start_point2 = QtCore.QPoint(viewer_size.width() // 4, viewer_size.height() // 4)
+        end_point1 = QtCore.QPoint(viewer_size.width() // 2, viewer_size.height() // 2)
+        end_point2 = QtCore.QPoint(viewer_size.width() // 3, viewer_size.height() // 3)
+        new_end_point1 = QtCore.QPoint(int(viewer_size.width() // 1.5), int(viewer_size.height() // 1.5))
+
+        self.draw_box(start_point1, end_point1)
+        self.draw_box(start_point2, end_point2)
 
         #resize
-        drag_start = QtCore.QPoint(300, 300)
-        drag_end = QtCore.QPoint(400, 400)
         old_string = self.get_string_from_file(self.path, 1)
-        tester.eval_and_wait_true(guicom.drag_with_mouse, (self.widget, drag_start, drag_end, QtCore.Qt.MouseButton.LeftButton),
+        tester.eval_and_wait_true(guicom.drag_with_mouse, (self.widget, end_point1, new_end_point1, QtCore.Qt.MouseButton.LeftButton),
                                   's() == True', {'s': lambda: self.get_string_from_file(self.path, 2) != old_string})
 
         # delete
         tester.eval_and_wait_window(guicom.click_mouse, 
-                                     (self.widget, QtCore.QPoint(400, 301), QtCore.Qt.MouseButton.RightButton), QtWidgets.QMessageBox)
+                                     (self.widget, new_end_point1, QtCore.Qt.MouseButton.RightButton), QtWidgets.QMessageBox)
         guicom.press_key(QtCore.Qt.Key.Key_Left)
         guicom.press_enter()
 
         # delete image
         tester.eval(mwin.table_viewer.update_row_focus, (None, 0, 0) )
         tester.eval_and_wait_true(
-            guicom.press_key, (QtCore.Qt.Key.Key_Delete), 'a() == 0', {'a': State().box_saver.bbox_data.__len__}
+            guicom.press_key, (QtCore.Qt.Key.Key_Delete), 'a() == 0', {'a': State().box_saver.all_boxes_count}
         )
 
         # rescale window
@@ -63,7 +69,6 @@ class Test1(unittest.TestCase):
                                   {'a': lambda: mwin.image_model_viewer.transform().m11()!= before})
 
     def test_delete_img(self):
-        State().actions["LoadImages"].openfolder("test_images")
         box = Box("AAA", QtCore.QRectF(10, 10, 20, 20))
         State().actions["CreateBox"].do(box, "test9.jpg")
 
@@ -75,7 +80,7 @@ class Test1(unittest.TestCase):
         self.assertIsNone(State().model.index_by_imagename("test9.jpg"))
 
         # check no entry for boxes in csv
-        with open("test_images/bbox_output.csv", "r") as f:
+        with open(os.path.join(self.path, self.csv_name), "r") as f:
             lines = f.readlines()
             self.assertEqual(len(lines), 1)
 
@@ -100,7 +105,6 @@ class Test1(unittest.TestCase):
         State().actions["DeleteBox"].do(new_box, os.path.join(folder, img))
         self.assertEqual(State().box_saver.box_count(img), 0)
 
-
     def test_window(self):
         before = self.mwin.image_model_viewer.transform().m11()
         tester.eval_and_wait_true(self.mwin.resize, (900, 700), 'a() == True',
@@ -108,7 +112,7 @@ class Test1(unittest.TestCase):
 
 
 
-    def draw_box(self, start_pos, end_pos, N):
+    def draw_box(self, start_pos, end_pos):
         tester.eval_and_wait_window(guicom.drag_with_mouse, (self.widget, start_pos, end_pos, QtCore.Qt.MouseButton.LeftButton),  QtWidgets.QInputDialog)
         guicom.type_text("a")
         guicom.press_enter()

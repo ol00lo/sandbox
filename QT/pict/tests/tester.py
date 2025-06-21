@@ -11,7 +11,7 @@ class TestThread(QtCore.QThread):
         self.test_names = None
 
     def initialize_module(self, module):
-        self.__init(0.1, 3, 1)
+        self.init(0.1, 3, 1)
         self.test_module = module
     
     def run(self):
@@ -120,7 +120,7 @@ class TestThread(QtCore.QThread):
                 elast = e
         raise elast
     
-    def __init(self, sleepsec, ntries, maxwait):
+    def init(self, sleepsec, ntries, maxwait):
         self.test_module = None
         self.test_case = None
 
