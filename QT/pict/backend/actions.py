@@ -5,6 +5,7 @@ import traceback
 from qt_common import show_message, SUPPORTED_IMAGE_EXTENSIONS, SUPPORTED_IMAGE_FILTER
 from .table import ImageInfo
 from .state import State
+from .box import Box
 
 class BaseAction(QtGui.QAction):
     _action_name = "BaseAction"
@@ -44,6 +45,9 @@ class LoadImagesAction(BaseAction):
 
     def do_impl(self, *args):
         folder = QtWidgets.QFileDialog.getExistingDirectory(None, "Select Folder")
+        self.openfolder(folder)
+
+    def openfolder(self, folder):
         if not folder:
             return
         images = []
@@ -53,8 +57,8 @@ class LoadImagesAction(BaseAction):
                 images.append(ImageInfo(image_path))
 
         State().model.set_data(images, dir_path=folder)
+        State().set_current_dir(folder)
         State().signals.load_images_signal.emit()
-        State().current_dir = folder
 
 class DeleteAllImagesAction(BaseAction):
     _action_name = "DeleteAllImages"
@@ -64,30 +68,18 @@ class DeleteAllImagesAction(BaseAction):
 
     def do_impl(self, *args):
         if State().model and State().current_dir is not None:
-            question = QtWidgets.QMessageBox()
-            question.setIcon(QtWidgets.QMessageBox.Icon.Question)
-            question.setWindowTitle('Delete All Images')
-            question.setText('Are you sure you want to delete all images?')
-            question.setStandardButtons(
-                 QtWidgets.QMessageBox.StandardButton.Yes | 
-                 QtWidgets.QMessageBox.StandardButton.No
-            )
-            question.setDefaultButton(QtWidgets.QMessageBox.StandardButton.No)
-            reply = question.exec()
+            deleted_files = 0
+            for filename in os.listdir(State().current_dir):
+                file_path = os.path.join(State().current_dir, filename)
+                if os.path.isfile(file_path) and filename.lower().endswith(SUPPORTED_IMAGE_EXTENSIONS):
+                    os.remove(file_path)
+                    deleted_files += 1
 
-            if reply == QtWidgets.QMessageBox.StandardButton.Yes:
-                deleted_files = 0
-                for filename in os.listdir(State().current_dir):
-                    file_path = os.path.join(State().current_dir, filename)
-                    if os.path.isfile(file_path) and filename.lower().endswith(SUPPORTED_IMAGE_EXTENSIONS):
-                        os.remove(file_path)
-                        deleted_files += 1
-
-                if deleted_files > 0:
-                    State().model.clear_data()
-                    State().cleanup()
-                    show_message("Success", f"Deleted {deleted_files} images.", is_error=False)
-                    State().signals.all_image_deleted_signal.emit()
+            if deleted_files > 0:
+                State().model.clear_data()
+                State().cleanup()
+                show_message("Success", f"Deleted {deleted_files} images.", is_error=False)
+                State().signals.all_images_deleted_signal.emit()
         else:
             raise Exception("No directory selected.")
 
@@ -184,3 +176,33 @@ class DeleteImageAction(BaseAction):
             os.remove(image_path)
         model.images.pop(current_row)
         model.endRemoveRows()
+        State().box_saver.delete_boxes_on_image(image_info.name)
+
+class CreateBoxAction(BaseAction):
+    _action_name = "CreateBox"
+    def __init__(self):
+        super().__init__()
+
+    def do_impl(self, box: Box, img_name: str):
+        State().box_saver.new_bbox(Box(box.label, box.toRect()), img_name)
+        State().signals.create_box_signal.emit(img_name, box)
+
+class DeleteBoxAction(BaseAction):
+    _action_name = "DeleteBox"
+    def __init__(self):
+        super().__init__()
+
+    def do_impl(self, box: Box, path: str):
+        name = os.path.basename(path)
+        ok = State().box_saver.delete_bbox(box, name) 
+        if ok: State().signals.delete_box_signal.emit(path, box)
+
+class ResizeBoxAction(BaseAction):
+    _action_name = "ResizeBox"
+    def __init__(self):
+        super().__init__()
+
+    def do_impl(self, old_box: Box, new_box: Box, path):
+        name = os.path.basename(path)
+        State().box_saver.update_bbox(old_box, new_box, name)
+        State().signals.change_boxes_signal.emit(path)

@@ -27,10 +27,10 @@ class TableViewer (QtWidgets.QWidget):
         self.load_images_button.clicked.connect(State().actions["LoadImages"].do)
 
         State().signals.load_images_signal.connect(self.init_connections)
-        State().signals.all_image_deleted_signal.connect(lambda: self.image_selected.emit(None))
+        State().signals.all_images_deleted_signal.connect(lambda: self.image_selected.emit(None))
 
         self.delete_images_button = QtWidgets.QPushButton("Delete All Images")
-        self.delete_images_button.clicked.connect(State().actions["DeleteAllImages"].do)
+        self.delete_images_button.clicked.connect(self.delete_all)
 
         self.filter_line_edit = QtWidgets.QLineEdit()
         self.filter_line_edit.setPlaceholderText("Filter by name...")
@@ -82,6 +82,7 @@ class TableViewer (QtWidgets.QWidget):
         for column_index in range(len(State().model.columns)):
             self.table_view.horizontalHeader().setSectionResizeMode(column_index, QtWidgets.QHeaderView.ResizeMode.Stretch)
         self.main_win.show_folder_name(State().current_dir)
+        self.table_view.selectRow(0)
 
     def _on_filter_text_changed(self, text):
         if State().model:
@@ -92,10 +93,8 @@ class TableViewer (QtWidgets.QWidget):
             if index.isValid() and index.column() == 0:
                 source_index = self.proxy_model.mapToSource(index)
                 if source_index.isValid():
-                    image_info = State().model.images[source_index.row()]
-                    image_name = image_info.name
-                    State().selected_image = image_name
-                    self.image_selected.emit(State().get_path())
+                    im_name = State().model.images[source_index.row()].name
+                    self.image_selected.emit(State().get_path(im_name))
                     self.main_win.show_folder_name(State().current_dir)
 
     def update_row_focus(self, parent, first, last):
@@ -112,3 +111,18 @@ class TableViewer (QtWidgets.QWidget):
             )
             self.table_view.scrollTo(new_index)
             self.table_view.setFocus()
+
+    def delete_all(self):
+        question = QtWidgets.QMessageBox()
+        question.setIcon(QtWidgets.QMessageBox.Icon.Question)
+        question.setWindowTitle('Delete All Images')
+        question.setText('Are you sure you want to delete all images?')
+        question.setStandardButtons(
+            QtWidgets.QMessageBox.StandardButton.Yes |
+            QtWidgets.QMessageBox.StandardButton.No
+        )
+        question.setDefaultButton(QtWidgets.QMessageBox.StandardButton.No)
+        reply = question.exec()
+
+        if reply == QtWidgets.QMessageBox.StandardButton.Yes:
+            State().actions["DeleteAllImages"].do()
