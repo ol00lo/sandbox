@@ -1,0 +1,4 @@
+mouse_sensor:
+    ros__parameters:
+        sensor_data_ttl_days : 10
+        db_connection: "host=db dbname=mydb user=user password=password port=5432"

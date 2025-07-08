@@ -11,26 +11,30 @@ RUN apt-get update && apt-get install -y \
         mc \
         gdb \
         valgrind \
-        python3-pudb && \
+        python3-pudb \
+		postgresql \
+        postgresql-client \
+        libpqxx-dev \
+		postgresql-server-dev-all  && \
     rm -rf /var/lib/apt/lists/*
 
 RUN pip3 install --break-system-packages pynput
 
-RUN echo $'\n\
-# run mc remembering last mc directory on exit
-function mcc() {
-    MC_TMP_FILE=~/.mclast.txt
-    /usr/bin/mc --printwd="$MC_TMP_FILE"
-    if [ $? -eq 0 ] && [ -f "$MC_TMP_FILE" ]; then
-        NEW_DIR=$(cat "$MC_TMP_FILE" 2>/dev/null)
-        if [ -d "$NEW_DIR" ] && [ "$NEW_DIR" != "$ORIG_DIR" ]; then
-            echo $NEW_DIR
-            cd "$NEW_DIR" || return
-        fi
-    fi
-    rm -f "$MC_TMP_FILE"
-}' >> ~/.bashrc
+RUN printf '\n\
+# run mc remembering last mc directory on exit\n\
+function mcc() {\n\
+    MC_TMP_FILE=~/.mclast.txt\n\
+    /usr/bin/mc --printwd="$MC_TMP_FILE"\n\
+    if [ $? -eq 0 ] && [ -f "$MC_TMP_FILE" ]; then\n\
+        NEW_DIR=$(cat "$MC_TMP_FILE" 2>/dev/null)\n\
+        if [ -d "$NEW_DIR" ] && [ "$NEW_DIR" != "$ORIG_DIR" ]; then\n\
+            echo $NEW_DIR\n\
+            cd "$NEW_DIR" || return\n\
+        fi\n\
+    fi\n\
+    rm -f "$MC_TMP_FILE"\n\
+}\n' >> ~/.bashrc
 
 WORKDIR /work
 
-CMD ["bash", "-c", "source /opt/ros/kilted/setup.bash && bash"]
+CMD ["bash", "-c", "source /opt/ros/kilted/setup.bash && (tail -f /dev/null &) && bash"]
