@@ -24,7 +24,7 @@ class TableViewer (QtWidgets.QWidget):
         self.table_view.viewport().installEventFilter(self)
 
         self.load_images_button = QtWidgets.QPushButton("Open Folder")
-        self.load_images_button.clicked.connect(State().actions["LoadImages"].do)
+        self.load_images_button.clicked.connect(lambda: State().do_action("LoadImages"))
 
         State().signals.load_images_signal.connect(self.init_connections)
         State().signals.all_images_deleted_signal.connect(lambda: self.image_selected.emit(None))
@@ -51,16 +51,17 @@ class TableViewer (QtWidgets.QWidget):
         selected_rows = self.table_view.selectionModel().selectedRows()
         context_menu = QtWidgets.QMenu(self.table_view)
 
-        rename_action = State().actions["RenameFile"]
         delete_action = State().actions["DeleteImage"]
 
         context_menu.addAction(delete_action)
         source_indexes = [self.proxy_model.mapToSource(index) for index in selected_rows]        
-        delete_action.triggered.connect(lambda: delete_action.do(source_indexes))
+        delete_action.triggered.connect(lambda: State().do_action("DeleteImage", source_indexes))
+
+        rename_action = State().actions["RenameFile"]
 
         context_menu.addAction(rename_action)
         source_index = selected_rows[0]
-        rename_action.triggered.connect(lambda: rename_action.do(self.proxy_model.mapToSource(source_index)))
+        rename_action.triggered.connect(lambda: State().do_action("RenameFile", self.proxy_model.mapToSource(source_index)))
 
         context_menu.exec(self.table_view.viewport().mapToGlobal(position))
 
@@ -71,7 +72,7 @@ class TableViewer (QtWidgets.QWidget):
         if event.key() == QtCore.Qt.Key.Key_Delete:
             selected_rows = self.table_view.selectionModel().selectedRows()
             source_indexes = [self.proxy_model.mapToSource(index) for index in selected_rows]
-            State().actions["DeleteImage"].do(source_indexes)
+            State().do_action("DeleteImage", source_indexes)
         else:
             super().keyPressEvent(event)
 
@@ -125,4 +126,4 @@ class TableViewer (QtWidgets.QWidget):
         reply = question.exec()
 
         if reply == QtWidgets.QMessageBox.StandardButton.Yes:
-            State().actions["DeleteAllImages"].do()
+            State().do_action("DeleteAllImages")

@@ -1,8 +1,8 @@
 from .table import TableModel
 import os
-from PyQt6 import QtCore, QtWidgets
-from backend.bboxlist import BBoxList
-from backend.box import Box
+from PyQt6 import QtCore
+from .bboxlist import BBoxList
+from .commands import Command, UndoRedoManager
 
 class Signals(QtCore.QObject):
     rename_image_signal = QtCore.pyqtSignal(str)
@@ -34,6 +34,7 @@ class State:
         self.init_actions()
         self.box_saver = BBoxList()
         self.need_labels = False
+        self.undo_redo_manager = UndoRedoManager()
 
     @classmethod
     def register_action(cls, action_name, action_class):
@@ -62,3 +63,9 @@ class State:
 
     def cleanup(self):
         self.model.set_data([], None)
+
+    def do_action(self, action_name, *args):
+        if action_name in self.actions:
+            action = self.actions[action_name]
+            command = Command(action, *args)
+            self.undo_redo_manager.execute(command)

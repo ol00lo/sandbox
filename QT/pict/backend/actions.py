@@ -21,7 +21,17 @@ class BaseAction(QtGui.QAction):
 
     def do(self, *args):
         try:
-            self.do_impl(*args)
+            return self.do_impl(*args)
+        except Exception as e:
+            self.errors(e)
+    def undo(self, *args):
+        try:
+            return self.undo_impl(*args)
+        except Exception as e:
+            self.errors(e)
+    def redo(self, *args):
+        try:
+            self.redo_impl(*args)
         except Exception as e:
             self.errors(e)
 
@@ -35,6 +45,10 @@ class BaseAction(QtGui.QAction):
 
     def do_impl(self, *args):
         raise NotImplementedError("Subclasses must implement do_impl()")
+    def undo_impl(self, *args):
+        raise NotImplementedError("Subclasses must implement undo_impl()")
+    def redo_impl(self, *args):
+        raise NotImplementedError("Subclasses must implement redo_impl()")
 
 class LoadImagesAction(BaseAction):
     _action_name = "LoadImages"
@@ -128,24 +142,41 @@ class RenameFileAction(BaseAction):
             if not ok or not new_name or new_name == old_name:
                 return
 
-            old_path = os.path.join(State().current_dir, old_name)
-            new_path = os.path.join(State().current_dir, new_name)
+            self._rename(row, old_name, new_name)
 
-            if os.path.exists(new_path):
+            return (index, old_name)
+
+    def undo_impl(self, index, old_name):
+        if index.isValid():
+            row = index.row()
+            curr_name = State().model.images[row].name
+            self._rename(row, curr_name, old_name)
+
+            return (index, curr_name)
+
+    def redo_impl(self, index, new_name):
+        if index.isValid():
+            row = index.row()
+            old_name = State().model.images[row].name
+            self._rename(row, old_name, new_name)
+
+    def _rename(self, row, from_name, to_name):
+        from_path = os.path.join(State().current_dir, from_name)
+        to_path = os.path.join(State().current_dir, to_name)
+        if os.path.exists(to_path):
                 QtWidgets.QMessageBox.warning(
                     None,
                     "Error",
                     "File with this name already exists."
                 )
                 return
+        os.rename(from_path, to_path)
 
-            os.rename(old_path, new_path)
+        State().model.layoutAboutToBeChanged.emit()
+        State().model.images[row].name = to_name
+        State().model.layoutChanged.emit()
+        State().signals.rename_image_signal.emit(to_path)
 
-            State().model.layoutAboutToBeChanged.emit()
-            State().model.images[row].name = new_name
-            State().model.layoutChanged.emit()
-
-            State().signals.rename_image_signal.emit(new_path)
 
 class DeleteImageAction(BaseAction):
     _action_name = "DeleteImage"
