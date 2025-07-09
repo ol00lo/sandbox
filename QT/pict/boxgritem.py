@@ -146,7 +146,7 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
             reply = question.exec()
 
             if reply == QtWidgets.QMessageBox.StandardButton.Yes:
-                State().do_action("DeleteBox", self.rect(), self.image_path)
+                State().do_action("DeleteBox", self.original_box, self.image_path)
             event.accept()
             return
         super().mousePressEvent(event)

@@ -114,6 +114,7 @@ class TableModel(QtCore.QAbstractTableModel):
         return len(self.images)
 
     def index_by_imagename(self, name):
+        name = os.path.basename(name)
         for i in range(len(self.images)):
             if self.images[i].name == name:
                 return self.createIndex(i, 0)

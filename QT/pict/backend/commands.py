@@ -2,18 +2,23 @@ class Command:
     def __init__(self, action, *args):
         self.action = action
         self.args = args
-        self._saved_state = None 
-        self._redo_state = None
+        self._undo_data = None
+        self._redo_data = None
     
     def execute(self):
-        self._saved_state = self.action.do(*self.args)
-        return self._saved_state
+        result = self.action.do(*self.args)
+        if result:
+            self._undo_data = result.get('undo_data')
+            self._redo_data = result.get('redo_data')
+        return result
     
     def undo(self):
-        self._redo_state = self.action.undo(*self._saved_state)
+        if hasattr(self.action, 'undo') and self._undo_data:
+            return self.action.undo(*self._undo_data)
     
     def redo(self):
-        self.action.redo(*self._redo_state)
+        if hasattr(self.action, 'redo') and self._redo_data:
+            return self.action.redo(*self._redo_data)
 
 
 class UndoRedoManager:

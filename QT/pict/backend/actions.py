@@ -26,7 +26,7 @@ class BaseAction(QtGui.QAction):
             self.errors(e)
     def undo(self, *args):
         try:
-            return self.undo_impl(*args)
+            self.undo_impl(*args)
         except Exception as e:
             self.errors(e)
     def redo(self, *args):
@@ -108,7 +108,7 @@ class AddImageAction(BaseAction):
             QtWidgets.QMessageBox.warning(None, "Error", "Please select a directory first.")
             return
         options = QtWidgets.QFileDialog.Option.DontUseNativeDialog
-        file_name, _ = QtWidgets.QFileDialog.getOpenFileName(
+        file_path, _ = QtWidgets.QFileDialog.getOpenFileName(
             None,
             "Select Image",
             "",
@@ -116,6 +116,33 @@ class AddImageAction(BaseAction):
             options=options
         )
 
+        self._add_image(file_path)
+        return {
+            'undo_data': (os.path.basename(file_path),),
+            'redo_data': (file_path,)
+        }
+
+    def undo_impl(self, file_name):
+        if not file_name:
+            return None
+
+        model = State().model
+        image_path = os.path.join(model.dir_path, file_name)
+
+        current_row = model.index_by_imagename(file_name).row()
+
+        model.beginRemoveRows(QtCore.QModelIndex(), current_row, current_row)
+        if os.path.exists(image_path):
+            os.remove(image_path)
+        model.images.pop(current_row)
+        model.endRemoveRows()
+
+        State().box_saver.delete_boxes_on_image(file_name)
+
+    def redo_impl(self, file_name):
+        self._add_image(file_name)
+
+    def _add_image(self, file_name):
         if file_name:
             new_image_info = ImageInfo(file_name)
             State().model.add_image(new_image_info, file_name)
@@ -144,15 +171,16 @@ class RenameFileAction(BaseAction):
 
             self._rename(row, old_name, new_name)
 
-            return (index, old_name)
+            return {
+                'undo_data': (index, old_name),
+                'redo_data': (index, new_name)
+            }
 
     def undo_impl(self, index, old_name):
         if index.isValid():
             row = index.row()
             curr_name = State().model.images[row].name
             self._rename(row, curr_name, old_name)
-
-            return (index, curr_name)
 
     def redo_impl(self, index, new_name):
         if index.isValid():
@@ -176,7 +204,6 @@ class RenameFileAction(BaseAction):
         State().model.images[row].name = to_name
         State().model.layoutChanged.emit()
         State().signals.rename_image_signal.emit(to_path)
-
 
 class DeleteImageAction(BaseAction):
     _action_name = "DeleteImage"
@@ -215,7 +242,21 @@ class CreateBoxAction(BaseAction):
         super().__init__()
 
     def do_impl(self, box: Box, img_name: str):
-        State().box_saver.new_bbox(Box(box.label, box.toRect()), img_name)
+        State().box_saver.new_bbox(Box(box.label, box), img_name)
+        State().signals.create_box_signal.emit(img_name, box)
+
+        return {
+            'undo_data': (img_name, box),
+            'redo_data': (img_name, box)
+        }
+
+    def undo_impl(self, img_name, box):
+        name = os.path.basename(img_name)
+        State().box_saver.delete_bbox(box, name)
+        State().signals.delete_box_signal.emit(State().current_dir + "/" + name, box)
+
+    def redo_impl(self, img_name, box):
+        State().box_saver.new_bbox(Box(box.label, box), img_name)
         State().signals.create_box_signal.emit(img_name, box)
 
 class DeleteBoxAction(BaseAction):
@@ -227,6 +268,21 @@ class DeleteBoxAction(BaseAction):
         name = os.path.basename(path)
         ok = State().box_saver.delete_bbox(box, name) 
         if ok: State().signals.delete_box_signal.emit(path, box)
+
+        return {
+            'undo_data': (path, box),
+            'redo_data': (path, box)
+        }
+
+    def undo_impl(self, path, box):
+        name = os.path.basename(path)
+        State().box_saver.new_bbox(box, name)
+        State().signals.create_box_signal.emit(path, box)
+
+    def redo_impl(self, path, box):
+        name = os.path.basename(path)
+        State().box_saver.delete_bbox(box, name)
+        State().signals.delete_box_signal.emit(path, box)
 
 class ResizeBoxAction(BaseAction):
     _action_name = "ResizeBox"
