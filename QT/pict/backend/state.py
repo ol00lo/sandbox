@@ -63,6 +63,8 @@ class State:
 
     def cleanup(self):
         self.model.set_data([], None)
+        self.current_dir = None
+        self.signals.all_images_deleted_signal.emit()
 
     def do_action(self, action_name, *args):
         if action_name in self.actions:

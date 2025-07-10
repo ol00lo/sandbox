@@ -1,6 +1,5 @@
 from typing import Dict, List
 from pathlib import Path
-from PyQt6 import QtCore
 import os
 import csv
 from backend.box import Box
@@ -108,3 +107,11 @@ class BBoxList:
         for name in self.bbox_data:
             count += self.box_count(name)
         return count
+
+    def get_boxes_for_image(self, name: str):
+        if name in self.bbox_data:
+            return self.bbox_data[name]
+        return []
+
+    def get_csv(self):
+        return self.output_file

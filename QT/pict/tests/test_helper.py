@@ -16,6 +16,20 @@ def create_test_folder():
 
     return folder
 
+def create_image(path):
+    try:
+        dir_path = os.path.normpath(path) + os.sep
+        os.makedirs(dir_path, exist_ok=True)
+        file_path = os.path.join(dir_path, "test.jpg")
+        image = np.ones((100, 100, 3), dtype=np.uint8) * 255
+        if cv2.imwrite(file_path, image):
+            return file_path
+        return None
+
+    except Exception as e:
+        print(f"Ошибка при создании изображения: {e}")
+        return None
+
 if __name__ == "__main__":
     create_test_folder()
     print("DONE")

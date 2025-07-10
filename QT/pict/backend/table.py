@@ -118,6 +118,7 @@ class TableModel(QtCore.QAbstractTableModel):
         for i in range(len(self.images)):
             if self.images[i].name == name:
                 return self.createIndex(i, 0)
+        return self.createIndex(-1, 0)
 
     def read_boxes(self):
         file_path = self.dir_path + "/bbox_output.csv"
