@@ -12,10 +12,10 @@ RUN apt-get update && apt-get install -y \
         gdb \
         valgrind \
         python3-pudb \
-		postgresql \
+        postgresql \
         postgresql-client \
         libpqxx-dev \
-		postgresql-server-dev-all  && \
+        postgresql-server-dev-all  && \
     rm -rf /var/lib/apt/lists/*
 
 RUN pip3 install --break-system-packages pynput
