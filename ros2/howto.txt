@@ -1,0 +1,32 @@
+сборка образа:
+	docker build -t kilted .
+
+запуск контейнера:
+	docker run -it --name kilted -v /c/users/mymri/repos/sandbox/ros2:/work -e DISPLAY=host.docker.internal:0.0 kilted
+
+подключение к запущенному контейнеру:
+	docker exec -it kilted bash
+
+запуск пакета:
+	colcon build && source install/setup.bash && ros2 run mouse_control mouse_sensor
+
+запуск пакета через launch:
+	ros2 launch mouse_control mouse_sensor.launch.py
+
+мониторинг вывода:
+	ros2 topic echo /mouse_moved
+
+bash: command not foud ros2:
+	source /opt/ros/kilted/setup.bash
+
+запуск контейнера через docker-compose:
+	docker-compose build
+	docker-compose up -d
+	docker-compose exec mouse_control bash
+
+pgadmin:
+	http://localhost:8080
+	Email: user@domain.com
+	Password: SuperSecretPassword
+	Add New Server ->
+		Connection: Host name/address: db + Port: 5432 + database: mydb + Username: user + Password: password
