@@ -8,10 +8,10 @@
 	docker exec -it kilted bash
 
 запуск пакета:
-	colcon build && source install/setup.bash && ros2 run mouse_control mouse_sensor
+	colcon build && source install/setup.bash && ros2 run mouse_sensor mouse_sensor
 
 запуск пакета через launch:
-	ros2 launch mouse_control mouse_sensor.launch.py
+	ros2 launch sensor_saver sensor_saver.launch.py
 
 мониторинг вывода:
 	ros2 topic echo /mouse_moved

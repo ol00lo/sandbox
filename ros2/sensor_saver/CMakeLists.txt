@@ -11,17 +11,18 @@ find_package(geometry_msgs REQUIRED)
 set(PQXX_INCLUDE_DIR "/usr/include")
 set(PQXX_LIBRARY "/usr/lib/x86_64-linux-gnu/libpqxx.so")
 
-add_executable(sensor_saver src/sensor_saver_node.cpp)
+add_executable(sensor_saver_node src/sensor_saver_node.cpp)
 
-target_include_directories(sensor_saver PRIVATE ${PQXX_INCLUDE_DIR})
-target_link_libraries(sensor_saver PRIVATE
+target_include_directories(sensor_saver_node PRIVATE ${PQXX_INCLUDE_DIR})
+target_link_libraries(sensor_saver_node PRIVATE
   rclcpp::rclcpp
   ${geometry_msgs_TARGETS}
   ${PQXX_LIBRARY}
 )
-target_compile_options(sensor_saver PRIVATE
+target_compile_options(sensor_saver_node PRIVATE
     $<$<CONFIG:Release>:-Werror>
     $<$<CONFIG:Debug>:-Wno-error>
+    $<$<CONFIG:RelWithDebInfo>:-Werror>
     -Wall
     -Wextra
     -Wpedantic
@@ -42,12 +43,15 @@ target_compile_options(sensor_saver PRIVATE
     -Wold-style-cast
 )
 
-install(
-  DIRECTORY config
+install(DIRECTORY config
   DESTINATION share/${PROJECT_NAME}
 )
 
-install(TARGETS sensor_saver
+install(DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME}
+)
+
+install(TARGETS sensor_saver_node
   DESTINATION lib/${PROJECT_NAME})
 
 ament_package()

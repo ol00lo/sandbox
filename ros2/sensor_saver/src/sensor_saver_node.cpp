@@ -24,6 +24,9 @@ public:
         RCLCPP_INFO(this->get_logger(), "TTL days: %ld", ttl_days_);
         RCLCPP_INFO(this->get_logger(), "DB connection: %s", conn_str_.substr(0, conn_str_.find("password")).c_str());
 
+		param_callback_ = this->add_on_set_parameters_callback(
+            std::bind(&MouseSaver::parameters_callback, this, std::placeholders::_1));
+
         try {
             db_conn_ = std::make_unique<pqxx::connection>(conn_str_);
             init_db();
@@ -97,11 +100,32 @@ private:
         }
     }
 
+    rcl_interfaces::msg::SetParametersResult parameters_callback(const std::vector<rclcpp::Parameter> &parameters)
+    {
+        rcl_interfaces::msg::SetParametersResult result;
+        result.successful = true;
+
+        for (const auto &param : parameters) {
+            if (param.get_name() == "sensor_data_ttl_days") {
+                ttl_days_ = param.as_int();
+                RCLCPP_INFO(get_logger(), "TTL days updated to: %ld", ttl_days_);
+            } else {
+                result.successful = false;
+                result.reason = "Parameter '" + param.get_name() + "' cannot be changed at runtime";
+                RCLCPP_ERROR(get_logger(), "Attempt to change read-only parameter: %s", 
+                            param.get_name().c_str());
+            }
+        }
+
+        return result;
+    }
+
     int64_t ttl_days_;
     std::string conn_str_;
     rclcpp::Subscription<geometry_msgs::msg::Point>::SharedPtr subscription_;
     rclcpp::TimerBase::SharedPtr cleanup_timer_;
     std::unique_ptr<pqxx::connection> db_conn_;
+    rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr param_callback_;
 };
 
 int main(int argc, char* argv[]) {
