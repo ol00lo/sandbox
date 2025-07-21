@@ -24,7 +24,7 @@ public:
         RCLCPP_INFO(this->get_logger(), "TTL days: %ld", ttl_days_);
         RCLCPP_INFO(this->get_logger(), "DB connection: %s", conn_str_.substr(0, conn_str_.find("password")).c_str());
 
-		param_callback_ = this->add_on_set_parameters_callback(
+        param_callback_ = this->add_on_set_parameters_callback(
             std::bind(&MouseSaver::parameters_callback, this, std::placeholders::_1));
 
         try {
