@@ -5,7 +5,7 @@ from tester import tester
 from gui_communicator import guicom
 from backend.state import State
 from backend.box import Box
-from test_helper import create_test_folder, create_image
+from test_helper import create_test_folder, create_image, clear_folder
 import os
 
 class Test1(unittest.TestCase):
@@ -17,9 +17,8 @@ class Test1(unittest.TestCase):
 
     def setUp(self):
         self.widget = None
-        for root, dirs, files in os.walk(self.path, topdown=False):
-            for file in files:
-                os.remove(os.path.join(root, file))
+        clear_folder(self.path)
+        clear_folder(State().backup_dir)
         State().current_dir = None
         create_test_folder()
         State().do_action("LoadImages", self.path)
@@ -73,7 +72,7 @@ class Test1(unittest.TestCase):
         State().actions["CreateBox"].do(box, "test9.jpg")
 
         index = State().model.index_by_imagename("test9.jpg")
-        State().actions["DeleteImage"].delete(index)
+        State().actions["DeleteImage"].do((index,))
 
         # check that image was deleted
         self.assertEqual(State().model.rowCount(), 9)

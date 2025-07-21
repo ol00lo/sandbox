@@ -2,10 +2,14 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 import os
 import sys
 import traceback
+import csv
+import shutil
+from pathlib import Path
 from qt_common import show_message, SUPPORTED_IMAGE_EXTENSIONS, SUPPORTED_IMAGE_FILTER
 from .table import ImageInfo
 from .state import State
 from .box import Box
+from .commands import Command, ActionResult
 
 class BaseAction(QtGui.QAction):
     _action_name = "BaseAction"
@@ -70,18 +74,13 @@ class LoadImagesAction(BaseAction):
         super().__init__("Ctrl+L")
         self.setIcon(QtGui.QIcon(":/load"))
 
-    def do_impl(self, *args):
-        if args:
-            folder = args[0]
-        else:
+    def do_impl(self, folder = None):
+        if not folder:
             folder = QtWidgets.QFileDialog.getExistingDirectory(None, "Select Folder")
         old_folder = State().current_dir
         self._open_folder(folder)
 
-        return {
-            "undo_data": (old_folder,),
-            "redo_data": (folder,)
-        }
+        return ActionResult([old_folder], [folder])
 
     def undo_impl(self, old_folder):
         if not old_folder: State().cleanup()
@@ -102,11 +101,7 @@ class DeleteAllImagesAction(BaseAction):
             self._delete_data()
         else:
             raise Exception("No directory selected.")
-
-        return {
-            'undo_data': (deleted_files,),
-            'redo_data': (0,)
-        }
+        return ActionResult([deleted_files], [0])
 
     def undo_impl(self, deleted_files):
         if not deleted_files:
@@ -161,13 +156,11 @@ class AddImageAction(BaseAction):
         super().__init__()
         self.setIcon(QtGui.QIcon(":/add"))
 
-    def do_impl(self, *args):
+    def do_impl(self, file_path=None):
         if State().current_dir is None:
             QtWidgets.QMessageBox.warning(None, "Error", "Please select a directory first.")
             return
-        if args:
-            file_path = args[0]
-        else:
+        if not file_path:
             options = QtWidgets.QFileDialog.Option.DontUseNativeDialog
             file_path, _ = QtWidgets.QFileDialog.getOpenFileName(
                 None,
@@ -178,10 +171,7 @@ class AddImageAction(BaseAction):
             )
 
         self._add_image(file_path)
-        return {
-            'undo_data': (os.path.basename(file_path),),
-            'redo_data': (file_path,)
-        }
+        return ActionResult([os.path.basename(file_path)], [file_path])
 
     def undo_impl(self, file_name):
         if not file_name:
@@ -231,11 +221,7 @@ class RenameFileAction(BaseAction):
                 return
 
             self._rename(row, old_name, new_name)
-
-            return {
-                'undo_data': (index, old_name),
-                'redo_data': (index, new_name)
-            }
+            return ActionResult([index, old_name], [index, new_name])
 
     def undo_impl(self, index, old_name):
         if index.isValid():
@@ -275,69 +261,87 @@ class DeleteImageAction(BaseAction):
     def do_impl(self, selected):
         if not selected:
             raise Exception("No selection")
+
+        backup_dir = Path(State().backup_dir) / State().current_dir.split("/")[-2]
+        backup_dir.mkdir(parents=True, exist_ok=True)
         deleted = []
-        indexes = []
-        for index in sorted(selected, key=lambda x: x.row(), reverse=True):
-            out = self.delete(index)
-            deleted.append(out)
-            indexes.append(index)
 
-        return {
-            'undo_data': (deleted,),
-            'redo_data': (indexes,)
-        }
+        sorted_indexes = sorted(selected, key=lambda x: x.row(), reverse=True)
 
-    def delete(self, index):
+        for index in sorted_indexes:
+            deleted.append(self.delete(index, backup_dir))
+
+        return ActionResult([deleted], [sorted_indexes])
+
+    def delete(self, index, backup_dir=None):
         model = State().model
-        if not index.isValid():
-            return
+        if not index.isValid() or not (0 <= index.row() < len(model.images)):
+            return None
 
-        current_row = index.row()
-        if current_row >= len(model.images) or current_row < 0:
-            return
-
-        image_info = model.images[current_row]
-        image_path = os.path.join(model.dir_path, image_info.name)
-
+        image_info = model.images[index.row()]
+        image_path = Path(model.dir_path) / image_info.name
         boxes = State().box_saver.get_boxes_for_image(image_info.name)
 
         image_data = {
             'info': image_info,
-            'content': None,
-            'boxes': boxes,
-            'path': image_path,
-            'row': current_row
+            'path': str(image_path),
+            'backup_path': str(backup_dir),
+            'row': index.row()
         }
 
-        if os.path.exists(image_path):
-            with open(image_path, 'rb') as f:
-                image_data['content'] = f.read()
+        if image_path.exists():
+            backup_image_path = backup_dir / image_info.name
 
-        model.beginRemoveRows(QtCore.QModelIndex(), current_row, current_row)
+            backup_csv_path = backup_dir / f"{image_info.name.split('.')[0]}.csv"
+
+            shutil.copy2(image_path, backup_image_path)
+
+            with backup_csv_path.open('w', newline='') as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerows(box.to_csv_row() for box in boxes)
+
+        model.beginRemoveRows(QtCore.QModelIndex(), index.row(), index.row())
         if os.path.exists(image_path):
             os.remove(image_path)
-        model.images.pop(current_row)
+        model.images.pop(index.row())
         model.endRemoveRows()
         State().box_saver.delete_boxes_on_image(image_info.name)
 
         return image_data
 
     def undo_impl(self, deleted):
+        model = State().model
+
         for item in deleted:
-            if item['content']:
-                with open(item['path'], 'wb') as f:
-                    f.write(item['content'])
+            backup_image_path = Path(item['backup_path']) / item['info'].name
+            original_path = Path(item['path'])
 
-            State().model.beginInsertRows(QtCore.QModelIndex(), item['row'], item['row'])
-            State().model.images.insert(item['row'], item['info'])
-            State().model.endInsertRows()
+            if backup_image_path.exists():
+                shutil.copy2(backup_image_path, original_path)
 
-            for box in item['boxes']:
-                State().box_saver.add_bbox(box, item['info'].name)
+                backup_csv_path = backup_image_path.with_suffix('.csv')
+                if backup_csv_path.exists():
+                    with open(backup_csv_path, newline='') as csvfile:
+                        reader = csv.reader(csvfile)
+                        for row in reader:
+                            label, x1, y1, x2, y2 = row
+                            box = Box(label, QtCore.QRectF( float(x1), float(y1), float(x2), float(y2)))
+                            State().box_saver.add_bbox(box, item['info'].name)
+
+            model.beginInsertRows(QtCore.QModelIndex(), item['row'], item['row'])
+            model.images.insert(item['row'], item['info'])
+            model.endInsertRows()
+            model.dataChanged.emit(model.index_by_imagename(item['info'].name), model.index_by_imagename(item['info'].name))
+
 
     def redo_impl(self, indexes):
+        backup_dir = Path(State().backup_dir) / State().current_dir.split("/")[-2]
+        deleted = []
+
         for index in indexes:
-            self.delete(index)
+            deleted.append(self.delete(index, backup_dir))
+
+        return deleted
 
 class CreateBoxAction(BaseAction):
     _action_name = "CreateBox"
@@ -347,11 +351,7 @@ class CreateBoxAction(BaseAction):
     def do_impl(self, box: Box, img_name: str):
         State().box_saver.new_bbox(Box(box.label, box), img_name)
         State().signals.create_box_signal.emit(img_name, box)
-
-        return {
-            'undo_data': (img_name, box),
-            'redo_data': (img_name, box)
-        }
+        return ActionResult([img_name, box], [img_name, box])
 
     def undo_impl(self, img_name, box):
         name = os.path.basename(img_name)
@@ -371,11 +371,7 @@ class DeleteBoxAction(BaseAction):
         name = os.path.basename(path)
         ok = State().box_saver.delete_bbox(box, name) 
         if ok: State().signals.delete_box_signal.emit(path, box)
-
-        return {
-            'undo_data': (path, box),
-            'redo_data': (path, box)
-        }
+        return ActionResult([path, box], [path, box])
 
     def undo_impl(self, path, box):
         name = os.path.basename(path)
@@ -396,11 +392,7 @@ class ResizeBoxAction(BaseAction):
         name = os.path.basename(path)
         State().box_saver.update_bbox(old_box, new_box, name)
         State().signals.change_boxes_signal.emit(path)
-
-        return {
-            'undo_data': (path, old_box, new_box),
-            'redo_data': (path, old_box, new_box)
-        }
+        return ActionResult([path, old_box, new_box], [path, old_box, new_box])
 
     def undo_impl(self, path, old_box, new_box):
         name = os.path.basename(path)

@@ -35,6 +35,7 @@ class State:
         self.box_saver = BBoxList()
         self.need_labels = False
         self.undo_redo_manager = UndoRedoManager()
+        self.backup_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "backup")
 
     @classmethod
     def register_action(cls, action_name, action_class):
@@ -71,3 +72,8 @@ class State:
             action = self.actions[action_name]
             command = Command(action, *args)
             self.undo_redo_manager.execute(command)
+
+    def clear_backup(self):
+        import shutil
+        if os.path.exists(self.backup_dir):
+            shutil.rmtree(self.backup_dir)

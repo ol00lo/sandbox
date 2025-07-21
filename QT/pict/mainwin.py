@@ -1,8 +1,8 @@
 from PyQt6 import QtWidgets, QtGui, QtCore
 from imageviewer import ImageViewer
 from tableviewer import TableViewer
-
 from backend.state import State
+import resources
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -39,17 +39,20 @@ class MainWindow(QtWidgets.QMainWindow):
         self.create_toolbar()
 
     def create_toolbar(self):
-        toolbar = self.addToolBar("Main Toolbar")
-        toolbar.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        #toolbar = self.addToolBar("Main Toolbar")
+        self.toolbar = self.addToolBar("Main Toolbar")
+        toolbar = self.toolbar
+        toolbar.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonIconOnly)
+        #toolbar.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         toolbar.setIconSize(QtCore.QSize(15, 15))
 
         undo_action = QtGui.QAction(QtGui.QIcon(":/undo"), "Undo", self)
-        undo_action.setShortcut("Ctrl+Z")
+        undo_action.setShortcut(QtGui.QKeySequence.StandardKey.Undo)
         undo_action.triggered.connect(State().undo_redo_manager.undo)
         toolbar.addAction(undo_action)
 
         redo_action = QtGui.QAction(QtGui.QIcon(":/redo"), "Redo", self)
-        redo_action.setShortcut("Ctrl+Y")
+        redo_action.setShortcut(QtGui.QKeySequence.StandardKey.Redo)
         redo_action.triggered.connect(State().undo_redo_manager.redo)
         toolbar.addAction(redo_action)
 
@@ -59,17 +62,17 @@ class MainWindow(QtWidgets.QMainWindow):
         toolbar.addAction(load_action)
         load_action.triggered.connect(lambda: State().do_action("LoadImages"))
 
-        load_action = State().actions["DeleteAllImages"]
-        toolbar.addAction(load_action)
-        load_action.triggered.connect(lambda: State().do_action("DeleteAllImages"))
+        deleteall_action = State().actions["DeleteAllImages"]
+        toolbar.addAction(deleteall_action)
+        deleteall_action.triggered.connect(lambda: State().do_action("DeleteAllImages"))
 
-        load_action = State().actions["AddImage"]
-        toolbar.addAction(load_action)
-        load_action.triggered.connect(lambda: State().do_action("AddImage"))
+        add_action = State().actions["AddImage"]
+        toolbar.addAction(add_action)
+        add_action.triggered.connect(lambda: State().do_action("AddImage"))
 
         toolbar.addSeparator()
 
-        self.need_labels_checkbox = QtWidgets.QCheckBox("Need Labels")
+        self.need_labels_checkbox = QtWidgets.QCheckBox("Labels")
         self.need_labels_checkbox.setChecked(False)
         self.need_labels_checkbox.stateChanged.connect(self.on_need_labels_changed)
 
@@ -77,7 +80,6 @@ class MainWindow(QtWidgets.QMainWindow):
         checkbox_action.setDefaultWidget(self.need_labels_checkbox)
 
         toolbar.addAction(checkbox_action)
-
 
     def on_need_labels_changed(self, state):
         State().need_labels = (state == QtCore.Qt.CheckState.Checked.value)
