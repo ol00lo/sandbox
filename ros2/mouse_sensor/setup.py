@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 from glob import glob
 import os
 
-package_name = 'mouse_control'
+package_name = 'mouse_sensor'
 
 setup(
     name=package_name,
@@ -23,7 +23,7 @@ setup(
     license='TODO: License declaration',
     entry_points={
     'console_scripts': [
-        'mouse_sensor = mouse_control.mouse_sensor:main',
+        'mouse_sensor = mouse_sensor.mouse_sensor_node:main',
     ],
 
 },
