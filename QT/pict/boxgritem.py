@@ -104,7 +104,7 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
             self.resizing = False
             self.temp_box = None
             self.setRect(self.original_box)
-            State().actions["ResizeBox"].do(old_box, new_box, self.image_path)
+            State().do_action("ResizeBox", old_box, new_box, self.image_path)
 
     def is_box(self):
         return self.original_box.width() >= 5 and self.original_box.height() >= 5
@@ -146,7 +146,7 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
             reply = question.exec()
 
             if reply == QtWidgets.QMessageBox.StandardButton.Yes:
-                State().actions["DeleteBox"].do(self.rect(), self.image_path)
+                State().do_action("DeleteBox", self.original_box, self.image_path)
             event.accept()
             return
         super().mousePressEvent(event)

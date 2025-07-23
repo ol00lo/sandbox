@@ -43,14 +43,29 @@ class MainWindow(QtWidgets.QMainWindow):
         toolbar.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         toolbar.setIconSize(QtCore.QSize(15, 15))
 
-        toolbar.addAction(State().actions["LoadImages"])
-        State().actions["LoadImages"].triggered.connect(State().actions["LoadImages"].do)
+        undo_action = QtGui.QAction(QtGui.QIcon(":/undo"), "Undo", self)
+        undo_action.setShortcut("Ctrl+Z")
+        undo_action.triggered.connect(State().undo_redo_manager.undo)
+        toolbar.addAction(undo_action)
 
-        toolbar.addAction(State().actions["DeleteAllImages"])
-        State().actions["DeleteAllImages"].triggered.connect(State().actions["DeleteAllImages"].do)
+        redo_action = QtGui.QAction(QtGui.QIcon(":/redo"), "Redo", self)
+        redo_action.setShortcut("Ctrl+Y")
+        redo_action.triggered.connect(State().undo_redo_manager.redo)
+        toolbar.addAction(redo_action)
 
-        toolbar.addAction(State().actions["AddImage"])
-        State().actions["AddImage"].triggered.connect(State().actions["AddImage"].do)
+        toolbar.addSeparator()
+
+        load_action = State().actions["LoadImages"]
+        toolbar.addAction(load_action)
+        load_action.triggered.connect(lambda: State().do_action("LoadImages"))
+
+        load_action = State().actions["DeleteAllImages"]
+        toolbar.addAction(load_action)
+        load_action.triggered.connect(lambda: State().do_action("DeleteAllImages"))
+
+        load_action = State().actions["AddImage"]
+        toolbar.addAction(load_action)
+        load_action.triggered.connect(lambda: State().do_action("AddImage"))
 
         toolbar.addSeparator()
 
@@ -62,6 +77,7 @@ class MainWindow(QtWidgets.QMainWindow):
         checkbox_action.setDefaultWidget(self.need_labels_checkbox)
 
         toolbar.addAction(checkbox_action)
+
 
     def on_need_labels_changed(self, state):
         State().need_labels = (state == QtCore.Qt.CheckState.Checked.value)
@@ -78,4 +94,4 @@ class MainWindow(QtWidgets.QMainWindow):
             self.setWindowTitle("Image Viewer")
 
     def open_folder(self, dir_path = "tests/test_images"):
-        State().actions["LoadImages"].openfolder(dir_path)
+        State().do_action("LoadImages", dir_path)

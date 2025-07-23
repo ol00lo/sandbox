@@ -113,7 +113,7 @@ class ImageViewer(QtWidgets.QGraphicsView):
             return
 
         self.current_box.update_label(label)
-        State().actions["CreateBox"].do(self.current_box.original_box, self.current_box.name)
+        State().do_action("CreateBox", self.current_box.original_box, self.current_box.name)
         if State().need_labels:
             self.image_model.add_labels(self.current_box, label)
         self.current_box = None

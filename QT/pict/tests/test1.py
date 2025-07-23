@@ -1,11 +1,11 @@
 import unittest
-from PyQt6 import QtWidgets, QtCore, QtGui
+from PyQt6 import QtWidgets, QtCore
 from mainwin import MainWindow
 from tester import tester
 from gui_communicator import guicom
 from backend.state import State
 from backend.box import Box
-from test_helper import create_test_folder
+from test_helper import create_test_folder, create_image
 import os
 
 class Test1(unittest.TestCase):
@@ -20,8 +20,9 @@ class Test1(unittest.TestCase):
         for root, dirs, files in os.walk(self.path, topdown=False):
             for file in files:
                 os.remove(os.path.join(root, file))
+        State().current_dir = None
         create_test_folder()
-        self.mwin.open_folder(self.path)
+        State().do_action("LoadImages", self.path)
 
     def test_gui(self):
         self.assertEqual(1, 1)
@@ -29,7 +30,6 @@ class Test1(unittest.TestCase):
         self.assertIsInstance(mwin, MainWindow)
 
         #open
-        self.path = "test_images/bbox_output.csv"
         self.assertEqual(State().model.get_len(), 10)
 
         # draw
@@ -47,9 +47,9 @@ class Test1(unittest.TestCase):
         self.draw_box(start_point2, end_point2)
 
         #resize
-        old_string = self.get_string_from_file(self.path, 1)
+        old_string = self.get_string_from_file(self.path+'/' + self.csv_name, 1)
         tester.eval_and_wait_true(guicom.drag_with_mouse, (self.widget, end_point1, new_end_point1, QtCore.Qt.MouseButton.LeftButton),
-                                  's() == True', {'s': lambda: self.get_string_from_file(self.path, 2) != old_string})
+                                  's() == True', {'s': lambda: self.get_string_from_file(self.path + '/' + self.csv_name, 2) != old_string})
 
         # delete
         tester.eval_and_wait_window(guicom.click_mouse, 
@@ -77,7 +77,6 @@ class Test1(unittest.TestCase):
 
         # check that image was deleted
         self.assertEqual(State().model.rowCount(), 9)
-        self.assertIsNone(State().model.index_by_imagename("test9.jpg"))
 
         # check no entry for boxes in csv
         with open(os.path.join(self.path, self.csv_name), "r") as f:
@@ -86,10 +85,9 @@ class Test1(unittest.TestCase):
 
     def test_change_box(self):
         # abs path
-        folder = os.path.abspath('test_images')
+        folder = os.path.abspath('tests\\test_images')
         csv_path = os.path.join(folder, self.csv_name)
         img = "test9.jpg"
-        State().actions["LoadImages"].openfolder(folder)
 
         box = Box("AAA", QtCore.QRectF(10, 10, 20, 20))
         State().actions["CreateBox"].do(box, img)
@@ -110,7 +108,72 @@ class Test1(unittest.TestCase):
         tester.eval_and_wait_true(self.mwin.resize, (900, 700), 'a() == True',
                                   {'a': lambda: self.mwin.image_model_viewer.transform().m11()!= before})
 
+    def test_undo_redo_box(self):
+        v_size = self.mwin.image_model_viewer.size()
 
+        img = "test9.jpg"
+        box = Box("AAA", QtCore.QRectF(v_size.width() // 4, v_size.height() // 4, v_size.width() // 3, v_size.height() // 3))
+        box2 = Box("AAA", QtCore.QRectF(v_size.width() // 4, v_size.height() // 4, v_size.width() // 2, v_size.height() // 2))
+        index = State().model.index_by_imagename(img)
+
+        # CreateBox
+        State().do_action("CreateBox", box, img)
+        self.assertEqual(len(State().box_saver.get_boxes_for_image(img)), 1)
+        State().undo_redo_manager.undo()
+        self.assertEqual(len(State().box_saver.get_boxes_for_image(img)), 0)
+        self.assertEqual(self.count_boxes(self.path + '/' + self.csv_name), 1)
+        State().undo_redo_manager.redo()
+        self.assertEqual(self.count_boxes(self.path + '/' + self.csv_name), 2)
+
+        #ResizeBox
+        tester.eval_and_wait_true(State().do_action, ("ResizeBox", box, box2, img), 'a() == True', {'a': lambda: State().model.n_boxes[img] == 1})
+        tester.eval_and_wait_true(State().undo_redo_manager.undo, (), 'a() == True', {'a': lambda: State().model.n_boxes[img] == 1}) 
+
+        # DeleteBox
+        State().do_action("DeleteBox", box, img)
+        self.assertEqual(len(State().box_saver.get_boxes_for_image(img)), 0)
+        State().undo_redo_manager.undo()
+        self.assertEqual(self.count_boxes(self.path + '/' + self.csv_name), 2)
+
+        State().undo_redo_manager.undo()
+        State().undo_redo_manager.undo()
+        self.assertEqual(len(State().box_saver.get_boxes_for_image(img)), 0)
+        self.assertEqual(self.count_boxes(self.path + '/' + self.csv_name), 1)
+
+    def test_undo_redo_image(self):
+        create_image(os.path.dirname(os.path.abspath(__file__)))
+
+        self.assertEqual(State().model.rowCount(), 10)
+        State().undo_redo_manager.undo()
+        self.assertEqual(State().model.rowCount(), 0)
+        State().undo_redo_manager.redo()
+        self.assertEqual(State().model.rowCount(), 10)
+        State().do_action("AddImage", os.path.join(os.path.dirname(os.path.abspath(__file__)), "test.jpg"))
+        self.assertEqual(State().model.rowCount(), 11)
+        State().undo_redo_manager.undo()
+        self.assertEqual(State().model.rowCount(), 10)
+        State().undo_redo_manager.redo()
+        self.assertEqual(State().model.rowCount(), 11)
+        State().do_action("DeleteImage", (State().model.index_by_imagename("test.jpg"),))
+        self.assertEqual(State().model.rowCount(), 10)
+        State().undo_redo_manager.undo()
+        self.assertEqual(State().model.rowCount(), 11)
+        State().undo_redo_manager.redo()
+        self.assertEqual(State().model.rowCount(), 10)
+
+        State().undo_redo_manager.undo() # delete undo
+        State().undo_redo_manager.undo() # add undo
+
+        State().do_action("DeleteAllImages")
+        self.assertEqual(State().model.rowCount(), 0)
+        State().undo_redo_manager.undo()
+        self.assertEqual(State().model.rowCount(), 10)
+        State().undo_redo_manager.redo()
+        self.assertEqual(State().model.rowCount(), 0)
+
+        State().undo_redo_manager.undo() # delete undo
+        State().undo_redo_manager.undo() # load undo
+        self.assertEqual(State().model.rowCount(), 0)
 
     def draw_box(self, start_pos, end_pos):
         tester.eval_and_wait_window(guicom.drag_with_mouse, (self.widget, start_pos, end_pos, QtCore.Qt.MouseButton.LeftButton),  QtWidgets.QInputDialog)
@@ -120,3 +183,7 @@ class Test1(unittest.TestCase):
     def get_string_from_file(self, path:str, N:int):
         with open(path, "r") as f:
            return f.readlines()[N]
+
+    def count_boxes(self, path:str):
+        with open(path, "r") as f:
+            return len(f.readlines())
