@@ -39,22 +39,25 @@ class MainWindow(QtWidgets.QMainWindow):
         self.create_toolbar()
 
     def create_toolbar(self):
-        #toolbar = self.addToolBar("Main Toolbar")
-        self.toolbar = self.addToolBar("Main Toolbar")
-        toolbar = self.toolbar
+        toolbar = self.addToolBar("Main Toolbar")
+        #self.toolbar = self.addToolBar("Main Toolbar")
+        #toolbar = self.toolbar
         toolbar.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonIconOnly)
         #toolbar.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         toolbar.setIconSize(QtCore.QSize(15, 15))
 
-        undo_action = QtGui.QAction(QtGui.QIcon(":/undo"), "Undo", self)
-        undo_action.setShortcut(QtGui.QKeySequence.StandardKey.Undo)
-        undo_action.triggered.connect(State().undo_redo_manager.undo)
-        toolbar.addAction(undo_action)
+        self.undo_action = QtGui.QAction(QtGui.QIcon(":/gundo"), "Undo", self)
+        self.undo_action.setShortcut(QtGui.QKeySequence.StandardKey.Undo)
+        self.undo_action.triggered.connect(State().undo_redo_manager.undo)
+        toolbar.addAction(self.undo_action)
 
-        redo_action = QtGui.QAction(QtGui.QIcon(":/redo"), "Redo", self)
-        redo_action.setShortcut(QtGui.QKeySequence.StandardKey.Redo)
-        redo_action.triggered.connect(State().undo_redo_manager.redo)
-        toolbar.addAction(redo_action)
+        self.redo_action = QtGui.QAction(QtGui.QIcon(":/gredo"), "Redo", self)
+        self.redo_action.setShortcut(QtGui.QKeySequence.StandardKey.Redo)
+        self.redo_action.triggered.connect(State().undo_redo_manager.redo)
+        toolbar.addAction(self.redo_action)
+
+        State().undo_redo_manager.undo_stack_empty_signal.connect(self.update_undo_icon)
+        State().undo_redo_manager.redo_stack_empty_signal.connect(self.update_redo_icon)
 
         toolbar.addSeparator()
 
@@ -85,7 +88,6 @@ class MainWindow(QtWidgets.QMainWindow):
         State().need_labels = (state == QtCore.Qt.CheckState.Checked.value)
         self.image_model_viewer.update_image()
 
-
     def show_coordinates(self, x, y):
         self.status_bar.showMessage(f"X: {x}, Y: {y}")
 
@@ -97,3 +99,19 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def open_folder(self, dir_path = "tests/test_images"):
         State().do_action("LoadImages", dir_path)
+
+    def update_undo_icon(self, is_empty):
+        if is_empty:
+            self.undo_action.setIcon(QtGui.QIcon(":/gundo"))
+            self.undo_action.setEnabled(False)
+        else:
+            self.undo_action.setIcon(QtGui.QIcon(":/undo"))
+            self.undo_action.setEnabled(True)
+
+    def update_redo_icon(self, is_empty):
+        if is_empty:
+            self.redo_action.setIcon(QtGui.QIcon(":/gredo"))
+            self.redo_action.setEnabled(False)
+        else:
+            self.redo_action.setIcon(QtGui.QIcon(":/redo"))
+            self.redo_action.setEnabled(True)

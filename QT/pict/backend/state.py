@@ -3,6 +3,7 @@ import os
 from PyQt6 import QtCore
 from .bboxlist import BBoxList
 from .commands import Command, UndoRedoManager
+from .backup import BackUp
 
 class Signals(QtCore.QObject):
     rename_image_signal = QtCore.pyqtSignal(str)
@@ -12,6 +13,8 @@ class Signals(QtCore.QObject):
     create_box_signal = QtCore.pyqtSignal(str, QtCore.QRectF)
     delete_box_signal = QtCore.pyqtSignal(str, QtCore.QRectF)
     change_boxes_signal = QtCore.pyqtSignal(str)
+
+    change_focus_signal = QtCore.pyqtSignal(int, int, int)
 
 class State:
     _instance = None
@@ -36,6 +39,10 @@ class State:
         self.need_labels = False
         self.undo_redo_manager = UndoRedoManager()
         self.backup_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "backup")
+        self.backup_manager = BackUp(self.backup_dir)
+
+        self.undo_redo_manager.delete_backup_signal.connect(self.backup_manager.delete_files)
+
 
     @classmethod
     def register_action(cls, action_name, action_class):

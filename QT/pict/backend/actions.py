@@ -2,14 +2,12 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 import os
 import sys
 import traceback
-import csv
-import shutil
 from pathlib import Path
 from qt_common import show_message, SUPPORTED_IMAGE_EXTENSIONS, SUPPORTED_IMAGE_FILTER
 from .table import ImageInfo
 from .state import State
 from .box import Box
-from .commands import Command, ActionResult
+from .commands import ActionResult
 
 class BaseAction(QtGui.QAction):
     _action_name = "BaseAction"
@@ -25,17 +23,20 @@ class BaseAction(QtGui.QAction):
 
     def do(self, *args):
         try:
-            return self.do_impl(*args)
+            return self._do_impl(*args)
         except Exception as e:
             self.errors(e)
+            return ActionResult(error=True)
+
     def undo(self, *args):
         try:
-            self.undo_impl(*args)
+            self._undo_impl(*args)
         except Exception as e:
             self.errors(e)
+
     def redo(self, *args):
         try:
-            self.redo_impl(*args)
+            self._redo_impl(*args)
         except Exception as e:
             self.errors(e)
 
@@ -47,11 +48,13 @@ class BaseAction(QtGui.QAction):
         print("======================\n")
         show_message("ERROR", str(error), is_error=True)
 
-    def do_impl(self, *args):
+    def _do_impl(self, *args):
         raise NotImplementedError("Subclasses must implement do_impl()")
-    def undo_impl(self, *args):
+
+    def _undo_impl(self, *args):
         raise NotImplementedError("Subclasses must implement undo_impl()")
-    def redo_impl(self, *args):
+
+    def _redo_impl(self, *args):
         raise NotImplementedError("Subclasses must implement redo_impl()")
 
     def _open_folder(self, folder):
@@ -74,19 +77,20 @@ class LoadImagesAction(BaseAction):
         super().__init__("Ctrl+L")
         self.setIcon(QtGui.QIcon(":/load"))
 
-    def do_impl(self, folder = None):
+    def _do_impl(self, folder = None):
         if not folder:
             folder = QtWidgets.QFileDialog.getExistingDirectory(None, "Select Folder")
         old_folder = State().current_dir
+        State().backup_manager.clear_all()
         self._open_folder(folder)
 
         return ActionResult([old_folder], [folder])
 
-    def undo_impl(self, old_folder):
+    def _undo_impl(self, old_folder):
         if not old_folder: State().cleanup()
         else: State().signals.load_images_signal.emit()
 
-    def redo_impl(self, folder):
+    def _redo_impl(self, folder):
         self._open_folder(folder)
 
 class DeleteAllImagesAction(BaseAction):
@@ -95,60 +99,44 @@ class DeleteAllImagesAction(BaseAction):
         super().__init__("Ctrl+D")
         self.setIcon(QtGui.QIcon(":/deleteall"))
 
-    def do_impl(self, *args):
+    def _do_impl(self, *args):
         if State().model and State().current_dir is not None:
-            deleted_files = self._copy_data(State().current_dir)
-            self._delete_data()
-        else:
-            raise Exception("No directory selected.")
-        return ActionResult([deleted_files], [0])
+            deleted_info = {
+                'directory': State().current_dir,
+                'images': []
+            }
 
-    def undo_impl(self, deleted_files):
-        if not deleted_files:
+            for filename in os.listdir(State().current_dir):
+                if filename.lower().endswith(SUPPORTED_IMAGE_EXTENSIONS):
+                    image_path = os.path.join(State().current_dir, filename)
+                    boxes = State().box_saver.get_boxes_for_image(filename)
+
+                    State().backup_manager.save_file(image_path, boxes)
+                    deleted_info['images'].append({
+                        'name': filename,
+                    })
+            if deleted_info['images']:
+                State().model.clear_data()
+                State().cleanup()
+                State().signals.all_images_deleted_signal.emit()
+            return ActionResult([deleted_info], [0])
+
+    def _undo_impl(self, deleted_info):
+        if not deleted_info:
             return
-        path = deleted_files['directory']
-        for image in deleted_files['images']:
-            with open(path + "/" + image['name'], 'wb') as f:
-                f.write(image['content'])
 
-        self._open_folder(path)
+        for image in deleted_info['images']:
+            dest_path = os.path.join(deleted_info['directory'], image['name'])
+            State().backup_manager.return_file(image['name'], dest_path)
 
-    def redo_impl(self, *args):
-        self._delete_data()
+            boxes = State().backup_manager.get_boxes_on_image
+            for box in boxes:
+                State().box_saver.new_bbox(box, image['name'])
 
-    def _copy_data(self, directory):
-        data = {
-            'directory': directory,
-            'csv': [],
-            'images': []
-        }
+        self._open_folder(deleted_info['directory'])
 
-        data['csv'] = State().box_saver.get_csv()
-        for filename in os.listdir(directory):
-            if filename.lower().endswith(SUPPORTED_IMAGE_EXTENSIONS):
-                image = {
-                    'name': filename,
-                    'content': None
-                }
-                file_path = os.path.join(directory, filename)
-                with open(file_path, 'rb') as f:
-                    image['content']=f.read()
-                data['images'].append(image)
-
-        return data
-
-    def _delete_data(self):
-        n_files = 0
-        for filename in os.listdir(State().current_dir):
-            file_path = os.path.join(State().current_dir, filename)
-            if os.path.isfile(file_path) and filename.lower().endswith(SUPPORTED_IMAGE_EXTENSIONS):
-                os.remove(file_path)
-                n_files += 1
-
-        if n_files > 0:
-            State().model.clear_data()
-            State().cleanup()
-            State().signals.all_images_deleted_signal.emit()
+    def _redo_impl(self, *args):
+        self._do_impl()
 
 class AddImageAction(BaseAction):
     _action_name = "AddImage"
@@ -156,7 +144,7 @@ class AddImageAction(BaseAction):
         super().__init__()
         self.setIcon(QtGui.QIcon(":/add"))
 
-    def do_impl(self, file_path=None):
+    def _do_impl(self, file_path=None):
         if State().current_dir is None:
             QtWidgets.QMessageBox.warning(None, "Error", "Please select a directory first.")
             return
@@ -173,7 +161,7 @@ class AddImageAction(BaseAction):
         self._add_image(file_path)
         return ActionResult([os.path.basename(file_path)], [file_path])
 
-    def undo_impl(self, file_name):
+    def _undo_impl(self, file_name):
         if not file_name:
             return None
 
@@ -190,7 +178,7 @@ class AddImageAction(BaseAction):
 
         State().box_saver.delete_boxes_on_image(file_name)
 
-    def redo_impl(self, file_name):
+    def _redo_impl(self, file_name):
         self._add_image(file_name)
 
     def _add_image(self, file_name):
@@ -204,7 +192,7 @@ class RenameFileAction(BaseAction):
         super().__init__()
         self.setIcon(QtGui.QIcon(":/rename"))
 
-    def do_impl(self, index):
+    def _do_impl(self, index):
         if index.isValid():
             row = index.row()
 
@@ -223,13 +211,13 @@ class RenameFileAction(BaseAction):
             self._rename(row, old_name, new_name)
             return ActionResult([index, old_name], [index, new_name])
 
-    def undo_impl(self, index, old_name):
+    def _undo_impl(self, index, old_name):
         if index.isValid():
             row = index.row()
             curr_name = State().model.images[row].name
             self._rename(row, curr_name, old_name)
 
-    def redo_impl(self, index, new_name):
+    def _redo_impl(self, index, new_name):
         if index.isValid():
             row = index.row()
             old_name = State().model.images[row].name
@@ -258,107 +246,79 @@ class DeleteImageAction(BaseAction):
         super().__init__("Delete")
         self.setIcon(QtGui.QIcon(":/delete"))
 
-    def do_impl(self, selected):
+    def _do_impl(self, selected):
         if not selected:
             raise Exception("No selection")
 
-        backup_dir = Path(State().backup_dir) / State().current_dir.split("/")[-2]
-        backup_dir.mkdir(parents=True, exist_ok=True)
         deleted = []
-
         sorted_indexes = sorted(selected, key=lambda x: x.row(), reverse=True)
 
         for index in sorted_indexes:
-            deleted.append(self.delete(index, backup_dir))
+            if not index.isValid() or not (0 <= index.row() < len(State().model.images)):
+                continue
+            image_name = State().model.images[index.row()].name
+            image_path = os.path.join(State().model.dir_path, image_name)
+            boxes = State().box_saver.get_boxes_for_image(image_name)
 
-        return ActionResult([deleted], [sorted_indexes])
+            backup_data = State().backup_manager.save_file(image_path, boxes)
+            deleted.append(self.delete(index.row()))
 
-    def delete(self, index, backup_dir=None):
+        return ActionResult([deleted], [sorted_indexes], backup_data)
+
+    def delete(self, index):
         model = State().model
-        if not index.isValid() or not (0 <= index.row() < len(model.images)):
-            return None
 
-        image_info = model.images[index.row()]
+        image_info = model.images[index]
         image_path = Path(model.dir_path) / image_info.name
-        boxes = State().box_saver.get_boxes_for_image(image_info.name)
 
         image_data = {
             'info': image_info,
             'path': str(image_path),
-            'backup_path': str(backup_dir),
-            'row': index.row()
+            'row': index
         }
 
-        if image_path.exists():
-            backup_image_path = backup_dir / image_info.name
-
-            backup_csv_path = backup_dir / f"{image_info.name.split('.')[0]}.csv"
-
-            shutil.copy2(image_path, backup_image_path)
-
-            with backup_csv_path.open('w', newline='') as csvfile:
-                writer = csv.writer(csvfile)
-                writer.writerows(box.to_csv_row() for box in boxes)
-
-        model.beginRemoveRows(QtCore.QModelIndex(), index.row(), index.row())
-        if os.path.exists(image_path):
-            os.remove(image_path)
-        model.images.pop(index.row())
+        model.beginRemoveRows(QtCore.QModelIndex(), index, index)
+        model.images.pop(index)
         model.endRemoveRows()
         State().box_saver.delete_boxes_on_image(image_info.name)
 
         return image_data
 
-    def undo_impl(self, deleted):
+    def _undo_impl(self, deleted):
         model = State().model
-
-        for item in deleted:
-            backup_image_path = Path(item['backup_path']) / item['info'].name
-            original_path = Path(item['path'])
-
-            if backup_image_path.exists():
-                shutil.copy2(backup_image_path, original_path)
-
-                backup_csv_path = backup_image_path.with_suffix('.csv')
-                if backup_csv_path.exists():
-                    with open(backup_csv_path, newline='') as csvfile:
-                        reader = csv.reader(csvfile)
-                        for row in reader:
-                            label, x1, y1, x2, y2 = row
-                            box = Box(label, QtCore.QRectF( float(x1), float(y1), float(x2), float(y2)))
-                            State().box_saver.add_bbox(box, item['info'].name)
+        for item in reversed(deleted):
+            State().backup_manager.return_file(item['info'].name, item['path'])
+            boxes = State().backup_manager.get_boxes_on_image(item['info'].name)
+            for box in boxes:
+                State().box_saver.new_bbox(box, item['info'].name)
 
             model.beginInsertRows(QtCore.QModelIndex(), item['row'], item['row'])
             model.images.insert(item['row'], item['info'])
             model.endInsertRows()
             model.dataChanged.emit(model.index_by_imagename(item['info'].name), model.index_by_imagename(item['info'].name))
 
+            row = model.rowCount() - item['row'] - 1
+            State().signals.change_focus_signal.emit(0, 0, row)
 
-    def redo_impl(self, indexes):
-        backup_dir = Path(State().backup_dir) / State().current_dir.split("/")[-2]
-        deleted = []
-
-        for index in indexes:
-            deleted.append(self.delete(index, backup_dir))
-
-        return deleted
+    def _redo_impl(self, indexes):
+        self._do_impl(indexes)
 
 class CreateBoxAction(BaseAction):
     _action_name = "CreateBox"
     def __init__(self):
         super().__init__()
 
-    def do_impl(self, box: Box, img_name: str):
+    def _do_impl(self, box: Box, img_name: str):
         State().box_saver.new_bbox(Box(box.label, box), img_name)
         State().signals.create_box_signal.emit(img_name, box)
         return ActionResult([img_name, box], [img_name, box])
 
-    def undo_impl(self, img_name, box):
+    def _undo_impl(self, img_name, box):
         name = os.path.basename(img_name)
         State().box_saver.delete_bbox(box, name)
         State().signals.delete_box_signal.emit(State().current_dir + "/" + name, box)
 
-    def redo_impl(self, img_name, box):
+    def _redo_impl(self, img_name, box):
         State().box_saver.new_bbox(Box(box.label, box), img_name)
         State().signals.create_box_signal.emit(img_name, box)
 
@@ -367,18 +327,18 @@ class DeleteBoxAction(BaseAction):
     def __init__(self):
         super().__init__()
 
-    def do_impl(self, box: Box, path: str):
+    def _do_impl(self, box: Box, path: str):
         name = os.path.basename(path)
         ok = State().box_saver.delete_bbox(box, name) 
         if ok: State().signals.delete_box_signal.emit(path, box)
         return ActionResult([path, box], [path, box])
 
-    def undo_impl(self, path, box):
+    def _undo_impl(self, path, box):
         name = os.path.basename(path)
         State().box_saver.new_bbox(box, name)
         State().signals.create_box_signal.emit(path, box)
 
-    def redo_impl(self, path, box):
+    def _redo_impl(self, path, box):
         name = os.path.basename(path)
         State().box_saver.delete_bbox(box, name)
         State().signals.delete_box_signal.emit(path, box)
@@ -388,18 +348,18 @@ class ResizeBoxAction(BaseAction):
     def __init__(self):
         super().__init__()
 
-    def do_impl(self, old_box: Box, new_box: Box, path):
+    def _do_impl(self, old_box: Box, new_box: Box, path):
         name = os.path.basename(path)
         State().box_saver.update_bbox(old_box, new_box, name)
         State().signals.change_boxes_signal.emit(path)
         return ActionResult([path, old_box, new_box], [path, old_box, new_box])
 
-    def undo_impl(self, path, old_box, new_box):
+    def _undo_impl(self, path, old_box, new_box):
         name = os.path.basename(path)
         State().box_saver.update_bbox(new_box, old_box, name)
         State().signals.change_boxes_signal.emit(path)
 
-    def redo_impl(self, path, old_box, new_box):
+    def _redo_impl(self, path, old_box, new_box):
         name = os.path.basename(path)
         State().box_saver.update_bbox(old_box, new_box, name)
         State().signals.change_boxes_signal.emit(path)
