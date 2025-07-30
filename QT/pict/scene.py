@@ -28,8 +28,7 @@ class ImageModel(QtWidgets.QGraphicsScene):
             if isinstance(item, BoxGraphicsItem):
                 self.removeItem(item)
             elif isinstance(item, QtWidgets.QGraphicsSimpleTextItem):
-                if item.parentItem() and isinstance(item.parentItem(), BoxGraphicsItem):
-                    self.removeItem(item)
+                self.removeItem(item)
         self.draw_boxes()
 
     def draw_boxes(self):

@@ -1,8 +1,9 @@
 from .table import TableModel
 import os
-from PyQt6 import QtCore, QtWidgets
-from backend.bboxlist import BBoxList
-from backend.box import Box
+from PyQt6 import QtCore
+from .bboxlist import BBoxList
+from .commands import Command, UndoRedoManager
+from .backup import BackUp
 
 class Signals(QtCore.QObject):
     rename_image_signal = QtCore.pyqtSignal(str)
@@ -12,6 +13,8 @@ class Signals(QtCore.QObject):
     create_box_signal = QtCore.pyqtSignal(str, QtCore.QRectF)
     delete_box_signal = QtCore.pyqtSignal(str, QtCore.QRectF)
     change_boxes_signal = QtCore.pyqtSignal(str)
+
+    change_focus_signal = QtCore.pyqtSignal(int, int, int)
 
 class State:
     _instance = None
@@ -34,6 +37,12 @@ class State:
         self.init_actions()
         self.box_saver = BBoxList()
         self.need_labels = False
+        self.undo_redo_manager = UndoRedoManager()
+        self.backup_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "backup")
+        self.backup_manager = BackUp(self.backup_dir)
+
+        self.undo_redo_manager.delete_backup_signal.connect(self.backup_manager.delete_files)
+
 
     @classmethod
     def register_action(cls, action_name, action_class):
@@ -62,3 +71,16 @@ class State:
 
     def cleanup(self):
         self.model.set_data([], None)
+        self.current_dir = None
+        self.signals.all_images_deleted_signal.emit()
+
+    def do_action(self, action_name, *args):
+        if action_name in self.actions:
+            action = self.actions[action_name]
+            command = Command(action, *args)
+            self.undo_redo_manager.execute(command)
+
+    def clear_backup(self):
+        import shutil
+        if os.path.exists(self.backup_dir):
+            shutil.rmtree(self.backup_dir)

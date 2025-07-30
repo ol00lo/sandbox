@@ -24,3 +24,10 @@ class Box(QRectF):
 
     def copy_coord(self, box):
         self.setCoords(box.left(), box.top(), box.right(), box.bottom())
+
+    def to_csv_row(self):
+        return [
+            self.label,
+            self.left(), self.top(),
+            self.right(), self.bottom()
+        ]
