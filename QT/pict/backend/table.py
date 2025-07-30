@@ -13,7 +13,7 @@ class ImageInfo:
             raise Exception("File does not exist.")
         self.name = os.path.basename(path)
         self.width, self.height = imagesize.get(path)
-        self.size = os.path.getsize(path)
+        self.size = round(os.path.getsize(path) / 1_000_000, 2)
         self.area = (self.width * self.height) / 1_000_000  
 
 class TableModel(QtCore.QAbstractTableModel):

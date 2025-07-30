@@ -7,7 +7,7 @@ from qt_common import show_message, SUPPORTED_IMAGE_EXTENSIONS, SUPPORTED_IMAGE_
 from .table import ImageInfo
 from .state import State
 from .box import Box
-from .commands import ActionResult
+from .commands import ActionResult, Command
 
 class BaseAction(QtGui.QAction):
     _action_name = "BaseAction"
@@ -15,6 +15,7 @@ class BaseAction(QtGui.QAction):
         super().__init__(self._action_name)
         if shortcut:
             self.setShortcut(shortcut)
+        self.triggered.connect(self._handle_trigger)
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -47,6 +48,21 @@ class BaseAction(QtGui.QAction):
         print(tb_str)
         print("======================\n")
         show_message("ERROR", str(error), is_error=True)
+
+    def _handle_trigger(self):
+        args = self._get_default_args()
+        if args is not None:
+            self.execute(*args)
+
+    def execute(self, *args):
+        try:
+            command = Command(self, *args)
+            State().undo_redo_manager.execute(command)
+        except Exception as e:
+            self.errors(e)
+
+    def _get_default_args(self):
+        return ()
 
     def _do_impl(self, *args):
         raise NotImplementedError("Subclasses must implement do_impl()")
@@ -129,7 +145,7 @@ class DeleteAllImagesAction(BaseAction):
             dest_path = os.path.join(deleted_info['directory'], image['name'])
             State().backup_manager.return_file(image['name'], dest_path)
 
-            boxes = State().backup_manager.get_boxes_on_image
+            boxes = State().backup_manager.get_boxes_on_image(image['name'])
             for box in boxes:
                 State().box_saver.new_bbox(box, image['name'])
 

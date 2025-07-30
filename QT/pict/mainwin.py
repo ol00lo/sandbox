@@ -39,9 +39,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.create_toolbar()
 
     def create_toolbar(self):
-        toolbar = self.addToolBar("Main Toolbar")
-        #self.toolbar = self.addToolBar("Main Toolbar")
-        #toolbar = self.toolbar
+        #toolbar = self.addToolBar("Main Toolbar")
+        self.toolbar = self.addToolBar("Main Toolbar")
+        toolbar = self.toolbar
         toolbar.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonIconOnly)
         #toolbar.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         toolbar.setIconSize(QtCore.QSize(15, 15))
@@ -61,17 +61,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
         toolbar.addSeparator()
 
-        load_action = State().actions["LoadImages"]
-        toolbar.addAction(load_action)
-        load_action.triggered.connect(lambda: State().do_action("LoadImages"))
+        toolbar.addAction(State().actions["LoadImages"])
 
-        deleteall_action = State().actions["DeleteAllImages"]
-        toolbar.addAction(deleteall_action)
-        deleteall_action.triggered.connect(lambda: State().do_action("DeleteAllImages"))
+        toolbar.addAction(State().actions["DeleteAllImages"])
 
-        add_action = State().actions["AddImage"]
-        toolbar.addAction(add_action)
-        add_action.triggered.connect(lambda: State().do_action("AddImage"))
+        toolbar.addAction(State().actions["AddImage"])
 
         toolbar.addSeparator()
 

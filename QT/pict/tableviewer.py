@@ -1,4 +1,5 @@
 from PyQt6 import QtCore, QtWidgets
+from backend.actions import BaseAction
 from backend.state import State
 
 class TableViewer (QtWidgets.QWidget):
@@ -53,20 +54,19 @@ class TableViewer (QtWidgets.QWidget):
 
         delete_action = State().actions["DeleteImage"]
 
+        source_indexes = [self.proxy_model.mapToSource(index) for index in selected_rows]
         context_menu.addAction(delete_action)
-        source_indexes = [self.proxy_model.mapToSource(index) for index in selected_rows]        
-        delete_action.triggered.connect(lambda: State().do_action("DeleteImage", source_indexes))
+        delete_action.triggered.connect(lambda: delete_action.execute(source_indexes))
+
 
         rename_action = State().actions["RenameFile"]
-
+        source_index = self.proxy_model.mapToSource(selected_rows[0])
         context_menu.addAction(rename_action)
-        source_index = selected_rows[0]
-        rename_action.triggered.connect(lambda: State().do_action("RenameFile", self.proxy_model.mapToSource(source_index)))
+        rename_action.triggered.connect(lambda: rename_action.execute(source_index))
 
         context_menu.exec(self.table_view.viewport().mapToGlobal(position))
-
-        rename_action.triggered.disconnect()
         delete_action.triggered.disconnect()
+        rename_action.triggered.disconnect()
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key.Key_Delete:

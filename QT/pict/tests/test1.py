@@ -113,15 +113,30 @@ class Test1(unittest.TestCase):
         img = "test9.jpg"
         box = Box("AAA", QtCore.QRectF(v_size.width() // 4, v_size.height() // 4, v_size.width() // 3, v_size.height() // 3))
         box2 = Box("AAA", QtCore.QRectF(v_size.width() // 4, v_size.height() // 4, v_size.width() // 2, v_size.height() // 2))
-        index = State().model.index_by_imagename(img)
+        State().need_labels = True
 
         # CreateBox
-        State().do_action("CreateBox", box, img)
+        tester.eval_and_wait_true(State().do_action, ("CreateBox", box, img),
+                                  'a() == True', {'a': lambda: self.mwin.image_model_viewer.image_model.items().__len__() == 3})
+
+        self.assertTrue(any(isinstance(item, QtWidgets.QGraphicsSimpleTextItem)
+                            for item in self.mwin.image_model_viewer.image_model.items()))
         self.assertEqual(len(State().box_saver.get_boxes_for_image(img)), 1)
-        State().undo_redo_manager.undo()
+
+
+        tester.eval_and_wait_true(State().undo_redo_manager.undo, (), 'a() == True',
+                                  {'a': lambda: self.mwin.image_model_viewer.image_model.items().__len__() == 1})
+
+        self.assertTrue(not any(isinstance(item, QtWidgets.QGraphicsSimpleTextItem)
+                                for item in self.mwin.image_model_viewer.image_model.items()))
         self.assertEqual(len(State().box_saver.get_boxes_for_image(img)), 0)
         self.assertEqual(self.count_boxes(self.path + '/' + self.csv_name), 1)
-        State().undo_redo_manager.redo()
+
+        State().need_labels = False
+        tester.eval_and_wait_true(State().undo_redo_manager.redo, (), 'a() == True',
+                                  {'a': lambda: self.mwin.image_model_viewer.image_model.items().__len__() == 2})
+        self.assertTrue(not any(isinstance(item, QtWidgets.QGraphicsSimpleTextItem)
+                                for item in self.mwin.image_model_viewer.image_model.items()))
         self.assertEqual(self.count_boxes(self.path + '/' + self.csv_name), 2)
 
         #ResizeBox
