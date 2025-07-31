@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title> Red hearts | Black squares </title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas" width="{{ width }}" height="{{ height }}"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const width = {{ width }};
+        const height = {{ height }};
+
+
+        function drawHeart(x, y, size, color) {
+            ctx.save();
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            const topCurveHeight = size * 0.3;
+            ctx.moveTo(x, y + topCurveHeight);
+            ctx.bezierCurveTo(
+                x, y,
+                x - size / 2, y,
+                x - size / 2, y + topCurveHeight
+            );
+            ctx.bezierCurveTo(
+                x - size / 2, y + (size + topCurveHeight) / 2,
+                x, y + (size + topCurveHeight) / 2,
+                x, y + size
+            );
+            ctx.bezierCurveTo(
+                x, y + (size + topCurveHeight) / 2,
+                x + size / 2, y + (size + topCurveHeight) / 2,
+                x + size / 2, y + topCurveHeight
+            );
+            ctx.bezierCurveTo(
+                x + size / 2, y,
+                x, y,
+                x, y + topCurveHeight
+            );
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+        }
+
+
+        function drawSquare(x, y, size, color) {
+            ctx.fillStyle = color;
+            ctx.fillRect(x - size / 2, y - size / 2, size, size);
+        }
+
+
+        function updateWorld() {
+            fetch('/world')
+                .then(response => response.json())
+                .then(data => {
+                    ctx.clearRect(0, 0, width, height);
+
+                    data.preys.forEach(prey => {
+                        drawHeart(prey.x, prey.y, {{ prey_size }} * 2, '{{ prey_color }}');
+                    });
+
+                    data.predators.forEach(predator => {
+                        drawSquare(predator.x, predator.y, {{ predator_size }} * 2, '{{ predator_color }}');
+                    });
+                });
+        }
+
+
+        setInterval(updateWorld, 500);
+        updateWorld();
+    </script>
+</body>
+
+</html>
