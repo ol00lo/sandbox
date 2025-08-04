@@ -22,6 +22,10 @@
         const width = {{ width }};
         const height = {{ height }};
 
+        const staticCanvas = document.createElement('canvas');
+        staticCanvas.width = width;
+        staticCanvas.height = height;
+        const staticCtx = staticCanvas.getContext('2d');
 
         function drawHeart(x, y, size, color) {
             ctx.save();
@@ -60,12 +64,19 @@
             ctx.fillRect(x - size / 2, y - size / 2, size, size);
         }
 
+        function drawStatic(){
+            staticCtx.strokeStyle = "black";
+            staticCtx.lineWidth = 3;
+            staticCtx.strokeRect(0, 0, width, height);
+        }
 
         function updateWorld() {
             fetch('/world')
                 .then(response => response.json())
                 .then(data => {
                     ctx.clearRect(0, 0, width, height);
+
+                    ctx.drawImage(staticCanvas, 0, 0);
 
                     data.preys.forEach(prey => {
                         drawHeart(prey.x, prey.y, {{ prey_size }} * 2, '{{ prey_color }}');
@@ -78,6 +89,7 @@
         }
 
 
+        drawStatic();
         setInterval(updateWorld, 500);
         updateWorld();
     </script>
