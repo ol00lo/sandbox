@@ -1,13 +1,21 @@
 import os
 import shutil
 import csv
-from pathlib import Path
 from .box import Box
 
 class BackUp:
-    def __init__(self, backup_dir):
-        self.backup_dir = Path(backup_dir)
+    BACKUP_PREFIX = "~backup_"
+    def __init__(self):
+        self.backup_dir = None
+
+    def set_backup_dir(self, directory):
+        import time
+        self.cleanup_old_backups(directory)
+        dir_name = f"{self.BACKUP_PREFIX}{int(time.time())}"
+        self.backup_dir = directory + dir_name
         os.makedirs(self.backup_dir, exist_ok=True)
+
+        return self.backup_dir
 
     def save_file(self, file_path, boxes, folder = None):
         if folder:
@@ -54,10 +62,19 @@ class BackUp:
             self.delete_file(file_name)
 
     def clear_all(self):
-        for filename in os.listdir(self.backup_dir):
-            file_path = os.path.join(self.backup_dir, filename)
-            try:
-                if os.path.isfile(file_path):
-                    os.unlink(file_path)
-            except Exception as e:
-                print(f"Ошибка при удалении {file_path}: {e}")
+        if not self.backup_dir:
+            return
+        try:
+            shutil.rmtree(self.backup_dir)
+        except Exception as e:
+            print(f"Failed to delete current backup dir {self.backup_dir}: {e}")
+
+    def cleanup_old_backups(self, target_dir):
+        for item_name in os.listdir(target_dir):
+            if item_name.startswith(self.BACKUP_PREFIX):
+                try:
+                    item_path = os.path.join(target_dir, item_name)
+                    if os.path.isdir(item_path):
+                        shutil.rmtree(item_path)
+                except Exception as e:
+                    print(f"Failed to delete backup {item_path}: {e}")

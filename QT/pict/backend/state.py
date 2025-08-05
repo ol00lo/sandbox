@@ -38,8 +38,7 @@ class State:
         self.box_saver = BBoxList()
         self.need_labels = False
         self.undo_redo_manager = UndoRedoManager()
-        self.backup_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "backup")
-        self.backup_manager = BackUp(self.backup_dir)
+        self.backup_manager = BackUp()
 
         self.undo_redo_manager.delete_backup_signal.connect(self.backup_manager.delete_files)
 
@@ -60,6 +59,7 @@ class State:
         if os.path.isdir(dir_path):
             self.current_dir = dir_path
             self.box_saver = BBoxList(dir_path, "bbox_output.csv")
+            self.backup_dir = self.backup_manager.set_backup_dir(dir_path)
             return True
         return False
 
@@ -80,7 +80,3 @@ class State:
             command = Command(action, *args)
             self.undo_redo_manager.execute(command)
 
-    def clear_backup(self):
-        import shutil
-        if os.path.exists(self.backup_dir):
-            shutil.rmtree(self.backup_dir)

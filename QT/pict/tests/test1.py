@@ -18,7 +18,6 @@ class Test1(unittest.TestCase):
     def setUp(self):
         self.widget = None
         clear_folder(self.path)
-        clear_folder(State().backup_dir)
         State().current_dir = None
         create_test_folder()
         State().do_action("LoadImages", self.path)
@@ -153,6 +152,10 @@ class Test1(unittest.TestCase):
         State().undo_redo_manager.undo()
         self.assertEqual(len(State().box_saver.get_boxes_for_image(img)), 0)
         self.assertEqual(self.count_boxes(self.path + '/' + self.csv_name), 1)
+        State().undo_redo_manager.undo()
+        State().undo_redo_manager.undo()
+        State().undo_redo_manager.undo()
+        State().undo_redo_manager.undo()
 
     def test_undo_redo_image(self):
         create_image(os.path.dirname(os.path.abspath(__file__)))
@@ -187,7 +190,9 @@ class Test1(unittest.TestCase):
 
         State().undo_redo_manager.undo() # delete undo
         State().undo_redo_manager.undo() # load undo
-        self.assertEqual(State().model.rowCount(), 0)
+        State().undo_redo_manager.undo()
+        State().undo_redo_manager.undo()
+        State().undo_redo_manager.undo()
 
     def draw_box(self, start_pos, end_pos):
         tester.eval_and_wait_window(guicom.drag_with_mouse, (self.widget, start_pos, end_pos, QtCore.Qt.MouseButton.LeftButton),  QtWidgets.QInputDialog)

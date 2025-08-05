@@ -27,19 +27,21 @@ class BaseAction(QtGui.QAction):
             return self._do_impl(*args)
         except Exception as e:
             self.errors(e)
-            return ActionResult(error=True)
+            raise e
 
     def undo(self, *args):
         try:
             self._undo_impl(*args)
         except Exception as e:
             self.errors(e)
+            raise e
 
     def redo(self, *args):
         try:
             self._redo_impl(*args)
         except Exception as e:
             self.errors(e)
+            raise e
 
     def errors(self, error):
         exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -82,6 +84,7 @@ class BaseAction(QtGui.QAction):
                 image_path = os.path.join(folder, filename)
                 images.append(ImageInfo(image_path))
 
+        State().undo_redo_manager.clear_stack()
         State().model.set_data(images, dir_path=folder)
         State().set_current_dir(folder)
         State().signals.load_images_signal.emit()
@@ -97,7 +100,6 @@ class LoadImagesAction(BaseAction):
         if not folder:
             folder = QtWidgets.QFileDialog.getExistingDirectory(None, "Select Folder")
         old_folder = State().current_dir
-        State().backup_manager.clear_all()
         self._open_folder(folder)
 
         return ActionResult([old_folder], [folder])
