@@ -24,7 +24,7 @@ def generate_launch_description():
         ),
         Node(
             package='sensor_saver',
-            executable='sensor_saver',
+            executable='sensor_saver_node',
             name='sensor_saver',
             parameters=[saver_path],
             arguments=['--ros-args', '--log-level', 'debug'],

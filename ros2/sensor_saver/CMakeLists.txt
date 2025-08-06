@@ -11,47 +11,54 @@ find_package(geometry_msgs REQUIRED)
 set(PQXX_INCLUDE_DIR "/usr/include")
 set(PQXX_LIBRARY "/usr/lib/x86_64-linux-gnu/libpqxx.so")
 
-add_executable(sensor_saver_node src/sensor_saver_node.cpp)
 
-target_include_directories(sensor_saver_node PRIVATE ${PQXX_INCLUDE_DIR})
+add_library(sensor_saver_impl src/sensor_saver_impl.cpp)
+target_include_directories(sensor_saver_impl PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(sensor_saver_impl PRIVATE ${PQXX_INCLUDE_DIR})
+target_link_libraries(sensor_saver_impl PRIVATE ${PQXX_LIBRARY})
+
+
+add_executable(sensor_saver_node src/sensor_saver_node.cpp)
 target_link_libraries(sensor_saver_node PRIVATE
+  sensor_saver_impl
   rclcpp::rclcpp
   ${geometry_msgs_TARGETS}
-  ${PQXX_LIBRARY}
-)
-target_compile_options(sensor_saver_node PRIVATE
-    $<$<CONFIG:Release>:-Werror>
-    $<$<CONFIG:Debug>:-Wno-error>
-    $<$<CONFIG:RelWithDebInfo>:-Werror>
-    -Wall
-    -Wextra
-    -Wpedantic
-    -Wconversion
-    -Wunused-const-variable
-    -Wduplicated-cond
-    -Wnon-virtual-dtor
-    -Woverloaded-virtual
-    -Wredundant-decls
-    -Wsign-promo
-    -Wzero-as-null-pointer-constant
-    -Wsuggest-override
-    -Wshadow
-    -Wfloat-equal
-    -Wcast-qual
-    -Wlogical-op
-    -Wcast-align
-    -Wold-style-cast
 )
 
-install(DIRECTORY config
+set (C_FLAGS 
+  $<$<CONFIG:Release>:-Werror>
+  $<$<CONFIG:Debug>:-Wno-error>
+  $<$<CONFIG:RelWithDebInfo>:-Werror>
+  -Wall
+  -Wextra
+  -Wpedantic
+  -Wconversion
+  -Wunused-const-variable
+  -Wduplicated-cond
+  -Wnon-virtual-dtor
+  -Woverloaded-virtual
+  -Wredundant-decls
+  -Wsign-promo
+  -Wzero-as-null-pointer-constant
+  -Wsuggest-override
+  -Wshadow
+  -Wfloat-equal
+  -Wcast-qual
+  -Wlogical-op
+  -Wcast-align
+  -Wold-style-cast
+)
+
+
+foreach(TARGET sensor_saver_impl sensor_saver_node)
+  target_compile_options(${TARGET} PRIVATE ${C_FLAGS})
+endforeach()
+
+install(DIRECTORY config launch
   DESTINATION share/${PROJECT_NAME}
 )
 
-install(DIRECTORY launch
-  DESTINATION share/${PROJECT_NAME}
-)
-
-install(TARGETS sensor_saver_node
+install(TARGETS sensor_saver_impl  sensor_saver_node
   DESTINATION lib/${PROJECT_NAME})
 
 ament_package()
