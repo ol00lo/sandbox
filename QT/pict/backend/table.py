@@ -13,7 +13,7 @@ class ImageInfo:
             raise Exception("File does not exist.")
         self.name = os.path.basename(path)
         self.width, self.height = imagesize.get(path)
-        self.size = os.path.getsize(path)
+        self.size = round(os.path.getsize(path) / 1_000_000, 2)
         self.area = (self.width * self.height) / 1_000_000  
 
 class TableModel(QtCore.QAbstractTableModel):
@@ -114,9 +114,11 @@ class TableModel(QtCore.QAbstractTableModel):
         return len(self.images)
 
     def index_by_imagename(self, name):
+        name = os.path.basename(name)
         for i in range(len(self.images)):
             if self.images[i].name == name:
                 return self.createIndex(i, 0)
+        return self.createIndex(-1, 0)
 
     def read_boxes(self):
         file_path = self.dir_path + "/bbox_output.csv"

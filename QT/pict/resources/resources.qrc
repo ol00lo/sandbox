@@ -8,5 +8,9 @@
     <file alias="deleteall">deleteall.svg</file>
     <file alias="load">load.svg</file>
     <file alias="rename">rename.svg</file>
+    <file alias="undo">undo.svg</file>
+    <file alias="redo">redo.svg</file>
+    <file alias="gundo">grayundo.svg</file>
+    <file alias="gredo">grayredo.svg</file>
 </qresource>
 </RCC>

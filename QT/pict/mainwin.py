@@ -1,8 +1,8 @@
 from PyQt6 import QtWidgets, QtGui, QtCore
 from imageviewer import ImageViewer
 from tableviewer import TableViewer
-
 from backend.state import State
+import resources
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -39,22 +39,37 @@ class MainWindow(QtWidgets.QMainWindow):
         self.create_toolbar()
 
     def create_toolbar(self):
-        toolbar = self.addToolBar("Main Toolbar")
-        toolbar.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        #toolbar = self.addToolBar("Main Toolbar")
+        self.toolbar = self.addToolBar("Main Toolbar")
+        toolbar = self.toolbar
+        toolbar.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonIconOnly)
+        #toolbar.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         toolbar.setIconSize(QtCore.QSize(15, 15))
 
-        toolbar.addAction(State().actions["LoadImages"])
-        State().actions["LoadImages"].triggered.connect(State().actions["LoadImages"].do)
+        self.undo_action = QtGui.QAction(QtGui.QIcon(":/gundo"), "Undo", self)
+        self.undo_action.setShortcut(QtGui.QKeySequence.StandardKey.Undo)
+        self.undo_action.triggered.connect(State().undo_redo_manager.undo)
+        toolbar.addAction(self.undo_action)
 
-        toolbar.addAction(State().actions["DeleteAllImages"])
-        State().actions["DeleteAllImages"].triggered.connect(State().actions["DeleteAllImages"].do)
+        self.redo_action = QtGui.QAction(QtGui.QIcon(":/gredo"), "Redo", self)
+        self.redo_action.setShortcut(QtGui.QKeySequence.StandardKey.Redo)
+        self.redo_action.triggered.connect(State().undo_redo_manager.redo)
+        toolbar.addAction(self.redo_action)
 
-        toolbar.addAction(State().actions["AddImage"])
-        State().actions["AddImage"].triggered.connect(State().actions["AddImage"].do)
+        State().undo_redo_manager.undo_stack_empty_signal.connect(self.update_undo_icon)
+        State().undo_redo_manager.redo_stack_empty_signal.connect(self.update_redo_icon)
 
         toolbar.addSeparator()
 
-        self.need_labels_checkbox = QtWidgets.QCheckBox("Need Labels")
+        toolbar.addAction(State().actions["LoadImages"])
+
+        toolbar.addAction(State().actions["DeleteAllImages"])
+
+        toolbar.addAction(State().actions["AddImage"])
+
+        toolbar.addSeparator()
+
+        self.need_labels_checkbox = QtWidgets.QCheckBox("Labels")
         self.need_labels_checkbox.setChecked(False)
         self.need_labels_checkbox.stateChanged.connect(self.on_need_labels_changed)
 
@@ -67,7 +82,6 @@ class MainWindow(QtWidgets.QMainWindow):
         State().need_labels = (state == QtCore.Qt.CheckState.Checked.value)
         self.image_model_viewer.update_image()
 
-
     def show_coordinates(self, x, y):
         self.status_bar.showMessage(f"X: {x}, Y: {y}")
 
@@ -78,4 +92,20 @@ class MainWindow(QtWidgets.QMainWindow):
             self.setWindowTitle("Image Viewer")
 
     def open_folder(self, dir_path = "tests/test_images"):
-        State().actions["LoadImages"].openfolder(dir_path)
+        State().do_action("LoadImages", dir_path)
+
+    def update_undo_icon(self, is_empty):
+        if is_empty:
+            self.undo_action.setIcon(QtGui.QIcon(":/gundo"))
+            self.undo_action.setEnabled(False)
+        else:
+            self.undo_action.setIcon(QtGui.QIcon(":/undo"))
+            self.undo_action.setEnabled(True)
+
+    def update_redo_icon(self, is_empty):
+        if is_empty:
+            self.redo_action.setIcon(QtGui.QIcon(":/gredo"))
+            self.redo_action.setEnabled(False)
+        else:
+            self.redo_action.setIcon(QtGui.QIcon(":/redo"))
+            self.redo_action.setEnabled(True)

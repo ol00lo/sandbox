@@ -3,7 +3,7 @@
 # Created by: The Resource Compiler for Qt version 6.8.2
 # WARNING! All changes made in this file will be lost!
 
-from PyQt6 import QtCore
+from PySide6 import QtCore
 
 qt_resource_data = b"\
 \x00\x00\x02\xd5\
@@ -96,6 +96,50 @@ a2 2 0 0 0 0 4h5\
 a-original=\x22#000\
 000\x22></path></g>\
 </g></svg>\
+\x00\x00\x02\x95\
+<\
+svg xmlns=\x22http:\
+//www.w3.org/200\
+0/svg\x22 version=\x22\
+1.1\x22 xmlns:xlink\
+=\x22http://www.w3.\
+org/1999/xlink\x22 \
+width=\x22512\x22 heig\
+ht=\x22512\x22 x=\x220\x22 y\
+=\x220\x22 viewBox=\x220 \
+0 24 24\x22 style=\x22\
+enable-backgroun\
+d:new 0 0 512 51\
+2\x22 xml:space=\x22pr\
+eserve\x22 class=\x22\x22\
+><g transform=\x22m\
+atrix(-1.5000000\
+000000007,0,0,1.\
+5000000000000007\
+,30.031250715255\
+73,-5.7499997615\
+8144)\x22><path d=\x22\
+M14 8H7.4l2.3-2.\
+3c.4-.4.4-1 0-1.\
+4s-1-.4-1.4 0l-4\
+ 4s0 .1-.1.1c0 .\
+1-.1.1-.1.2-.1.3\
+-.1.5 0 .8 0 .1.\
+1.1.1.2l.1.1 4 4\
+c.4.4 1 .4 1.4 0\
+ .4-.4.4-1 0-1.4\
+L7.4 10H14c2.3 0\
+ 4 1.5 4 3.5S16.\
+3 17 14 17H7c-.6\
+ 0-1 .4-1 1s.4 1\
+ 1 1h7c3.4 0 6-2\
+.4 6-5.5S17.4 8 \
+14 8z\x22 fill=\x22#00\
+0000\x22 opacity=\x221\
+\x22 data-original=\
+\x22#000000\x22 class=\
+\x22\x22></path></g></\
+svg>\
 \x00\x00\x05\xd1\
 <\
 svg xmlns=\x22http:\
@@ -289,6 +333,50 @@ E\x9c\x15>(O\xa6\x0dQ\x8c\x08\xe8\xe2,p3\
 5A\x08\xca\xbcY\xa6\x03\xf7\x14|\xf1+\x1aEa\
 \xaeX\x17\xbap\xe6\x10\x8f\xb7\xc2\xf7\xa7\x5c\xbd\xc8\xc6\
 \xbb\xe9\xb2\xd5w6\xc6\xde\x17\
+\x00\x00\x02\x95\
+<\
+svg xmlns=\x22http:\
+//www.w3.org/200\
+0/svg\x22 version=\x22\
+1.1\x22 xmlns:xlink\
+=\x22http://www.w3.\
+org/1999/xlink\x22 \
+width=\x22512\x22 heig\
+ht=\x22512\x22 x=\x220\x22 y\
+=\x220\x22 viewBox=\x220 \
+0 24 24\x22 style=\x22\
+enable-backgroun\
+d:new 0 0 512 51\
+2\x22 xml:space=\x22pr\
+eserve\x22 class=\x22\x22\
+><g transform=\x22m\
+atrix(-1.5000000\
+000000007,0,0,1.\
+5000000000000007\
+,30.031250715255\
+73,-5.7499997615\
+8144)\x22><path d=\x22\
+M14 8H7.4l2.3-2.\
+3c.4-.4.4-1 0-1.\
+4s-1-.4-1.4 0l-4\
+ 4s0 .1-.1.1c0 .\
+1-.1.1-.1.2-.1.3\
+-.1.5 0 .8 0 .1.\
+1.1.1.2l.1.1 4 4\
+c.4.4 1 .4 1.4 0\
+ .4-.4.4-1 0-1.4\
+L7.4 10H14c2.3 0\
+ 4 1.5 4 3.5S16.\
+3 17 14 17H7c-.6\
+ 0-1 .4-1 1s.4 1\
+ 1 1h7c3.4 0 6-2\
+.4 6-5.5S17.4 8 \
+14 8z\x22 fill=\x22#50\
+5050\x22 opacity=\x221\
+\x22 data-original=\
+\x22#000000\x22 class=\
+\x22\x22></path></g></\
+svg>\
 \x00\x00\x04Z\
 <\
 svg xmlns=\x22http:\
@@ -361,6 +449,50 @@ ty=\x221\x22 data-orig\
 inal=\x22#000000\x22 c\
 lass=\x22\x22></path><\
 /g></svg>\
+\x00\x00\x02\x95\
+<\
+svg xmlns=\x22http:\
+//www.w3.org/200\
+0/svg\x22 version=\x22\
+1.1\x22 xmlns:xlink\
+=\x22http://www.w3.\
+org/1999/xlink\x22 \
+width=\x22512\x22 heig\
+ht=\x22512\x22 x=\x220\x22 y\
+=\x220\x22 viewBox=\x220 \
+0 24 24\x22 style=\x22\
+enable-backgroun\
+d:new 0 0 512 51\
+2\x22 xml:space=\x22pr\
+eserve\x22 class=\x22\x22\
+><g transform=\x22m\
+atrix(1.50000000\
+00000007,0,0,1.5\
+000000000000007,\
+-6.0062501430511\
+69,-5.7499997615\
+8144)\x22><path d=\x22\
+M14 8H7.4l2.3-2.\
+3c.4-.4.4-1 0-1.\
+4s-1-.4-1.4 0l-4\
+ 4s0 .1-.1.1c0 .\
+1-.1.1-.1.2-.1.3\
+-.1.5 0 .8 0 .1.\
+1.1.1.2l.1.1 4 4\
+c.4.4 1 .4 1.4 0\
+ .4-.4.4-1 0-1.4\
+L7.4 10H14c2.3 0\
+ 4 1.5 4 3.5S16.\
+3 17 14 17H7c-.6\
+ 0-1 .4-1 1s.4 1\
+ 1 1h7c3.4 0 6-2\
+.4 6-5.5S17.4 8 \
+14 8z\x22 fill=\x22#50\
+5050\x22 opacity=\x221\
+\x22 data-original=\
+\x22#000000\x22 class=\
+\x22\x22></path></g></\
+svg>\
 \x00\x00\x05U\
 <\
 svg xmlns=\x22http:\
@@ -445,6 +577,50 @@ ke-linecap=\x22roun\
 d\x22 stroke-linejo\
 in=\x22round\x22 strok\
 e-miterlimit=\x2210\
+\x22 data-original=\
+\x22#000000\x22 class=\
+\x22\x22></path></g></\
+svg>\
+\x00\x00\x02\x95\
+<\
+svg xmlns=\x22http:\
+//www.w3.org/200\
+0/svg\x22 version=\x22\
+1.1\x22 xmlns:xlink\
+=\x22http://www.w3.\
+org/1999/xlink\x22 \
+width=\x22512\x22 heig\
+ht=\x22512\x22 x=\x220\x22 y\
+=\x220\x22 viewBox=\x220 \
+0 24 24\x22 style=\x22\
+enable-backgroun\
+d:new 0 0 512 51\
+2\x22 xml:space=\x22pr\
+eserve\x22 class=\x22\x22\
+><g transform=\x22m\
+atrix(1.50000000\
+00000007,0,0,1.5\
+000000000000007,\
+-6.0062501430511\
+67,-5.7499997615\
+8144)\x22><path d=\x22\
+M14 8H7.4l2.3-2.\
+3c.4-.4.4-1 0-1.\
+4s-1-.4-1.4 0l-4\
+ 4s0 .1-.1.1c0 .\
+1-.1.1-.1.2-.1.3\
+-.1.5 0 .8 0 .1.\
+1.1.1.2l.1.1 4 4\
+c.4.4 1 .4 1.4 0\
+ .4-.4.4-1 0-1.4\
+L7.4 10H14c2.3 0\
+ 4 1.5 4 3.5S16.\
+3 17 14 17H7c-.6\
+ 0-1 .4-1 1s.4 1\
+ 1 1h7c3.4 0 6-2\
+.4 6-5.5S17.4 8 \
+14 8z\x22 fill=\x22#00\
+0000\x22 opacity=\x221\
 \x22 data-original=\
 \x22#000000\x22 class=\
 \x22\x22></path></g></\
@@ -571,6 +747,10 @@ qt_resource_name = b"\
 \x00r\
 \x00e\x00n\x00a\x00m\x00e\
 \x00\x04\
+\x00\x07\x8b\xaf\
+\x00r\
+\x00e\x00d\x00o\
+\x00\x04\
 \x00\x075t\
 \x00l\
 \x00o\x00a\x00d\
@@ -582,14 +762,26 @@ qt_resource_name = b"\
 \x00\x077\xfe\
 \x00m\
 \x00a\x00i\x00n\
+\x00\x05\
+\x00n\x8b\xaf\
+\x00g\
+\x00r\x00e\x00d\x00o\
 \x00\x06\
 \x06\xac,\xa5\
 \x00d\
 \x00e\x00l\x00e\x00t\x00e\
 \x00\x05\
+\x00n\xc4\xaf\
+\x00g\
+\x00u\x00n\x00d\x00o\
+\x00\x05\
 \x00x\xfd\xf4\
 \x00r\
 \x00i\x00g\x00h\x00t\
+\x00\x04\
+\x00\x07\xc4\xaf\
+\x00u\
+\x00n\x00d\x00o\
 \x00\x05\
 \x00l\x99b\
 \x00e\
@@ -597,24 +789,32 @@ qt_resource_name = b"\
 "
 
 qt_resource_struct = b"\
-\x00\x00\x00\x00\x00\x02\x00\x00\x00\x08\x00\x00\x00\x01\
+\x00\x00\x00\x00\x00\x02\x00\x00\x00\x0c\x00\x00\x00\x01\
 \x00\x00\x00\x00\x00\x00\x00\x00\
-\x00\x00\x008\x00\x00\x00\x00\x00\x01\x00\x00\x0b-\
-\x00\x00\x01\x96$-4\x0c\
+\x00\x00\x00F\x00\x00\x00\x00\x00\x01\x00\x00\x0d\xc6\
+\x00\x00\x01\x98Uc\xf5R\
+\x00\x00\x008\x00\x00\x00\x00\x00\x01\x00\x00\x07\xf1\
+\x00\x00\x01\x98Uc\xf5Y\
+\x00\x00\x00R\x00\x01\x00\x00\x00\x01\x00\x00\x10\xb3\
+\x00\x00\x01\x98Uc\xf5\x5c\
 \x00\x00\x00*\x00\x00\x00\x00\x00\x01\x00\x00\x05X\
-\x00\x00\x01\x96$\x1d\x06\xe6\
-\x00\x00\x00D\x00\x01\x00\x00\x00\x01\x00\x00\x0e\x1a\
-\x00\x00\x01\x96\x1fy\xd3\xd4\
-\x00\x00\x00t\x00\x00\x00\x00\x00\x01\x00\x00\x1a\xaf\
-\x00\x00\x01\x96\x1fy\xd3\xd3\
-\x00\x00\x00d\x00\x00\x00\x00\x00\x01\x00\x00\x15V\
-\x00\x00\x01\x96\x1fy\xd3\xd5\
+\x00\x00\x01\x98Zr\x0cY\
+\x00\x00\x00\xa2\x00\x00\x00\x00\x00\x01\x00\x00\x22z\
+\x00\x00\x01\x98Zq\x16f\
+\x00\x00\x00\xb0\x00\x00\x00\x00\x00\x01\x00\x00%\x13\
+\x00\x00\x01\x98Uc\xf5W\
+\x00\x00\x00`\x00\x00\x00\x00\x00\x01\x00\x00\x13\x91\
+\x00\x00\x01\x98Zrj)\
+\x00\x00\x00\x82\x00\x00\x00\x00\x00\x01\x00\x00\x1a\x88\
+\x00\x00\x01\x98Zr\xa4\x8f\
+\x00\x00\x00\x92\x00\x00\x00\x00\x00\x01\x00\x00\x1d!\
+\x00\x00\x01\x98Uc\xf5a\
 \x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\
-\x00\x00\x01\x96$/\x07\xc9\
-\x00\x00\x00R\x00\x00\x00\x00\x00\x01\x00\x00\x10\xf8\
-\x00\x00\x01\x96$\x1f\xd9\x85\
+\x00\x00\x01\x98Uc\xf5V\
+\x00\x00\x00p\x00\x00\x00\x00\x00\x01\x00\x00\x16*\
+\x00\x00\x01\x98Uc\xf5U\
 \x00\x00\x00\x18\x00\x00\x00\x00\x00\x01\x00\x00\x02\xd9\
-\x00\x00\x01\x96$!^\x1c\
+\x00\x00\x01\x98Uc\xf5^\
 "
 
 def qInitResources():
