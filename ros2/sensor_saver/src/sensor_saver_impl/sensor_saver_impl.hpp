@@ -3,6 +3,9 @@
 
 #include <pqxx/pqxx>
 #include <memory>
+#include <thread>
+#include <chrono>
+#include <atomic>
 
 class SensorSaverImpl {
 public:
@@ -14,11 +17,17 @@ public:
     void update_ttl(int64_t ttl_days_new);
     void save_to_db(double x, double y);
 
+    void start_cleanup_timer(std::chrono::hours time);
+    void change_cleanup_interval(std::chrono::hours new_interval);
+    void stop_cleanup_timer();
+
 private:
     std::unique_ptr<pqxx::connection> db_conn_;
     int64_t ttl_days_;
     std::string conn_str_;
     Logger logger_;
+    std::atomic<bool> cleanup_active_{false};
+    std::thread cleanup_thread_;
 };
 
 

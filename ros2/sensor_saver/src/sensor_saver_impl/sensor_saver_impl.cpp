@@ -59,3 +59,26 @@ void SensorSaverImpl::save_to_db(double x, double y) {
         throw;
     }
 }
+
+void SensorSaverImpl::start_cleanup_timer(std::chrono::hours interval) {
+    cleanup_active_ = true;
+    cleanup_thread_ = std::thread([this, interval] {
+        while (cleanup_active_) {
+            std::this_thread::sleep_for(interval);
+            cleanup_old_data();
+        }
+    });
+    logger_("INFO", "Cleanup timer started");
+}
+
+void SensorSaverImpl::stop_cleanup_timer() {
+    cleanup_active_ = false;
+    cleanup_thread_.join();
+    logger_("INFO", "Cleanup timer stopped");
+}
+
+void SensorSaverImpl::change_cleanup_interval(std::chrono::hours new_interval) {
+    stop_cleanup_timer();
+    start_cleanup_timer(new_interval);
+    logger_("INFO", "Cleanup interval changed to " + std::to_string(new_interval.count()) + " hours");
+}
