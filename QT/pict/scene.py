@@ -36,6 +36,7 @@ class ImageModel(QtWidgets.QGraphicsScene):
         boxes = self.find_rects(os.path.dirname(self.current_image_path))
         for box in boxes:
             box_item = BoxGraphicsItem(box=box, image_path=self.current_image_path)
+
             self.addItem(box_item)
             if State().need_labels:
                 self.add_labels(box_item, box.label)

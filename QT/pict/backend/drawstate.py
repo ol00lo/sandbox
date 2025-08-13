@@ -11,10 +11,17 @@ class DrawState:
     
     def _init_state(self):
         self.need_labels = False
-        self.line_color = QtGui.QColor(QtCore.Qt.GlobalColor.yellow)
+
+        r, g, b = 255, 215, 0
+
+        self.line_color = QtGui.QColor(r, g, b)
         self.line_width = 4
         self.line_style = QtCore.Qt.PenStyle.SolidLine
         self.margin = 40
+
+        self.hover_line_color = self.line_color.lighter(150)
+        self.hover_line_width = 5
+        self.hover_line_style = QtCore.Qt.PenStyle.SolidLine
 
         self.label_color = QtGui.QColor(QtCore.Qt.GlobalColor.black)
         self.label_size =  150
@@ -25,6 +32,12 @@ class DrawState:
     @property
     def pen(self):
         pen = QtGui.QPen(self.line_color, self.line_width, self.line_style)
+        pen.setCosmetic(True)
+        return pen
+
+    @property
+    def hover_pen(self):
+        pen = QtGui.QPen(self.hover_line_color, self.hover_line_width, self.hover_line_style)
         pen.setCosmetic(True)
         return pen
 

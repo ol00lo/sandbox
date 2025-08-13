@@ -12,6 +12,8 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
         self.image_path = image_path
         self.name = os.path.basename(image_path)
 
+        self.setAcceptHoverEvents(True)
+
         self.setPen(DrawState().pen)
 
         self.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
@@ -165,6 +167,16 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
             event.accept()
             return
         super().mouseReleaseEvent(event)
+
+    def hoverEnterEvent(self, event):
+        self.setPen(DrawState().hover_pen)
+        self.update()
+        event.accept()
+
+    def hoverLeaveEvent(self, event):
+        self.setPen(DrawState().pen)
+        self.update()
+        event.accept()
 
     def contains(self, point: QtCore.QPointF) -> bool:
         rect = self.rect()
