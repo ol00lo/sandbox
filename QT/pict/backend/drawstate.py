@@ -1,4 +1,4 @@
-from PyQt6 import QtGui, QtCore
+from PyQt6 import QtGui, QtCore, QtWidgets
 
 class DrawState:
     _instance = None
@@ -19,15 +19,14 @@ class DrawState:
         self.line_style = QtCore.Qt.PenStyle.SolidLine
         self.margin = 40
 
-        self.hover_line_color = self.line_color.lighter(150)
-        self.hover_line_width = 5
+        self.how_hover_brighter = 150
+        self.how_hover_wider = 1
         self.hover_line_style = QtCore.Qt.PenStyle.SolidLine
 
         self.label_color = QtGui.QColor(QtCore.Qt.GlobalColor.black)
-        self.label_size =  150
-        # self.label_size = 12
+        #self.label_size =  150
+        self.label_size = 12
         self.label_type = "Times New Roman" 
-        self.label_offset = 30
 
         self.dark_mask_color = QtGui.QColor(0, 0, 0, 150)
 
@@ -55,3 +54,11 @@ class DrawState:
         pen = QtGui.QPen(self.label_color, 1, QtCore.Qt.PenStyle.SolidLine)
         pen.setCosmetic(True)
         return pen
+
+    @property
+    def hover_line_color(self):
+        return self.line_color.lighter(self.how_hover_brighter)
+
+    @property
+    def hover_line_width(self):
+        return self.line_width + self.how_hover_wider

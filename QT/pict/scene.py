@@ -50,10 +50,18 @@ class ImageModel(QtWidgets.QGraphicsScene):
         text_item = QtWidgets.QGraphicsSimpleTextItem(label, box)
         text_item.setFont(DrawState().label_font)
         text_item.setPen(DrawState().label_pen)
-        #text_item.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIgnoresTransformations)
+        text_item.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIgnoresTransformations)
 
-        x_pos = box.rect().center().x() - text_item.boundingRect().width()/2
-        y_pos = box.rect().top() - text_item.boundingRect().height() - DrawState().label_offset
+        text_height = text_item.boundingRect().height()
+        text_width = text_item.boundingRect().width()
+        view_transform = self.views()[0].transform() if self.views() else None
+        if view_transform:
+            text_height /= view_transform.m22()
+            text_width /= view_transform.m11()
+
+        x_pos = box.rect().center().x() - text_width/2
+        y_pos = box.rect().top() - text_height
+
         text_item.setPos(QtCore.QPointF(x_pos, y_pos))
 
         self.addItem(text_item)
