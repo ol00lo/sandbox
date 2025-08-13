@@ -3,6 +3,7 @@ from backend.state import State
 from boxgritem import BoxGraphicsItem
 import os
 from backend.box import Box
+from backend.drawstate import DrawState
 
 class ImageModel(QtWidgets.QGraphicsScene):
     def __init__(self, parent=None):
@@ -40,21 +41,15 @@ class ImageModel(QtWidgets.QGraphicsScene):
                 self.add_labels(box_item, box.label)
 
     def add_labels(self, box, label):
-        width = self.sceneRect().width()
-        font_size = max(8, width * 0.05)
-
-        font = QtGui.QFont("Times New Roman")
-        font.setPointSizeF(font_size)
-
         text_item = QtWidgets.QGraphicsSimpleTextItem(label, box)
+        text_item.setFont(DrawState().label_font)
+        text_item.setPen(DrawState().label_pen)
+        #text_item.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIgnoresTransformations)
 
-        step = width * 0.01
-        local_pos = QtCore.QPointF(box.rect().right() + step, box.rect().top() - step)
-        text_item.setPos(local_pos)
+        x_pos = box.rect().center().x() - text_item.boundingRect().width()/2
+        y_pos = box.rect().top() - text_item.boundingRect().height() - DrawState().label_offset
+        text_item.setPos(QtCore.QPointF(x_pos, y_pos))
 
-        pen = QtGui.QPen(QtCore.Qt.GlobalColor.black, 1, QtCore.Qt.PenStyle.SolidLine)
-        text_item.setPen(pen)
-        text_item.setFont(font)
         self.addItem(text_item)
 
     def find_rects(self, directory):

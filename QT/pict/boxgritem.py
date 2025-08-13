@@ -2,6 +2,7 @@ from PyQt6 import QtWidgets, QtGui, QtCore
 from backend.box import Box
 from backend.state import State
 import os
+from backend.drawstate import DrawState
 
 class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
     def __init__(self, box:Box = None, image_path="", parent=None):
@@ -11,9 +12,8 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
         self.image_path = image_path
         self.name = os.path.basename(image_path)
 
-        pen = QtGui.QPen(QtCore.Qt.GlobalColor.yellow, 4, QtCore.Qt.PenStyle.SolidLine)
-        pen.setCosmetic(True)
-        self.setPen(pen)
+        self.setPen(DrawState().pen)
+
         self.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
         self.set_resizing()
 
@@ -50,15 +50,16 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
 
         self.h_resize = None
         self.v_resize = None
+        margin = DrawState().margin
 
-        if abs(pos.x() - self.rect().left()) < self.resize_margin:
+        if abs(pos.x() - self.rect().left()) < margin:
             self.h_resize = 'left'
-        elif abs(pos.x() - self.rect().right()) < self.resize_margin:
+        elif abs(pos.x() - self.rect().right()) < margin:
             self.h_resize = 'right'
 
-        if abs(pos.y() - self.rect().top()) < self.resize_margin:
+        if abs(pos.y() - self.rect().top()) < margin:
             self.v_resize = 'top'
-        elif abs(pos.y() -self.rect().bottom()) < self.resize_margin:
+        elif abs(pos.y() -self.rect().bottom()) < margin:
             self.v_resize = 'bottom'
 
         self.is_corner_resize = (self.h_resize is not None and self.v_resize is not None)
@@ -115,14 +116,16 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
         top_dist = abs(pos.y() - self.original_box.top())
         bottom_dist = abs(pos.y() - self.original_box.bottom())
 
-        if left_dist < self.resize_margin and top_dist < self.resize_margin: edge = 'top_left'
-        elif right_dist < self.resize_margin and top_dist < self.resize_margin: edge = 'top_right'
-        elif left_dist < self.resize_margin and bottom_dist < self.resize_margin: edge = 'bottom_left'
-        elif right_dist < self.resize_margin and bottom_dist < self.resize_margin: edge = 'bottom_right'
-        elif left_dist < self.resize_margin: edge = 'left'
-        elif right_dist < self.resize_margin: edge = 'right'
-        elif top_dist < self.resize_margin: edge = 'top'
-        elif bottom_dist < self.resize_margin: edge = 'bottom'
+        margin = DrawState().margin
+
+        if left_dist < margin and top_dist < margin: edge = 'top_left'
+        elif right_dist < margin and top_dist < margin: edge = 'top_right'
+        elif left_dist < margin and bottom_dist < margin: edge = 'bottom_left'
+        elif right_dist < margin and bottom_dist < margin: edge = 'bottom_right'
+        elif left_dist < margin: edge = 'left'
+        elif right_dist < margin: edge = 'right'
+        elif top_dist < margin: edge = 'top'
+        elif bottom_dist < margin: edge = 'bottom'
         else:
             return  QtCore.Qt.CursorShape.ArrowCursor
         return self.resize_cursor_map[edge]
@@ -165,7 +168,7 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
 
     def contains(self, point: QtCore.QPointF) -> bool:
         rect = self.rect()
-        margin = self.resize_margin
+        margin = DrawState().margin
 
         outer_rect = rect.adjusted(-margin, -margin, margin, margin)
 
@@ -176,7 +179,7 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
     def shape(self) -> QtGui.QPainterPath:
         path = QtGui.QPainterPath()
         rect = self.rect()
-        margin = self.resize_margin
+        margin = DrawState().margin
 
         outer_rect = rect.adjusted(-margin, -margin, margin, margin)
         path.addRect(outer_rect)
