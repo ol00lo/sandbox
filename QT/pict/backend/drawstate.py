@@ -29,6 +29,8 @@ class DrawState:
         self.label_type = "Times New Roman" 
         self.label_offset = 30
 
+        self.dark_mask_color = QtGui.QColor(0, 0, 0, 150)
+
     @property
     def pen(self):
         pen = QtGui.QPen(self.line_color, self.line_width, self.line_style)

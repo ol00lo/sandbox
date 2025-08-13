@@ -43,6 +43,7 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
     def update_box(self, rect):
         self.original_box = rect
         self.setRect(rect)
+        State().signals.update_mask_signal.emit(rect)
 
     def start_resizing(self, pos):
         self.resizing = True
@@ -67,6 +68,7 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
         self.is_corner_resize = (self.h_resize is not None and self.v_resize is not None)
 
         self.setRect(self.temp_box)
+        State().signals.create_mask_signal.emit(self.temp_box)
 
     def resize_box(self, pos):
         if not self.resizing or not self.temp_box:
@@ -94,6 +96,7 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
         if rect.width() > 5 and rect.height() > 5:
             self.temp_box = rect
             self.setRect(rect)
+            State().signals.update_mask_signal.emit(rect)
             self.resize_start_pos = pos
 
     def end_resizing(self):
@@ -107,6 +110,7 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
             self.resizing = False
             self.temp_box = None
             self.setRect(self.original_box)
+            State().signals.delete_mask_signal.emit()
             State().do_action("ResizeBox", old_box, new_box, self.image_path)
 
     def is_box(self):

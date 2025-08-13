@@ -13,6 +13,11 @@ class ImageModel(QtWidgets.QGraphicsScene):
         State().signals.delete_box_signal.connect(self.update_boxes)
         State().signals.create_box_signal.connect(self.update_boxes)
 
+        State().signals.create_mask_signal.connect(self.start_drawing_mask)
+        State().signals.delete_mask_signal.connect(self.remove_drawing_mask)
+        State().signals.update_mask_signal.connect(self.update_drawing_mask)
+        self.darken_mask = None
+
     def set_selected_image(self, name):
         self.current_image_path = State().get_path(name)
 
@@ -76,3 +81,34 @@ class ImageModel(QtWidgets.QGraphicsScene):
                 except ValueError:
                     continue
         return rects
+
+    def start_drawing_mask(self, box_rect):
+        if self.darken_mask:
+            self.removeItem(self.darken_mask)
+
+        mask = QtWidgets.QGraphicsPathItem()
+        path = QtGui.QPainterPath()
+        path.addRect(self.sceneRect())
+        path.addRect(box_rect)
+        mask.setPath(path)
+        mask.setBrush(DrawState().dark_mask_color)
+        mask.setPen(QtGui.QPen(QtCore.Qt.PenStyle.NoPen))
+
+        self.darken_mask = mask
+        self.addItem(mask)
+        mask.setZValue(1)
+
+    def update_drawing_mask(self, box_rect):
+        if not self.darken_mask:
+            return
+
+        mask_path = QtGui.QPainterPath()
+        mask_path.addRect(self.sceneRect())
+        mask_path.addRect(box_rect)
+
+        self.darken_mask.setPath(mask_path)
+
+    def remove_drawing_mask(self):
+        if self.darken_mask:
+            self.removeItem(self.darken_mask)
+            self.darken_mask = None
