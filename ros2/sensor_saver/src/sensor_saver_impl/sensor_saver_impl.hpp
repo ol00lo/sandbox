@@ -6,11 +6,11 @@
 #include <thread>
 #include <chrono>
 #include <atomic>
+#include <rclcpp/rclcpp.hpp>
 
 class SensorSaverImpl {
 public:
-    using Logger = std::function<void(const std::string&, const std::string&)>;
-    SensorSaverImpl(const std::string& conn_str, int64_t ttl_days, Logger logger);
+    SensorSaverImpl(const std::string& conn_str, int64_t ttl_days, rclcpp::Logger logger);
 
     void init_db();
     void cleanup_old_data();
@@ -25,7 +25,7 @@ private:
     std::unique_ptr<pqxx::connection> db_conn_;
     int64_t ttl_days_;
     std::string conn_str_;
-    Logger logger_;
+    rclcpp::Logger logger_;
     std::atomic<bool> cleanup_active_{false};
     std::thread cleanup_thread_;
 };

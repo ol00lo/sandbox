@@ -2,17 +2,25 @@
 #include <rclcpp/rclcpp.hpp>
 #include "sensor_saver_impl.hpp"
 
+constexpr int64_t SENSOR_DATA_TTL_DAYS_DEFAULT = 7;
+constexpr const char* HOST_DEFAULT = "db";
+constexpr const char* DBNAME_DEFAULT = "mydb";
+constexpr const char* USER_DEFAULT = "user";
+constexpr const char* PASSWORD_DEFAULT = "password";
+constexpr int PORT_DEFAULT = 5432;
+constexpr int64_t CLEANUP_INTERVAL_DEFAULT = 2;
+
 class MouseSaver : public rclcpp::Node
 {
 public:
     MouseSaver() : Node("MouseSaver") {
-        this->declare_parameter<int64_t>("sensor_data_ttl_days", sensor_data_ttl_days_default_);
-        this->declare_parameter<std::string>("db_connection.host", host_default_);
-        this->declare_parameter<std::string>("db_connection.dbname", dbname_default_);
-        this->declare_parameter<std::string>("db_connection.user", user_default_);
-        this->declare_parameter<std::string>("db_connection.password", password_default_);
-        this->declare_parameter<int>("db_connection.port", port_default_);
-        this->declare_parameter<int64_t>("cleanup_interval_hours", cleanup_interval_default_);
+        this->declare_parameter<int64_t>("sensor_data_ttl_days", SENSOR_DATA_TTL_DAYS_DEFAULT);
+        this->declare_parameter<std::string>("db_connection.host", HOST_DEFAULT);
+        this->declare_parameter<std::string>("db_connection.dbname", DBNAME_DEFAULT);
+        this->declare_parameter<std::string>("db_connection.user", USER_DEFAULT);
+        this->declare_parameter<std::string>("db_connection.password", PASSWORD_DEFAULT);
+        this->declare_parameter<int>("db_connection.port", PORT_DEFAULT);
+        this->declare_parameter<int64_t>("cleanup_interval_hours", CLEANUP_INTERVAL_DEFAULT);
 
         int64_t ttl_days = this->get_parameter("sensor_data_ttl_days").as_int();
         std::string conn_str = "host=" + this->get_parameter("db_connection.host").as_string() +
@@ -21,14 +29,14 @@ public:
                     " password=" + this->get_parameter("db_connection.password").as_string() +
                     " port=" + std::to_string(this->get_parameter("db_connection.port").as_int());
 
-        auto logger = [this](const std::string& level, const std::string& msg) {
-                if (level == "ERROR") RCLCPP_ERROR(this->get_logger(), "%s", msg.c_str());
-                else RCLCPP_INFO(this->get_logger(), "%s", msg.c_str());
-        };
-
-        pimpl_ = std::make_unique<SensorSaverImpl>(conn_str, ttl_days, logger);
-        pimpl_->init_db();
-        pimpl_->start_cleanup_timer(std::chrono::hours(cleanup_interval_default_));
+        try{
+            pimpl_ = std::make_unique<SensorSaverImpl>(conn_str, ttl_days, this->get_logger());
+            pimpl_->init_db();
+        } catch (const std::exception& e) {
+            RCLCPP_ERROR(this->get_logger(), "Failed to initialize database: %s", e.what());
+            throw;
+        }
+        pimpl_->start_cleanup_timer(std::chrono::hours(CLEANUP_INTERVAL_DEFAULT));
         rclcpp::on_shutdown([this]() {pimpl_->stop_cleanup_timer();});
 
         RCLCPP_INFO(this->get_logger(), "TTL days: %ld", ttl_days);
@@ -39,7 +47,6 @@ public:
 
         subscription_ = create_subscription<geometry_msgs::msg::Point>(
             "mouse_moved", 10, [this](const geometry_msgs::msg::Point::SharedPtr msg) { pimpl_->save_to_db(msg->x, msg->y); });
-
 
         RCLCPP_INFO(get_logger(), "Subscriber ready. DB: %s", conn_str.substr(0, conn_str.find("password")).c_str());
     }
@@ -73,14 +80,6 @@ private:
 
         return result;
     }
-
-    const int64_t sensor_data_ttl_days_default_ = 7;
-    const std::string host_default_ = "db";
-    const std::string dbname_default_ = "mydb";
-    const std::string user_default_ = "user";
-    const std::string password_default_ = "password";
-    const int port_default_ = 5432;
-    const int64_t cleanup_interval_default_ = 2;
 
     rclcpp::Subscription<geometry_msgs::msg::Point>::SharedPtr subscription_;
     std::unique_ptr<SensorSaverImpl> pimpl_;

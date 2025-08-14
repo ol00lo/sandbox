@@ -7,3 +7,4 @@ sensor_saver:
             user: user
             password: password
             port: 5432
+        cleanup_interval_hours: 2
