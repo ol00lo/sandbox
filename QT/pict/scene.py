@@ -49,6 +49,7 @@ class ImageModel(QtWidgets.QGraphicsScene):
     def add_labels(self, box, label):
         text_item = QtWidgets.QGraphicsSimpleTextItem(label, box)
         text_item.setFont(DrawState().label_font)
+        text_item.setBrush(QtGui.QBrush(DrawState().label_color))
         text_item.setPen(DrawState().label_pen)
         text_item.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIgnoresTransformations)
 

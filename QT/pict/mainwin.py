@@ -2,7 +2,7 @@ from PyQt6 import QtWidgets, QtGui, QtCore
 from imageviewer import ImageViewer
 from tableviewer import TableViewer
 from backend.state import State
-from backend.boxsettings import BBoxSettingsDialog
+from boxsettings import BBoxSettingsDialog
 from backend.drawstate import DrawState
 import resources
 
@@ -124,10 +124,13 @@ class MainWindow(QtWidgets.QMainWindow):
     def get_boxes_parameters(self):
         dialog = BBoxSettingsDialog(self)
         if dialog.exec() == QtWidgets.QDialog.DialogCode.Accepted:
-            DrawState().line_color = dialog.get_color()
-            DrawState().line_width = dialog.get_line_width()
-            DrawState().need_labels = dialog.get_show_labels()
-            DrawState().label_size = dialog.get_font_size()
+            res = dialog.get_settings()
+            DrawState().line_color = res['line_color']
+            DrawState().line_width = res['line_width']
+            DrawState().line_style =  res['line_style']
 
-            State().need_labels = DrawState().need_labels
+            DrawState().label_size = res['label_size']
+            DrawState().label_color = res['label_color']
+            DrawState().label_type = res['label_type']
+
             self.image_model_viewer.update_image()
