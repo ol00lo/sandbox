@@ -2,6 +2,8 @@ from PyQt6 import QtWidgets, QtGui, QtCore
 from imageviewer import ImageViewer
 from tableviewer import TableViewer
 from backend.state import State
+from boxsettings import BBoxSettingsDialog
+from backend.drawstate import DrawState
 import resources
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -37,9 +39,18 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.table_viewer.image_selected.connect(self.image_model_viewer.display_image)
         self.create_toolbar()
+        self.create_menus()
+
+    def create_menus(self):
+        menubar = self.menuBar()
+
+        options_menu = menubar.addMenu("Options")
+
+        bbox_settings_action = QtGui.QAction("BBox Settings...", self)
+        bbox_settings_action.triggered.connect(self.get_boxes_parameters)
+        options_menu.addAction(bbox_settings_action)
 
     def create_toolbar(self):
-        #toolbar = self.addToolBar("Main Toolbar")
         self.toolbar = self.addToolBar("Main Toolbar")
         toolbar = self.toolbar
         toolbar.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonIconOnly)
@@ -109,3 +120,17 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             self.redo_action.setIcon(QtGui.QIcon(":/redo"))
             self.redo_action.setEnabled(True)
+
+    def get_boxes_parameters(self):
+        dialog = BBoxSettingsDialog(self)
+        if dialog.exec() == QtWidgets.QDialog.DialogCode.Accepted:
+            res = dialog.get_settings()
+            DrawState().line_color = res['line_color']
+            DrawState().line_width = res['line_width']
+            DrawState().line_style =  res['line_style']
+
+            DrawState().label_size = res['label_size']
+            DrawState().label_color = res['label_color']
+            DrawState().label_type = res['label_type']
+
+            self.image_model_viewer.update_image()

@@ -87,6 +87,7 @@ class ImageViewer(QtWidgets.QGraphicsView):
 
         scene_rect = Box("", QtCore.QRectF(self.start_point, self.start_point))
         self.current_box = BoxGraphicsItem(box = scene_rect, image_path=self.image_model.current_image_path)
+        State().signals.create_mask_signal.emit(scene_rect)
         self.image_model.addItem(self.current_box)
 
     def finish_drawing(self):
@@ -117,10 +118,12 @@ class ImageViewer(QtWidgets.QGraphicsView):
         if State().need_labels:
             self.image_model.add_labels(self.current_box, label)
         self.current_box = None
+        State().signals.delete_mask_signal.emit()
 
     def cancel_drawing(self):
         self.image_model.removeItem(self.current_box)
         self.current_box = None
+        State().signals.delete_mask_signal.emit()
 
     def set_cursor(self, pos, item):
         if isinstance(item, QtWidgets.QGraphicsPixmapItem):

@@ -12,7 +12,7 @@ class BackUp:
         import time
         self.cleanup_old_backups(directory)
         dir_name = f"{self.BACKUP_PREFIX}{int(time.time())}"
-        self.backup_dir = directory + dir_name
+        self.backup_dir = directory + "/" + dir_name
         os.makedirs(self.backup_dir, exist_ok=True)
 
         return self.backup_dir

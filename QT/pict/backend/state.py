@@ -16,6 +16,10 @@ class Signals(QtCore.QObject):
 
     change_focus_signal = QtCore.pyqtSignal(int, int, int)
 
+    create_mask_signal = QtCore.pyqtSignal(QtCore.QRectF)
+    update_mask_signal = QtCore.pyqtSignal(QtCore.QRectF)
+    delete_mask_signal = QtCore.pyqtSignal()
+
 class State:
     _instance = None
     signals = None
