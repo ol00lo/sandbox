@@ -8,7 +8,7 @@ constexpr const char* DBNAME_DEFAULT = "mydb";
 constexpr const char* USER_DEFAULT = "user";
 constexpr const char* PASSWORD_DEFAULT = "password";
 constexpr int PORT_DEFAULT = 5432;
-constexpr int64_t CLEANUP_INTERVAL_DEFAULT = 2;
+constexpr int64_t CLEANUP_INTERVAL_DEFAULT = 24;
 
 class MouseSaver : public rclcpp::Node
 {
@@ -46,7 +46,7 @@ public:
             std::bind(&MouseSaver::parameters_callback, this, std::placeholders::_1));
 
         subscription_ = create_subscription<geometry_msgs::msg::Point>(
-            "mouse_moved", 10, [this](const geometry_msgs::msg::Point::SharedPtr msg) { pimpl_->save_to_db(msg->x, msg->y); });
+            "mouse_moved", 10, [this](const geometry_msgs::msg::Point::SharedPtr msg) { pimpl_->save_to_db(msg->x, msg->y, msg->z); });
 
         RCLCPP_INFO(get_logger(), "Subscriber ready. DB: %s", conn_str.substr(0, conn_str.find("password")).c_str());
     }
