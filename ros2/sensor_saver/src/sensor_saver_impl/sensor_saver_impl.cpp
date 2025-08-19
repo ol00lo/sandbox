@@ -4,11 +4,12 @@ SensorSaverImpl::SensorSaverImpl(const std::string& conn_str, int64_t ttl_days, 
     ttl_days_(ttl_days), conn_str_(conn_str), logger_(logger) {}
 
 void SensorSaverImpl::init_db(const std::string& table_name) {
+    table_name_ = table_name;
     db_conn_ = std::make_unique<pqxx::connection>(conn_str_);
     pqxx::work txn(*db_conn_);
 
     std::string sql = 
-        "CREATE TABLE IF NOT EXISTS " + txn.quote_name(table_name) + R"( (
+        "CREATE TABLE IF NOT EXISTS " + txn.quote_name(table_name_) + R"( (
         id SERIAL PRIMARY KEY,
         x REAL NOT NULL,
         y REAL NOT NULL,
@@ -23,7 +24,7 @@ void SensorSaverImpl::init_db(const std::string& table_name) {
 void SensorSaverImpl::cleanup_old_data() {
     pqxx::connection conn(conn_str_);
     pqxx::work txn(conn);
-    std::string sql = "DELETE FROM mouse_movements "
+    std::string sql = "DELETE FROM " + txn.quote_name(table_name_) + " "
                       "WHERE timestamp < CURRENT_TIMESTAMP - INTERVAL '" +
                       std::to_string(ttl_days_) + " days'";
 
@@ -40,7 +41,7 @@ void SensorSaverImpl::update_ttl(int64_t ttl_days_new) {
 void SensorSaverImpl::save_to_db(double x, double y, double timestamp) {
     pqxx::connection conn(conn_str_);
     pqxx::work txn(conn);
-    txn.exec_params("INSERT INTO mouse_movements (x, y, timestamp) VALUES ($1, $2, to_timestamp($3))", x, y, timestamp);
+    txn.exec_params("INSERT INTO " + txn.quote_name(table_name_) + " (x, y, timestamp) VALUES ($1, $2, to_timestamp($3))", x, y, timestamp);
     txn.commit();
     RCLCPP_INFO(logger_, "Saved coordinates: x=%f, y=%f, timestamp=%f", x, y, timestamp);
 }
@@ -66,4 +67,21 @@ void SensorSaverImpl::change_cleanup_interval(std::chrono::hours new_interval) {
     stop_cleanup_timer();
     start_cleanup_timer(new_interval);
     RCLCPP_INFO(logger_, "Cleanup interval changed to %ld hours", new_interval.count());
+}
+
+std::size_t SensorSaverImpl::count_rows() {
+    pqxx::connection conn(conn_str_);
+    pqxx::work txn(conn);
+    std::string sql = "SELECT COUNT(*) FROM " + txn.quote_name(table_name_);
+    auto res = txn.exec(sql);
+    txn.commit();
+    return res[0][0].as<std::size_t>(0);
+}
+
+void SensorSaverImpl::clear_table(){
+    pqxx::connection conn(conn_str_);
+    pqxx::work txn(conn);
+    txn.exec("TRUNCATE TABLE " + txn.quote_name(table_name_) + " RESTART IDENTITY;");
+    txn.commit();
+    RCLCPP_INFO(logger_, "Table cleared");
 }
