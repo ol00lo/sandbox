@@ -63,8 +63,11 @@ class MouseSensor(Node):
         msg = Point()
         msg.x = float(x)
         msg.y = float(y)
+        msg.z = float(tm)
+        
+
         self._publisher_mouse_moved.publish(msg)
-        self.get_logger().debug(f'Publishing: x={msg.x}, y={msg.y}')
+        self.get_logger().debug(f'Publishing: x={msg.x}, y={msg.y}, current time = {msg.z}')
 
     def update_time_interval(self, value=None):
         if value is None:
