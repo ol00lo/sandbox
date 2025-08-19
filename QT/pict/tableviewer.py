@@ -69,12 +69,15 @@ class TableViewer (QtWidgets.QWidget):
         rename_action.triggered.disconnect()
 
     def keyPressEvent(self, event):
-        if event.key() == QtCore.Qt.Key.Key_Delete:
-            selected_rows = self.table_view.selectionModel().selectedRows()
-            source_indexes = [self.proxy_model.mapToSource(index) for index in selected_rows]
-            State().do_action("DeleteImage", source_indexes)
-        else:
-            super().keyPressEvent(event)
+        try:
+            if event.key() == QtCore.Qt.Key.Key_Delete:
+                selected_rows = self.table_view.selectionModel().selectedRows()
+                source_indexes = [self.proxy_model.mapToSource(index) for index in selected_rows]
+                State().do_action("DeleteImage", source_indexes)
+            else:
+                super().keyPressEvent(event)
+        except Exception as e:
+            print(e)
 
     def init_connections(self):
         self.table_view.setModel(self.proxy_model)

@@ -17,7 +17,7 @@ class DrawState:
         self.line_color = QtGui.QColor(r, g, b)
         self.line_width = 4
         self.line_style = QtCore.Qt.PenStyle.SolidLine
-        self.margin = 40
+        self.margin = 10
 
         self.how_hover_brighter = 150
         self.how_hover_wider = 1

@@ -34,9 +34,6 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
             'bottom_right':  QtCore.Qt.CursorShape.SizeFDiagCursor
         }
 
-        img_info = State().model.images[State().model.index_by_imagename(self.name).row()]
-        self.resize_margin = min(img_info.width, img_info.height) * 0.02
-
     def update_label(self, label):
         self.original_box.label = label
 
@@ -53,7 +50,8 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
 
         self.h_resize = None
         self.v_resize = None
-        margin = DrawState().margin
+        view = self.scene().views()[0]
+        margin = DrawState().margin / view.transform().m11()
 
         if abs(pos.x() - self.rect().left()) < margin:
             self.h_resize = 'left'
@@ -122,7 +120,8 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
         top_dist = abs(pos.y() - self.original_box.top())
         bottom_dist = abs(pos.y() - self.original_box.bottom())
 
-        margin = DrawState().margin
+        view = self.scene().views()[0]
+        margin = DrawState().margin / view.transform().m11()
 
         if left_dist < margin and top_dist < margin: edge = 'top_left'
         elif right_dist < margin and top_dist < margin: edge = 'top_right'
@@ -137,54 +136,70 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
         return self.resize_cursor_map[edge]
 
     def mousePressEvent(self, event):
-        if event.button() == QtCore.Qt.MouseButton.LeftButton:
-            self.start_resizing(event.pos())
-            event.accept()
-            return
+        try:
+            if event.button() == QtCore.Qt.MouseButton.LeftButton:
+                self.start_resizing(event.pos())
+                event.accept()
+                return
 
-        if event.button() == QtCore.Qt.MouseButton.RightButton:
-            question = QtWidgets.QMessageBox()
-            question.setIcon(QtWidgets.QMessageBox.Icon.Question)
-            question.setWindowTitle('Delete Box')
-            question.setText('Are you sure you want to delete this box?')
-            question.setStandardButtons(
-                 QtWidgets.QMessageBox.StandardButton.Yes | 
-                 QtWidgets.QMessageBox.StandardButton.No
-            )
-            question.setDefaultButton(QtWidgets.QMessageBox.StandardButton.No)
-            reply = question.exec()
+            if event.button() == QtCore.Qt.MouseButton.RightButton:
+                question = QtWidgets.QMessageBox()
+                question.setIcon(QtWidgets.QMessageBox.Icon.Question)
+                question.setWindowTitle('Delete Box')
+                question.setText('Are you sure you want to delete this box?')
+                question.setStandardButtons(
+                     QtWidgets.QMessageBox.StandardButton.Yes | 
+                     QtWidgets.QMessageBox.StandardButton.No
+                )
+                question.setDefaultButton(QtWidgets.QMessageBox.StandardButton.No)
+                reply = question.exec()
 
-            if reply == QtWidgets.QMessageBox.StandardButton.Yes:
-                State().do_action("DeleteBox", self.original_box, self.image_path)
-            event.accept()
-            return
-        super().mousePressEvent(event)
+                if reply == QtWidgets.QMessageBox.StandardButton.Yes:
+                    State().do_action("DeleteBox", self.original_box, self.image_path)
+                    event.accept()
+                    return
+                super().mousePressEvent(event)
+        except Exception as e:
+            print(e)
 
     def mouseMoveEvent(self, event):
-        if self.resizing:
-            self.resize_box(event.pos())
+        try:
+            if self.resizing:
+                self.resize_box(event.pos())
+        except Exception as e:
+            print(e)
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
-        if event.button() == QtCore.Qt.MouseButton.LeftButton:
-            self.end_resizing()
-            event.accept()
-            return
+        try:
+            if event.button() == QtCore.Qt.MouseButton.LeftButton:
+                self.end_resizing()
+                event.accept()
+                return
+        except Exception as e:
+            print(e)
         super().mouseReleaseEvent(event)
 
     def hoverEnterEvent(self, event):
-        self.setPen(DrawState().hover_pen)
-        self.update()
-        event.accept()
+        try:
+            self.setPen(DrawState().hover_pen)
+            self.update()
+            event.accept()
+        except Exception as e:
+            print(e)
 
     def hoverLeaveEvent(self, event):
-        self.setPen(DrawState().pen)
-        self.update()
-        event.accept()
+        try:
+            self.setPen(DrawState().pen)
+            self.update()
+            event.accept()
+        except Exception as e:
+            print(e)
 
     def contains(self, point: QtCore.QPointF) -> bool:
         rect = self.rect()
-        margin = DrawState().margin
+        view = self.scene().views()[0]
+        margin = DrawState().margin / view.transform().m11()
 
         outer_rect = rect.adjusted(-margin, -margin, margin, margin)
 
@@ -195,7 +210,8 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
     def shape(self) -> QtGui.QPainterPath:
         path = QtGui.QPainterPath()
         rect = self.rect()
-        margin = DrawState().margin
+        view = self.scene().views()[0]
+        margin = DrawState().margin / view.transform().m11()
 
         outer_rect = rect.adjusted(-margin, -margin, margin, margin)
         path.addRect(outer_rect)
