@@ -28,6 +28,7 @@ class ImageViewer(QtWidgets.QGraphicsView):
     def display_image(self):
         self.image_model.display_image()
         self.fitInView(self.image_model.sceneRect(), QtCore.Qt.AspectRatioMode.KeepAspectRatio)
+        self.image_model.update_boxes()
 
     def update_image(self):
         self.image_model.update_boxes()
@@ -151,5 +152,6 @@ class ImageViewer(QtWidgets.QGraphicsView):
         super().resizeEvent(event)
         try:
             self.fitInView(self.image_model.sceneRect(), QtCore.Qt.AspectRatioMode.KeepAspectRatio)
+            self.image_model.update_boxes()
         except Exception as e:
             print(e)

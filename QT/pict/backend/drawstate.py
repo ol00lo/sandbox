@@ -24,9 +24,9 @@ class DrawState:
         self.hover_line_style = QtCore.Qt.PenStyle.SolidLine
 
         self.label_color = QtGui.QColor(QtCore.Qt.GlobalColor.black)
-        #self.label_size =  150
         self.label_size = 12
         self.label_type = "Times New Roman" 
+        self.label_background_alpha = 100
 
         self.dark_mask_color = QtGui.QColor(0, 0, 0, 150)
 
@@ -46,7 +46,6 @@ class DrawState:
     def label_font(self):
         font = QtGui.QFont(self.label_type)
         font.setPointSize(self.label_size)
-
         return font
 
     @property
@@ -54,6 +53,12 @@ class DrawState:
         pen = QtGui.QPen(self.label_color, 1, QtCore.Qt.PenStyle.SolidLine)
         pen.setCosmetic(True)
         return pen
+
+    @property
+    def label_background_color(self):
+        color = QtGui.QColor(self.line_color)
+        color.setAlpha(self.label_background_alpha)
+        return color
 
     @property
     def hover_line_color(self):

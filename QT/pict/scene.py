@@ -53,17 +53,30 @@ class ImageModel(QtWidgets.QGraphicsScene):
         text_item.setPen(DrawState().label_pen)
         text_item.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIgnoresTransformations)
 
-        text_height = text_item.boundingRect().height()
-        text_width = text_item.boundingRect().width()
         view_transform = self.views()[0].transform() if self.views() else None
-        if view_transform:
-            text_height /= view_transform.m22()
-            text_width /= view_transform.m11()
+        scale_x = view_transform.m11() if view_transform else 1.0
+        scale_y = view_transform.m22() if view_transform else 1.0
 
-        x_pos = box.rect().center().x() - text_width/2
-        y_pos = box.rect().top() - text_height
+        padding_pixels = 2.0
+        padding_scene_x = padding_pixels / scale_x
+        padding_scene_y = padding_pixels / scale_y
 
+        text_height_pixels = text_item.boundingRect().height()
+        text_height_scene = text_height_pixels / scale_y
+        x_pos = box.rect().left() + padding_scene_x
+        y_pos = box.rect().top() - text_height_scene - padding_scene_y
         text_item.setPos(QtCore.QPointF(x_pos, y_pos))
+
+        background_item = QtWidgets.QGraphicsRectItem(text_item)
+        background_item.setBrush(QtGui.QBrush(DrawState().label_background_color))
+        background_item.setPen(QtGui.QPen(QtCore.Qt.PenStyle.NoPen))
+        background_item.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIgnoresTransformations)
+        background_item.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemStacksBehindParent)
+
+        text_rect = text_item.boundingRect()
+        background_item.setRect(
+            text_rect.adjusted(-padding_pixels, -padding_pixels, padding_pixels, padding_pixels)
+        )
 
         self.addItem(text_item)
 
