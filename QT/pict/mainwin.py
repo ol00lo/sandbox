@@ -132,5 +132,6 @@ class MainWindow(QtWidgets.QMainWindow):
             DrawState().label_size = res['label_size']
             DrawState().label_color = res['label_color']
             DrawState().label_type = res['label_type']
+            DrawState().label_background_alpha = res['label_background_alpha']
 
             self.image_model_viewer.update_image()

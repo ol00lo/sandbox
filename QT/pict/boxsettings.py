@@ -16,6 +16,7 @@ class BBoxSettingsDialog(QtWidgets.QDialog):
         self.label_color_button = QtWidgets.QPushButton()
         self.label_color = None
         self.font = QtWidgets.QFontComboBox()
+        self.bg_alpha = QtWidgets.QSpinBox()
 
         self.layout = QtWidgets.QVBoxLayout(self)
 
@@ -64,6 +65,10 @@ class BBoxSettingsDialog(QtWidgets.QDialog):
         label_layout.addWidget(QtWidgets.QLabel("Font:"), 2, 0)
         label_layout.addWidget(self.font, 2, 1)
 
+        label_layout.addWidget(QtWidgets.QLabel("Background opacity:"), 3, 0)
+        self.bg_alpha.setRange(0, 255)
+        label_layout.addWidget(self.bg_alpha, 3, 1)
+
         label_group.setLayout(label_layout)
         self.layout.addWidget(label_group)
 
@@ -72,18 +77,21 @@ class BBoxSettingsDialog(QtWidgets.QDialog):
         preview_layout = QtWidgets.QHBoxLayout()
 
         self.bbox_preview = QtWidgets.QGraphicsView()
-        self.bbox_preview.setFixedSize(200, 150)
         self.bbox_preview_scene = QtWidgets.QGraphicsScene()
         self.bbox_preview.setScene(self.bbox_preview_scene)
 
-        self.preview_rect = QtWidgets.QGraphicsRectItem(20, 20, 160, 110)
+        self.preview_rect = QtWidgets.QGraphicsRectItem(0, 0, 160, 80)
         self.bbox_preview_scene.addItem(self.preview_rect)
 
         self.preview_text = QtWidgets.QGraphicsSimpleTextItem("Label")
         self.bbox_preview_scene.addItem(self.preview_text)
+        self.preview_text_bg = QtWidgets.QGraphicsRectItem(self.preview_text)
+        self.preview_text_bg.setPen(QtGui.QPen(QtCore.Qt.PenStyle.NoPen))
+        self.preview_text_bg.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemStacksBehindParent)
 
         self.update_bbox_preview()
         self.update_text_preview()
+        self.update_text_background_brush()
         preview_layout.addWidget(self.bbox_preview)
 
         preview_group.setLayout(preview_layout)
@@ -95,6 +103,8 @@ class BBoxSettingsDialog(QtWidgets.QDialog):
         self.font_size.valueChanged.connect(self.update_text_preview)
         self.label_color_button.clicked.connect(self.update_text_preview)
         self.font.currentFontChanged.connect(self.update_text_preview)
+        self.bg_alpha.valueChanged.connect(self.update_text_preview)
+        self.bg_alpha.valueChanged.connect(self.update_text_background_brush)
 
     def update_bbox_preview(self):
         pen = QtGui.QPen()
@@ -102,6 +112,7 @@ class BBoxSettingsDialog(QtWidgets.QDialog):
         pen.setColor(self.line_color)
         pen.setStyle(self.line_style.currentData())
         self.preview_rect.setPen(pen)
+        self.update_text_background_brush()
         self.update_text_position()
 
     def update_text_preview(self):
@@ -109,17 +120,30 @@ class BBoxSettingsDialog(QtWidgets.QDialog):
         font.setPointSize(self.font_size.value())
         self.preview_text.setFont(font)
         self.preview_text.setBrush(QtGui.QBrush(self.label_color))
+        self.update_text_background_brush()
         self.update_text_position()
+
+    def update_text_background_brush(self):
+        if hasattr(self, 'preview_text_bg'):
+            bg = QtGui.QColor(self.line_color)
+            bg.setAlpha(self.bg_alpha.value())
+            self.preview_text_bg.setBrush(QtGui.QBrush(bg))
 
     def update_text_position(self):
         if hasattr(self, 'preview_text') and hasattr(self, 'preview_rect'):
-            text_width = self.preview_text.boundingRect().width()
             rect = self.preview_rect.rect()
-
-            text_x = rect.x() + (rect.width() - text_width) / 2
-            text_y = rect.y() - self.preview_text.boundingRect().height() - 5
-
+            padding = 2.0
+            # Position top-left above the box
+            text_x = rect.left() + padding
+            text_y = rect.top() - self.preview_text.boundingRect().height() - padding
             self.preview_text.setPos(text_x, text_y)
+
+            # Update background geometry with padding
+            if hasattr(self, 'preview_text_bg'):
+                text_rect_local = self.preview_text.boundingRect()
+                self.preview_text_bg.setRect(
+                    text_rect_local.adjusted(-padding, -padding, padding, padding)
+                )
 
     def create_color_button(self, default_color):
         button = QtWidgets.QPushButton()
@@ -155,6 +179,7 @@ class BBoxSettingsDialog(QtWidgets.QDialog):
         self.font_size.setValue(DrawState().label_size)
         self.label_color = DrawState().label_color
         self.font.setCurrentFont(QtGui.QFont(DrawState().label_type))
+        self.bg_alpha.setValue(DrawState().label_background_alpha)
 
     def setup_acept_reject(self):
         buttons = QtWidgets.QDialogButtonBox(
@@ -172,5 +197,6 @@ class BBoxSettingsDialog(QtWidgets.QDialog):
             'line_style': self.line_style.currentData(),
             'label_size': self.font_size.value(),
             'label_color': self.label_color,
-            'label_type': self.font.currentFont().family()
+            'label_type': self.font.currentFont().family(),
+            'label_background_alpha': self.bg_alpha.value()
         }
