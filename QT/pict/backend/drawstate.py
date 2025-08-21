@@ -61,6 +61,11 @@ class DrawState:
         return color
 
     @property
+    def hover_label_background_color(self):
+        color = QtGui.QColor(self.hover_line_color)
+        return color
+
+    @property
     def hover_line_color(self):
         return self.line_color.lighter(self.how_hover_brighter)
 

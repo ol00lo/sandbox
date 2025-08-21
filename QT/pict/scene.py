@@ -18,6 +18,8 @@ class ImageModel(QtWidgets.QGraphicsScene):
         State().signals.update_mask_signal.connect(self.update_drawing_mask)
         self.darken_mask = None
 
+        State().signals.add_label_signal.connect(self.create_label_item)
+
     def set_selected_image(self, name):
         self.current_image_path = State().get_path(name)
 
@@ -47,15 +49,20 @@ class ImageModel(QtWidgets.QGraphicsScene):
                 self.add_labels(box_item, box.label)
 
     def add_labels(self, box, label):
-        text_item = QtWidgets.QGraphicsSimpleTextItem(label, box)
+        text_item = self.create_label_item(label, box)
+        self.addItem(text_item)
+
+    def create_label_item(self, label_text, rect, is_hover=False, callback=None):
+        text_item = QtWidgets.QGraphicsSimpleTextItem(label_text, rect)
         text_item.setFont(DrawState().label_font)
         text_item.setBrush(QtGui.QBrush(DrawState().label_color))
         text_item.setPen(DrawState().label_pen)
         text_item.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIgnoresTransformations)
 
-        view_transform = self.views()[0].transform() if self.views() else None
-        scale_x = view_transform.m11() if view_transform else 1.0
-        scale_y = view_transform.m22() if view_transform else 1.0
+        scene = self.scene() if hasattr(self, 'scene') else self
+        view = scene.views()[0] if scene and scene.views() else None
+        scale_x = view.transform().m11() if view else 1.0
+        scale_y = view.transform().m22() if view else 1.0
 
         padding_pixels = 2.0
         padding_scene_x = padding_pixels / scale_x
@@ -63,12 +70,14 @@ class ImageModel(QtWidgets.QGraphicsScene):
 
         text_height_pixels = text_item.boundingRect().height()
         text_height_scene = text_height_pixels / scale_y
-        x_pos = box.rect().left() + padding_scene_x
-        y_pos = box.rect().top() - text_height_scene - padding_scene_y
+        x_pos = rect.rect().left() + padding_scene_x
+        y_pos = rect.rect().top() - text_height_scene - padding_scene_y
         text_item.setPos(QtCore.QPointF(x_pos, y_pos))
 
+        bg_color = DrawState().hover_label_background_color if is_hover else DrawState().label_background_color
+
         background_item = QtWidgets.QGraphicsRectItem(text_item)
-        background_item.setBrush(QtGui.QBrush(DrawState().label_background_color))
+        background_item.setBrush(QtGui.QBrush(bg_color))
         background_item.setPen(QtGui.QPen(QtCore.Qt.PenStyle.NoPen))
         background_item.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIgnoresTransformations)
         background_item.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemStacksBehindParent)
@@ -78,7 +87,10 @@ class ImageModel(QtWidgets.QGraphicsScene):
             text_rect.adjusted(-padding_pixels, -padding_pixels, padding_pixels, padding_pixels)
         )
 
-        self.addItem(text_item)
+        if callback:
+            callback(text_item)
+
+        return text_item
 
     def find_rects(self, directory):
         if directory == '': return []

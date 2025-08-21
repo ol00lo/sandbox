@@ -11,6 +11,7 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
         self.temp_box = None
         self.image_path = image_path
         self.name = os.path.basename(image_path)
+        self.label_item = None
 
         self.setAcceptHoverEvents(True)
 
@@ -183,7 +184,16 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
     def hoverEnterEvent(self, event):
         try:
             self.setPen(DrawState().hover_pen)
+            if State().need_labels:
+                label_item = None
+                def callback(item):
+                    nonlocal label_item
+                    label_item = item
+                State().signals.add_label_signal.emit(self.original_box.label, self, True, callback)
+                self.label_item = label_item
+                self.scene().addItem(self.label_item)
             self.update()
+            self.setZValue(100)
             event.accept()
         except Exception as e:
             print(e)
@@ -191,7 +201,11 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
     def hoverLeaveEvent(self, event):
         try:
             self.setPen(DrawState().pen)
+            if State().need_labels and self.label_item:
+                self.scene().removeItem(self.label_item)
+                self.label_item = None
             self.update()
+            self.setZValue(2)
             event.accept()
         except Exception as e:
             print(e)
