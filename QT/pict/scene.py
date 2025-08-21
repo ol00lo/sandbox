@@ -70,8 +70,11 @@ class ImageModel(QtWidgets.QGraphicsScene):
 
         text_height_pixels = text_item.boundingRect().height()
         text_height_scene = text_height_pixels / scale_y
+
         x_pos = rect.rect().left() + padding_scene_x
-        y_pos = rect.rect().top() - text_height_scene - padding_scene_y
+        y = rect.rect().top() - text_height_scene - padding_scene_y
+        scene_top = scene.sceneRect().top() if hasattr(scene, 'sceneRect') else 0.0
+        y_pos = y if y >= scene_top else rect.rect().top() + padding_scene_y
         text_item.setPos(QtCore.QPointF(x_pos, y_pos))
 
         bg_color = DrawState().hover_label_background_color if is_hover else DrawState().label_background_color
