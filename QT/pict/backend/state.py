@@ -16,6 +16,12 @@ class Signals(QtCore.QObject):
 
     change_focus_signal = QtCore.pyqtSignal(int, int, int)
 
+    create_mask_signal = QtCore.pyqtSignal(QtCore.QRectF)
+    update_mask_signal = QtCore.pyqtSignal(QtCore.QRectF)
+    delete_mask_signal = QtCore.pyqtSignal()
+
+    add_label_signal = QtCore.pyqtSignal(str, object, bool, object)
+
 class State:
     _instance = None
     signals = None
@@ -41,7 +47,6 @@ class State:
         self.backup_manager = BackUp()
 
         self.undo_redo_manager.delete_backup_signal.connect(self.backup_manager.delete_files)
-
 
     @classmethod
     def register_action(cls, action_name, action_class):
