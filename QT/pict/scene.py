@@ -44,13 +44,13 @@ class ImageModel(QtWidgets.QGraphicsScene):
         for box in boxes:
             box_item = BoxGraphicsItem(box=box, image_path=self.current_image_path)
 
-            self.addItem(box_item)
+            if box_item.scene() is None: self.addItem(box_item)
             if State().need_labels:
                 self.add_labels(box_item, box.label)
 
     def add_labels(self, box, label):
         text_item = self.create_label_item(label, box)
-        self.addItem(text_item)
+        if text_item.scene() is None: self.addItem(text_item)
 
     def create_label_item(self, label_text, rect, is_hover=False, callback=None):
         text_item = QtWidgets.QGraphicsSimpleTextItem(label_text, rect)

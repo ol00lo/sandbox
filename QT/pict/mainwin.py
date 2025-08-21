@@ -39,22 +39,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.table_viewer.image_selected.connect(self.image_model_viewer.display_image)
         self.create_toolbar()
-        self.create_menus()
-
-    def create_menus(self):
-        menubar = self.menuBar()
-
-        options_menu = menubar.addMenu("Options")
-
-        bbox_settings_action = QtGui.QAction("BBox Settings...", self)
-        bbox_settings_action.triggered.connect(self.get_boxes_parameters)
-        options_menu.addAction(bbox_settings_action)
 
     def create_toolbar(self):
         self.toolbar = self.addToolBar("Main Toolbar")
         toolbar = self.toolbar
         toolbar.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonIconOnly)
-        #toolbar.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         toolbar.setIconSize(QtCore.QSize(15, 15))
 
         self.undo_action = QtGui.QAction(QtGui.QIcon(":/gundo"), "Undo", self)
@@ -71,6 +60,10 @@ class MainWindow(QtWidgets.QMainWindow):
         State().undo_redo_manager.redo_stack_empty_signal.connect(self.update_redo_icon)
 
         toolbar.addSeparator()
+
+        bbox_settings_action = QtGui.QAction(QtGui.QIcon(":/settings"), "BBox Settings...", self)
+        bbox_settings_action.triggered.connect(self.get_boxes_parameters)
+        toolbar.addAction(bbox_settings_action)
 
         toolbar.addAction(State().actions["LoadImages"])
 

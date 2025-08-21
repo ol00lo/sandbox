@@ -117,8 +117,8 @@ class Test1(unittest.TestCase):
         State().need_labels = True
 
         # CreateBox
-        tester.eval_and_wait_true(State().do_action, ("CreateBox", box, img),
-                                  'a() == True', {'a': lambda: self.mwin.image_model_viewer.image_model.items().__len__() == 3})
+        State().do_action("CreateBox", box, img)
+        tester._wait_true_wrk(self.mwin.image_model_viewer.image_model.items().__len__(), 3)
 
         self.assertTrue(any(isinstance(item, QtWidgets.QGraphicsSimpleTextItem)
                             for item in self.mwin.image_model_viewer.image_model.items()))
