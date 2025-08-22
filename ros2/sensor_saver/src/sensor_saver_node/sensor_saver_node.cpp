@@ -10,8 +10,7 @@ constexpr const char* PASSWORD_DEFAULT = "password";
 constexpr int PORT_DEFAULT = 5432;
 constexpr int64_t CLEANUP_INTERVAL_DEFAULT = 24;
 
-class MouseSaver : public rclcpp::Node
-{
+class MouseSaver : public rclcpp::Node {
 public:
     MouseSaver() : Node("MouseSaver") {
         this->declare_parameter<int64_t>("sensor_data_ttl_days", SENSOR_DATA_TTL_DAYS_DEFAULT);
@@ -24,20 +23,19 @@ public:
 
         int64_t ttl_days = this->get_parameter("sensor_data_ttl_days").as_int();
         std::string conn_str = "host=" + this->get_parameter("db_connection.host").as_string() +
-                    " dbname=" + this->get_parameter("db_connection.dbname").as_string() +
-                    " user=" + this->get_parameter("db_connection.user").as_string() +
-                    " password=" + this->get_parameter("db_connection.password").as_string() +
-                    " port=" + std::to_string(this->get_parameter("db_connection.port").as_int());
+                               " dbname=" + this->get_parameter("db_connection.dbname").as_string() +
+                               " user=" + this->get_parameter("db_connection.user").as_string() +
+                               " password=" + this->get_parameter("db_connection.password").as_string() +
+                               " port=" + std::to_string(this->get_parameter("db_connection.port").as_int());
 
-        try{
+        try {
             pimpl_ = std::make_unique<SensorSaverImpl>(conn_str, ttl_days, this->get_logger());
-            pimpl_->init_db();
         } catch (const std::exception& e) {
             RCLCPP_ERROR(this->get_logger(), "Failed to initialize database: %s", e.what());
             throw;
         }
         pimpl_->start_cleanup_timer(std::chrono::hours(CLEANUP_INTERVAL_DEFAULT));
-        rclcpp::on_shutdown([this]() {pimpl_->stop_cleanup_timer();});
+        rclcpp::on_shutdown([this]() { pimpl_->stop_cleanup_timer(); });
 
         RCLCPP_INFO(this->get_logger(), "TTL days: %ld", ttl_days);
         RCLCPP_INFO(this->get_logger(), "DB connection: %s", conn_str.substr(0, conn_str.find("password")).c_str());
@@ -46,17 +44,22 @@ public:
             std::bind(&MouseSaver::parameters_callback, this, std::placeholders::_1));
 
         subscription_ = create_subscription<geometry_msgs::msg::Point>(
-            "mouse_moved", 10, [this](const geometry_msgs::msg::Point::SharedPtr msg) { pimpl_->save_to_db(msg->x, msg->y, msg->z); });
+            "mouse_moved", 10,
+            [this](const geometry_msgs::msg::Point::SharedPtr msg, const rclcpp::MessageInfo & info) {
+                auto ns = info.get_rmw_message_info().source_timestamp;
+                auto tp = std::chrono::system_clock::time_point(std::chrono::nanoseconds(ns));
+                pimpl_->save_to_db(msg->x, msg->y, tp);
+            });
 
         RCLCPP_INFO(get_logger(), "Subscriber ready. DB: %s", conn_str.substr(0, conn_str.find("password")).c_str());
     }
 
 private:
-    rcl_interfaces::msg::SetParametersResult parameters_callback(const std::vector<rclcpp::Parameter> &parameters) {
+    rcl_interfaces::msg::SetParametersResult parameters_callback(const std::vector<rclcpp::Parameter>& parameters) {
         rcl_interfaces::msg::SetParametersResult result;
         result.successful = true;
 
-        for (const auto &param : parameters) {
+        for (const auto& param : parameters) {
             if (param.get_name() == "sensor_data_ttl_days") {
                 int64_t ttl_days = param.as_int();
                 pimpl_->update_ttl(ttl_days);
@@ -73,8 +76,7 @@ private:
             else {
                 result.successful = false;
                 result.reason = "Parameter '" + param.get_name() + "' cannot be changed at runtime";
-                RCLCPP_ERROR(get_logger(), "Attempt to change read-only parameter: %s", 
-                            param.get_name().c_str());
+                RCLCPP_ERROR(get_logger(), "Attempt to change read-only parameter: %s", param.get_name().c_str());
             }
         }
 

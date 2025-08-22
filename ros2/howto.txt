@@ -35,3 +35,4 @@ pgadmin:
 	сборка: colcon build --packages-select sensor_saver --cmake-args -DBUILD_TESTING=ON
 	запуск: colcon test --packages-select sensor_saver
 	результаты: colcon test-result --all --verbose
+	запуск с отладкой: gdb build/sensor_saver/test/mouse_sensor_test

@@ -1,10 +1,8 @@
 #include "sensor_saver_impl.hpp"
 
-SensorSaverImpl::SensorSaverImpl(const std::string& conn_str, int64_t ttl_days, rclcpp::Logger logger) : 
-    ttl_days_(ttl_days), conn_str_(conn_str), logger_(logger) {}
-
-void SensorSaverImpl::init_db(const std::string& table_name) {
-    table_name_ = table_name;
+SensorSaverImpl::SensorSaverImpl(const std::string& conn_str, int64_t ttl_days, rclcpp::Logger logger,
+                                 const std::string& table_name)
+    : conn_str_(conn_str), ttl_days_(ttl_days), logger_(logger), table_name_(table_name) {
     db_conn_ = std::make_unique<pqxx::connection>(conn_str_);
     pqxx::work txn(*db_conn_);
 
@@ -38,12 +36,17 @@ void SensorSaverImpl::update_ttl(int64_t ttl_days_new) {
     RCLCPP_INFO(logger_, "TTL updated. TTL days: %ld", ttl_days_);
 }
 
-void SensorSaverImpl::save_to_db(double x, double y, double timestamp) {
+void SensorSaverImpl::save_to_db(double x, double y, std::chrono::system_clock::time_point timestamp) {
+    const auto secs = std::chrono::time_point_cast<std::chrono::seconds>(timestamp);
+    const auto epoch_secs = secs.time_since_epoch().count();
+
     pqxx::connection conn(conn_str_);
     pqxx::work txn(conn);
-    txn.exec_params("INSERT INTO " + txn.quote_name(table_name_) + " (x, y, timestamp) VALUES ($1, $2, to_timestamp($3))", x, y, timestamp);
+    txn.exec_params("INSERT INTO " + txn.quote_name(table_name_) +
+                    " (x, y, timestamp) VALUES ($1, $2, to_timestamp($3))",
+                    x, y, epoch_secs);
     txn.commit();
-    RCLCPP_INFO(logger_, "Saved coordinates: x=%f, y=%f, timestamp=%f", x, y, timestamp);
+    RCLCPP_INFO(logger_, "Saved coordinates: x=%f, y=%f, timestamp=%ld", x, y, static_cast<long>(epoch_secs));
 }
 
 void SensorSaverImpl::start_cleanup_timer(std::chrono::hours interval) {
@@ -69,13 +72,13 @@ void SensorSaverImpl::change_cleanup_interval(std::chrono::hours new_interval) {
     RCLCPP_INFO(logger_, "Cleanup interval changed to %ld hours", new_interval.count());
 }
 
-std::size_t SensorSaverImpl::count_rows() {
+size_t SensorSaverImpl::rows_count() const {
     pqxx::connection conn(conn_str_);
     pqxx::work txn(conn);
     std::string sql = "SELECT COUNT(*) FROM " + txn.quote_name(table_name_);
     auto res = txn.exec(sql);
     txn.commit();
-    return res[0][0].as<std::size_t>(0);
+    return res[0][0].as<size_t>(0);
 }
 
 void SensorSaverImpl::clear_table(){
@@ -83,5 +86,5 @@ void SensorSaverImpl::clear_table(){
     pqxx::work txn(conn);
     txn.exec("TRUNCATE TABLE " + txn.quote_name(table_name_) + " RESTART IDENTITY;");
     txn.commit();
-    RCLCPP_INFO(logger_, "Table cleared");
+    RCLCPP_INFO(logger_, "Table cleared %s", table_name_.c_str());
 }
