@@ -63,6 +63,7 @@ class MouseSensor(Node):
         msg = Point()
         msg.x = float(x)
         msg.y = float(y)
+
         self._publisher_mouse_moved.publish(msg)
         self.get_logger().debug(f'Publishing: x={msg.x}, y={msg.y}')
 
