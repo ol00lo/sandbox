@@ -1,17 +1,18 @@
 import asyncio
 import random
+import math
 from dataclasses import dataclass
 from enum import Enum
 from typing import List, Dict
 
 @dataclass
 class WorldConfig:
-    WIDTH = 800
-    HEIGHT = 600
-    PREY_COLOR = "red"
-    PREDATOR_COLOR = "black"
-    PREY_SIZE = 5
-    PREDATOR_SIZE = 7
+    WIDTH = 1350
+    HEIGHT = 800
+    PREY_COLOR_BGR = (0, 0, 255) #red
+    PREDATOR_COLOR_BGR = (0, 0, 0) #black
+    PREY_SIZE = 12
+    PREDATOR_SIZE = 20
 
 
 class EntityType(Enum):
