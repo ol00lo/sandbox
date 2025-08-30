@@ -10,10 +10,10 @@ import numpy as np
 class WorldConfig:
     WIDTH = 1350
     HEIGHT = 800
-    PREY_COLOR_BGR = (0, 0, 255) #red
+    PREY_COLOR_BGR = (255, 0, 255) #pink
     PREDATOR_COLOR_BGR = (0, 0, 0) #black
     PREY_SIZE = 12
-    PREDATOR_SIZE = 20
+    PREDATOR_SIZE = 25
 
     PREY_FOV = 60  # degrees
     PREDATOR_FOV = 30  # degrees
@@ -37,7 +37,6 @@ class Sensor:
         )
 
     def get_sensor_data(self, world, entity):
-        """Return distance and type tensors for each vision ray"""
         distances = np.zeros(self.resolution, dtype=np.float32)
         types = np.zeros(self.resolution, dtype=np.uint8)
 

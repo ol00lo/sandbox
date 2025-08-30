@@ -3,21 +3,115 @@ import numpy as np
 import math
 from world import EntityType, WorldConfig
 
-def draw_heart(img, center_x, center_y, size, color_bgr):
-    num_points = 100
-    t = np.linspace(0, 2 * np.pi, num_points)
-    x = 16 * np.sin(t) ** 3
-    y = 13 * np.cos(t) - 5 * np.cos(2 * t) - 2 * np.cos(3 * t) - np.cos(4 * t)
-    x = x * size / 18.0 + center_x
-    y = - y * size / 18.0 + center_y
-    pts = np.vstack([x, y]).T.astype(np.int32)
-    cv2.fillPoly(img, [pts], color_bgr)
+def draw_prey(img, center_x, center_y, size, angle_deg, color_bgr):
+    eye_radius = size
+    iris_radius = eye_radius * 0.7
+    pupil_radius = iris_radius * 0.5
 
-def draw_square(img, center_x, center_y, size, color_bgr):
-    half = size // 2
-    top_left = (int(center_x - half), int(center_y - half))
-    bottom_right = (int(center_x + half), int(center_y + half))
-    cv2.rectangle(img, top_left, bottom_right, color_bgr, thickness=-1)
+    cv2.circle(img, (int(center_x), int(center_y)), eye_radius, (255, 255, 255), -1)
+    cv2.circle(img, (int(center_x), int(center_y)), eye_radius, (0, 0, 0), 1)
+
+    angle_rad = math.radians(angle_deg)
+    max_offset = (eye_radius - iris_radius) * 0.6
+
+    iris_x = center_x + max_offset * math.cos(angle_rad)
+    iris_y = center_y - max_offset * math.sin(angle_rad)
+
+    iris_color = color_bgr
+    cv2.circle(img, (int(iris_x), int(iris_y)), int(iris_radius), iris_color, -1)
+    cv2.circle(img, (int(iris_x), int(iris_y)), int(pupil_radius), (0, 0, 0), -1)
+
+    highlight_offset = iris_radius * 0.4
+    cv2.circle(img, (int(iris_x + highlight_offset), int(iris_y - highlight_offset)),
+               int(iris_radius * 0.3), (255, 255, 255), -1)
+
+    highlight2_offset = iris_radius * 0.2
+    cv2.circle(img, (int(iris_x + highlight2_offset), int(iris_y - highlight2_offset * 0.5)),
+               int(iris_radius * 0.15), (255, 255, 255), -1)
+
+    eyelid_thickness = max(2, eye_radius // 10)
+
+    top_control_points = np.array([
+        [center_x - eye_radius * 1.1, center_y - eye_radius * 0.3],
+        [center_x - eye_radius * 0.3, center_y - eye_radius * 0.7],
+        [center_x + eye_radius * 0.3, center_y - eye_radius * 0.7],
+        [center_x + eye_radius * 1.1, center_y - eye_radius * 0.3]
+    ], dtype=np.float32)
+
+    t = np.linspace(0, 1, 30)
+    top_curve_points = []
+    for ti in t:
+        point = (1-ti)**3 * top_control_points[0] + \
+                3*(1-ti)**2*ti * top_control_points[1] + \
+                3*(1-ti)*ti**2 * top_control_points[2] + \
+                ti**3 * top_control_points[3]
+        top_curve_points.append(point.astype(np.int32))
+    for i in range(len(top_curve_points) - 1):
+        cv2.line(img, tuple(top_curve_points[i]), tuple(top_curve_points[i+1]),
+                (0, 0, 0), eyelid_thickness)
+
+    bottom_control_points = np.array([
+        [center_x - eye_radius * 1.0, center_y + eye_radius * 0.2],
+        [center_x - eye_radius * 0.2, center_y + eye_radius * 0.6],
+        [center_x + eye_radius * 0.2, center_y + eye_radius * 0.6],
+        [center_x + eye_radius * 1.0, center_y + eye_radius * 0.2]
+    ], dtype=np.float32)
+
+    bottom_curve_points = []
+    for ti in t:
+        point = (1-ti)**3 * bottom_control_points[0] + \
+                3*(1-ti)**2*ti * bottom_control_points[1] + \
+                3*(1-ti)*ti**2 * bottom_control_points[2] + \
+                ti**3 * bottom_control_points[3]
+        bottom_curve_points.append(point.astype(np.int32))
+
+    for i in range(len(bottom_curve_points) - 1):
+        cv2.line(img, tuple(bottom_curve_points[i]), tuple(bottom_curve_points[i+1]),
+                (0, 0, 0), max(1, eyelid_thickness // 2))
+
+def draw_predator(img, center_x, center_y, size, angle_deg, color_bgr):
+    eye_radius = size // 2
+    iris_radius = eye_radius * 0.6
+    pupil_radius = iris_radius * 0.4
+
+    cv2.circle(img, (int(center_x), int(center_y)), eye_radius, (255, 255, 255), -1)
+    cv2.circle(img, (int(center_x), int(center_y)), eye_radius, (0, 0, 0), 2)
+
+    angle_rad = math.radians(angle_deg)
+    max_offset = (eye_radius - iris_radius) * 0.8
+
+    iris_x = center_x + max_offset * math.cos(angle_rad)
+    iris_y = center_y - max_offset * math.sin(angle_rad)
+
+    iris_color = tuple(max(0, c - 40) for c in color_bgr)
+    cv2.circle(img, (int(iris_x), int(iris_y)), int(iris_radius), iris_color, -1)
+    cv2.circle(img, (int(iris_x), int(iris_y)), int(pupil_radius), (0, 0, 0), -1)
+
+    highlight_offset = iris_radius * 0.3
+    cv2.circle(img, (int(iris_x + highlight_offset), int(iris_y - highlight_offset)),
+               int(iris_radius * 0.2), (255, 255, 255), -1)
+
+    eyelid_thickness = max(3, eye_radius // 8)
+
+    top_control_points = np.array([
+        [center_x - eye_radius * 1.3, center_y - eye_radius * 0.4],
+        [center_x - eye_radius * 0.5, center_y - eye_radius * 0.9],
+        [center_x + eye_radius * 0.5, center_y - eye_radius * 0.9],
+        [center_x + eye_radius * 1.3, center_y - eye_radius * 0.4]
+    ], dtype=np.float32)
+
+    t = np.linspace(0, 1, 50)
+    top_curve_points = []
+    for ti in t:
+        point = (1-ti)**3 * top_control_points[0] + \
+                3*(1-ti)**2*ti * top_control_points[1] + \
+                3*(1-ti)*ti**2 * top_control_points[2] + \
+                ti**3 * top_control_points[3]
+        top_curve_points.append(point.astype(np.int32))
+
+    for i in range(len(top_curve_points) - 1):
+        cv2.line(img, tuple(top_curve_points[i]), tuple(top_curve_points[i+1]),
+                (0, 0, 0), eyelid_thickness)
 
 def draw_direction_arrow(img, center_x, center_y, direction_deg, size, color_bgr):
     direction_rad = math.radians(direction_deg)
@@ -50,15 +144,11 @@ def render_frame(entities):
 
     for entity in entities:
         if entity.type == EntityType.PREY:
-            draw_heart(frame, entity.x, entity.y,
-                WorldConfig.PREY_SIZE, WorldConfig.PREY_COLOR_BGR)
-            draw_direction_arrow(frame, entity.x, entity.y, entity.direction,
-                WorldConfig.PREY_SIZE * 0.6, WorldConfig.PREY_COLOR_BGR)
+            draw_prey(frame, entity.x, entity.y,
+                WorldConfig.PREY_SIZE, entity.direction, WorldConfig.PREY_COLOR_BGR)
         else:
-            draw_square(frame, entity.x, entity.y,
-                WorldConfig.PREDATOR_SIZE, WorldConfig.PREDATOR_COLOR_BGR)
-            draw_direction_arrow(frame, entity.x, entity.y, entity.direction,
-                WorldConfig.PREDATOR_SIZE * 0.6, WorldConfig.PREDATOR_COLOR_BGR)
+            draw_predator(frame, entity.x, entity.y, WorldConfig.PREDATOR_SIZE,
+                    entity.direction, WorldConfig.PREDATOR_COLOR_BGR)
     return frame
 
 def encode_png(img):
