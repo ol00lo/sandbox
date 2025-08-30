@@ -7,6 +7,7 @@ from draw import render_frame, encode_png
 app = Flask(__name__, template_folder='.')
 
 world = World()
+event_loop = None
 
 @app.route('/')
 def index():
@@ -17,7 +18,16 @@ def index():
 
 @app.route('/frame')
 def get_frame():
-    img = render_frame(world)
+    global event_loop
+    if event_loop is not None:
+        try:
+            fut = asyncio.run_coroutine_threadsafe(world.get_entities_snapshot(), event_loop)
+            entities = fut.result(timeout=0.5)
+            img = render_frame(entities)
+        except Exception:
+            img = render_frame(list(world.entities.values()))
+    else:
+        img = render_frame(list(world.entities.values()))
     png = encode_png(img)
     return Response(png, mimetype='image/png')
 
@@ -30,6 +40,9 @@ async def main():
     flask_thread = threading.Thread(target=run_flask)
     flask_thread.daemon = True
     flask_thread.start()
+
+    global event_loop
+    event_loop = asyncio.get_running_loop()
 
     await spawn_initial_entities(world)
 
