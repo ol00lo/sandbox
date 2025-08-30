@@ -3,7 +3,8 @@ from imageviewer import ImageViewer
 from tableviewer import TableViewer
 from backend.state import State
 from boxsettings import BBoxSettingsDialog
-from backend.drawstate import DrawState
+from drawstate import DrawState
+from qt_common import show_message
 import resources
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -116,15 +117,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def get_boxes_parameters(self):
         dialog = BBoxSettingsDialog(self)
-        if dialog.exec() == QtWidgets.QDialog.DialogCode.Accepted:
-            res = dialog.get_settings()
-            DrawState().line_color = res['line_color']
-            DrawState().line_width = res['line_width']
-            DrawState().line_style =  res['line_style']
-
-            DrawState().label_size = res['label_size']
-            DrawState().label_color = res['label_color']
-            DrawState().label_type = res['label_type']
-            DrawState().label_background_alpha = res['label_background_alpha']
-
-            self.image_model_viewer.update_image()
+        try:
+            if dialog.exec() == QtWidgets.QDialog.DialogCode.Accepted:
+                dialog.set_current_settings()
+                self.image_model_viewer.update_image()
+        except Exception as e:
+            show_message(message=str(e), is_error=True)

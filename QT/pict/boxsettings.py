@@ -1,5 +1,5 @@
 from PyQt6 import QtWidgets, QtGui, QtCore
-from backend.drawstate import DrawState
+from drawstate import DrawState
 
 class BBoxSettingsDialog(QtWidgets.QDialog):
     def __init__(self, parent=None):
@@ -16,7 +16,7 @@ class BBoxSettingsDialog(QtWidgets.QDialog):
         self.label_color_button = QtWidgets.QPushButton()
         self.label_color = None
         self.font = QtWidgets.QFontComboBox()
-        self.bg_alpha = QtWidgets.QSpinBox()
+        self.bg_alpha = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
 
         self.layout = QtWidgets.QVBoxLayout(self)
 
@@ -24,7 +24,7 @@ class BBoxSettingsDialog(QtWidgets.QDialog):
         self.setup_bbox_settings()
         self.setup_label_settings()
         self.setup_preview()
-        self.setup_acept_reject()
+        self.acept()
 
     def setup_bbox_settings(self):
         box_group = QtWidgets.QGroupBox("Bounding Box Settings")
@@ -66,9 +66,19 @@ class BBoxSettingsDialog(QtWidgets.QDialog):
         label_layout.addWidget(self.font, 2, 1)
 
         label_layout.addWidget(QtWidgets.QLabel("Background opacity:"), 3, 0)
-        self.bg_alpha.setRange(0, 255)
-        label_layout.addWidget(self.bg_alpha, 3, 1)
 
+        bg_alpha_layout = QtWidgets.QHBoxLayout()
+        self.bg_alpha.setRange(0, 255)
+        self.bg_alpha.setTickPosition(QtWidgets.QSlider.TickPosition.TicksBelow)
+        self.bg_alpha.setTickInterval(25)
+        self.bg_alpha.setSingleStep(10)
+        bg_alpha_layout.addWidget(self.bg_alpha)
+
+        self.bg_alpha_label = QtWidgets.QLabel(f"{int(self.bg_alpha.value()/255*100)}%")
+        self.bg_alpha.valueChanged.connect(self.update_bg_alpha_label)
+        bg_alpha_layout.addWidget(self.bg_alpha_label)
+
+        label_layout.addLayout(bg_alpha_layout, 3, 1)
         label_group.setLayout(label_layout)
         self.layout.addWidget(label_group)
 
@@ -133,17 +143,19 @@ class BBoxSettingsDialog(QtWidgets.QDialog):
         if hasattr(self, 'preview_text') and hasattr(self, 'preview_rect'):
             rect = self.preview_rect.rect()
             padding = 2.0
-            # Position top-left above the box
             text_x = rect.left() + padding
             text_y = rect.top() - self.preview_text.boundingRect().height() - padding
             self.preview_text.setPos(text_x, text_y)
 
-            # Update background geometry with padding
             if hasattr(self, 'preview_text_bg'):
                 text_rect_local = self.preview_text.boundingRect()
                 self.preview_text_bg.setRect(
                     text_rect_local.adjusted(-padding, -padding, padding, padding)
                 )
+
+    def update_bg_alpha_label(self):
+        percentage = int((self.bg_alpha.value() / 255) * 100)
+        self.bg_alpha_label.setText(f"{percentage}%")
 
     def create_color_button(self, default_color):
         button = QtWidgets.QPushButton()
@@ -181,7 +193,17 @@ class BBoxSettingsDialog(QtWidgets.QDialog):
         self.font.setCurrentFont(QtGui.QFont(DrawState().label_type))
         self.bg_alpha.setValue(DrawState().label_background_alpha)
 
-    def setup_acept_reject(self):
+    def set_current_settings(self):
+        DrawState().line_color = self.line_color
+        DrawState().line_width = self.line_width.value()
+        DrawState().line_style = self.line_style.currentData()
+        DrawState().label_size = self.font_size.value()
+        DrawState().label_color = self.label_color
+        DrawState().label_type = self.font.currentFont().family()
+        DrawState().label_background_alpha = self.bg_alpha.value()
+
+
+    def acept(self):
         buttons = QtWidgets.QDialogButtonBox(
             QtWidgets.QDialogButtonBox.StandardButton.Ok | 
             QtWidgets.QDialogButtonBox.StandardButton.Cancel
@@ -189,14 +211,3 @@ class BBoxSettingsDialog(QtWidgets.QDialog):
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
         self.layout.addWidget(buttons)
-
-    def get_settings(self):
-        return {
-            'line_width': self.line_width.value(),
-            'line_color': self.line_color,
-            'line_style': self.line_style.currentData(),
-            'label_size': self.font_size.value(),
-            'label_color': self.label_color,
-            'label_type': self.font.currentFont().family(),
-            'label_background_alpha': self.bg_alpha.value()
-        }

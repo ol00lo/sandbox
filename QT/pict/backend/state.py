@@ -14,17 +14,8 @@ class Signals(QtCore.QObject):
     delete_box_signal = QtCore.pyqtSignal(str, QtCore.QRectF)
     change_boxes_signal = QtCore.pyqtSignal(str)
 
-    change_focus_signal = QtCore.pyqtSignal(int, int, int)
-
-    create_mask_signal = QtCore.pyqtSignal(QtCore.QRectF)
-    update_mask_signal = QtCore.pyqtSignal(QtCore.QRectF)
-    delete_mask_signal = QtCore.pyqtSignal()
-
-    add_label_signal = QtCore.pyqtSignal(str, object, bool, object)
-
 class State:
     _instance = None
-    signals = None
 
     def __new__(cls):
         if cls._instance is None:

@@ -3,7 +3,7 @@ from backend.state import State
 from boxgritem import BoxGraphicsItem
 import os
 from backend.box import Box
-from backend.drawstate import DrawState
+from drawstate import DrawState
 
 class ImageModel(QtWidgets.QGraphicsScene):
     def __init__(self, parent=None):
@@ -13,12 +13,12 @@ class ImageModel(QtWidgets.QGraphicsScene):
         State().signals.delete_box_signal.connect(self.update_boxes)
         State().signals.create_box_signal.connect(self.update_boxes)
 
-        State().signals.create_mask_signal.connect(self.start_drawing_mask)
-        State().signals.delete_mask_signal.connect(self.remove_drawing_mask)
-        State().signals.update_mask_signal.connect(self.update_drawing_mask)
+        DrawState().signals.create_mask_signal.connect(self.start_drawing_mask)
+        DrawState().signals.delete_mask_signal.connect(self.remove_drawing_mask)
+        DrawState().signals.update_mask_signal.connect(self.update_drawing_mask)
         self.darken_mask = None
 
-        State().signals.add_label_signal.connect(self.create_label_item)
+        DrawState().signals.add_label_signal.connect(self.create_label_item)
 
     def set_selected_image(self, name):
         self.current_image_path = State().get_path(name)

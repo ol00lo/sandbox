@@ -8,7 +8,7 @@ from backend.box import Box
 from test_helper import create_test_folder, create_image, clear_folder
 import os
 from boxsettings import BBoxSettingsDialog
-from backend.drawstate import DrawState
+from drawstate import DrawState
 
 class Test1(unittest.TestCase):
     def __init__(self, methodName = "runTest"):

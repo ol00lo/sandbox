@@ -2,7 +2,8 @@ from PyQt6 import QtWidgets, QtGui, QtCore
 from backend.box import Box
 from backend.state import State
 import os
-from backend.drawstate import DrawState
+from drawstate import DrawState
+from qt_common import show_message
 
 class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
     def __init__(self, box:Box = None, image_path="", parent=None):
@@ -41,7 +42,7 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
     def update_box(self, rect):
         self.original_box = rect
         self.setRect(rect)
-        State().signals.update_mask_signal.emit(rect)
+        DrawState().signals.update_mask_signal.emit(rect)
 
     def start_resizing(self, pos):
         self.resizing = True
@@ -67,7 +68,7 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
         self.is_corner_resize = (self.h_resize is not None and self.v_resize is not None)
 
         self.setRect(self.temp_box)
-        State().signals.create_mask_signal.emit(self.temp_box)
+        DrawState().signals.create_mask_signal.emit(self.temp_box)
 
     def resize_box(self, pos):
         if not self.resizing or not self.temp_box:
@@ -95,7 +96,7 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
         if rect.width() > 5 and rect.height() > 5:
             self.temp_box = rect
             self.setRect(rect)
-            State().signals.update_mask_signal.emit(rect)
+            DrawState().signals.update_mask_signal.emit(rect)
             self.resize_start_pos = pos
 
     def end_resizing(self):
@@ -109,7 +110,7 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
             self.resizing = False
             self.temp_box = None
             self.setRect(self.original_box)
-            State().signals.delete_mask_signal.emit()
+            DrawState().signals.delete_mask_signal.emit()
             State().do_action("ResizeBox", old_box, new_box, self.image_path)
 
     def is_box(self):
@@ -161,14 +162,14 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
                     return
                 super().mousePressEvent(event)
         except Exception as e:
-            print(e)
+            show_message(message=str(e), is_error=True)
 
     def mouseMoveEvent(self, event):
         try:
             if self.resizing:
                 self.resize_box(event.pos())
         except Exception as e:
-            print(e)
+            show_message(message=str(e), is_error=True)
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
@@ -178,7 +179,7 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
                 event.accept()
                 return
         except Exception as e:
-            print(e)
+            show_message(message=str(e), is_error=True)
         super().mouseReleaseEvent(event)
 
     def hoverEnterEvent(self, event):
@@ -189,14 +190,14 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
                 def callback(item):
                     nonlocal label_item
                     label_item = item
-                State().signals.add_label_signal.emit(self.original_box.label, self, True, callback)
+                DrawState().signals.add_label_signal.emit(self.original_box.label, self, True, callback)
                 self.label_item = label_item
                 self.scene().addItem(self.label_item)
             self.update()
             self.setZValue(100)
             event.accept()
         except Exception as e:
-            print(e)
+            show_message(message=str(e), is_error=True)
 
     def hoverLeaveEvent(self, event):
         try:
@@ -208,7 +209,7 @@ class BoxGraphicsItem(QtWidgets.QGraphicsRectItem):
             self.setZValue(2)
             event.accept()
         except Exception as e:
-            print(e)
+            show_message(message=str(e), is_error=True)
 
     def contains(self, point: QtCore.QPointF) -> bool:
         rect = self.rect()

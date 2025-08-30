@@ -1,5 +1,14 @@
 from PyQt6 import QtGui, QtCore
 
+class GUISignals(QtCore.QObject):
+    create_mask_signal = QtCore.pyqtSignal(QtCore.QRectF)
+    update_mask_signal = QtCore.pyqtSignal(QtCore.QRectF)
+    delete_mask_signal = QtCore.pyqtSignal()
+
+    change_focus_signal = QtCore.pyqtSignal(int, int, int)
+
+    add_label_signal = QtCore.pyqtSignal(str, object, bool, object)
+
 class DrawState:
     _instance = None
     
@@ -10,6 +19,7 @@ class DrawState:
         return cls._instance
     
     def _init_state(self):
+        self.signals = GUISignals()
         self.need_labels = False
 
         r, g, b = 255, 215, 0
@@ -29,6 +39,7 @@ class DrawState:
         self.label_background_alpha = 100
 
         self.dark_mask_color = QtGui.QColor(0, 0, 0, 150)
+
 
     @property
     def pen(self):

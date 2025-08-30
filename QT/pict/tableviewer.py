@@ -1,6 +1,7 @@
 from PyQt6 import QtCore, QtWidgets
 from backend.actions import BaseAction
 from backend.state import State
+from drawstate import DrawState
 
 class TableViewer (QtWidgets.QWidget):
     image_selected = QtCore.pyqtSignal(str)
@@ -28,7 +29,7 @@ class TableViewer (QtWidgets.QWidget):
 
         State().signals.load_images_signal.connect(self.init_connections)
         State().signals.all_images_deleted_signal.connect(lambda: self.image_selected.emit(None))
-        State().signals.change_focus_signal.connect(self.update_row_focus)
+        DrawState().signals.change_focus_signal.connect(self.update_row_focus)
 
         self.delete_images_button = QtWidgets.QPushButton("Delete All Images")
         self.delete_images_button.clicked.connect(self.delete_all)
