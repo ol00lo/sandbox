@@ -68,6 +68,8 @@ class Entity:
     direction: float = 0.0
     alive: bool = True
     sensor: Sensor = None
+    sensor_distances: np.ndarray = None
+    sensor_types: np.ndarray = None
 
     def __post_init__(self):
         if self.type == EntityType.PREY:
@@ -117,14 +119,21 @@ class World:
 
     async def get_entities_snapshot(self) -> List[Entity]:
         async with self.lock:
-            return [Entity(
-                id=e.id,
-                type=e.type,
-                x=e.x,
-                y=e.y,
-                direction=e.direction,
-                alive=e.alive
-            ) for e in self.entities.values()]
+            entities = []
+            for e in self.entities.values():
+                distances, types = e.sensor.get_sensor_data(self, e)
+                entity = Entity(
+                    id=e.id,
+                    type=e.type,
+                    x=e.x,
+                    y=e.y,
+                    direction=e.direction,
+                    alive=e.alive,
+                    sensor_distances=distances,
+                    sensor_types=types
+                )
+                entities.append(entity)
+            return entities
 
     def cast_ray(self, start_x, start_y, dx, dy, max_distance, source_id):
         closest_distance = float('inf')

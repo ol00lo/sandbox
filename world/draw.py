@@ -147,8 +147,18 @@ def render_frame(entities):
             draw_prey(frame, entity.x, entity.y,
                 WorldConfig.PREY_SIZE, entity.direction, WorldConfig.PREY_COLOR_BGR)
         else:
+            predator_color = WorldConfig.PREDATOR_COLOR_BGR
+            if entity.sensor_distances is not None and entity.sensor_types is not None:
+                valid_mask = entity.sensor_distances > 0
+                if np.any(valid_mask):
+                    closest_idx = np.argmax(entity.sensor_distances[valid_mask])
+                    closest_type = entity.sensor_types[valid_mask][closest_idx]
+                    if closest_type == 1:
+                        predator_color = (0, 0, 255)
+                    elif closest_type == 2:
+                        predator_color = (255, 0, 0)
             draw_predator(frame, entity.x, entity.y, WorldConfig.PREDATOR_SIZE,
-                    entity.direction, WorldConfig.PREDATOR_COLOR_BGR)
+                    entity.direction, predator_color)
     return frame
 
 def encode_png(img):
