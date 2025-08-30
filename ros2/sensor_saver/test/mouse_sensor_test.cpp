@@ -35,14 +35,8 @@ public:
 
 protected:
     void SetUp() override {
-        auto settings = DbConnectionSettings{}
-            .set_host("db")
-            .set_dbname("mydb")
-            .set_user("user")
-            .set_password("password")
-            .set_port(5432);
         std::string table_name = "mouse_movements_ttl_test";
-        impl = std::make_unique<SensorSaverImpl>(settings, 1, rclcpp::get_logger("test_logger"), table_name);
+        impl = std::make_unique<SensorSaverImpl>(DbConnectionSettings{"db", "mydb", "user", "password", 5432}, 1, rclcpp::get_logger("test_logger"), table_name);
         SensorSaverImpl_Tester::clear_table(impl);
 
         now_seconds = static_cast<int64_t>(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));

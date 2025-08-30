@@ -16,13 +16,6 @@ struct DbConnectionSettings{
     std::string user;
     std::string password;
     int port;
-
-    DbConnectionSettings&& set_host(const std::string& value) { host = value; return std::move(*this); }
-    DbConnectionSettings&& set_dbname(const std::string& value) { dbname = value; return std::move(*this); }
-    DbConnectionSettings&& set_user(const std::string& value) { user = value; return std::move(*this); }
-    DbConnectionSettings&& set_password(const std::string& value) { password = value; return std::move(*this); }
-    DbConnectionSettings&& set_port(int value) { port = value; return std::move(*this); }
-
     std::string build_connection_string() const;
 };
 

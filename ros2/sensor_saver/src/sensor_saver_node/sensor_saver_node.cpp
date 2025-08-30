@@ -22,12 +22,12 @@ public:
         this->declare_parameter<int>("cleanup_interval_hours", CLEANUP_INTERVAL_HOURS_DEFAULT);
 
         int64_t ttl_days = this->get_parameter("sensor_data_ttl_days").as_int();
-        auto settings = DbConnectionSettings{}
-            .set_host(this->get_parameter("db_connection.host").as_string())
-            .set_dbname(this->get_parameter("db_connection.dbname").as_string())
-            .set_user(this->get_parameter("db_connection.user").as_string())
-            .set_password(this->get_parameter("db_connection.password").as_string())
-            .set_port(static_cast<int>(this->get_parameter("db_connection.port").as_int()));
+        DbConnectionSettings settings = DbConnectionSettings{
+                this->get_parameter("db_connection.host").as_string(),
+                this->get_parameter("db_connection.dbname").as_string(),
+                this->get_parameter("db_connection.user").as_string(),
+                this->get_parameter("db_connection.password").as_string(),
+                static_cast<int>(this->get_parameter("db_connection.port").as_int())};
 
         try {
             pimpl_ = std::make_unique<SensorSaverImpl>(settings, ttl_days, this->get_logger());
@@ -39,7 +39,8 @@ public:
         rclcpp::on_shutdown([this]() { pimpl_->stop_cleanup_timer(); });
 
         RCLCPP_INFO(this->get_logger(), "TTL days: %ld", ttl_days);
-        RCLCPP_INFO(this->get_logger(), "DB connection: host = %s, dbname = %s, user = %s", settings.host, settings.dbname, settings.user);
+        RCLCPP_INFO(this->get_logger(), "DB connection: host = %s, dbname = %s, user = %s", 
+                   settings.host.c_str(), settings.dbname.c_str(), settings.user.c_str());
 
         param_callback_ = this->add_on_set_parameters_callback(
             std::bind(&MouseSaver::parameters_callback, this, std::placeholders::_1));
@@ -52,7 +53,8 @@ public:
                 pimpl_->save_to_db(msg->x, msg->y, tp);
             });
 
-        RCLCPP_INFO(get_logger(), "Subscriber ready. DB: host = %s, dbname = %s, user = %s", settings.host, settings.dbname, settings.user);
+        RCLCPP_INFO(get_logger(), "Subscriber ready. DB: host = %s, dbname = %s, user = %s", 
+                   settings.host.c_str(), settings.dbname.c_str(), settings.user.c_str());
     }
 
 private:
