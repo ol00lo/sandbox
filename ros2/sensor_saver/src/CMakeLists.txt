@@ -22,6 +22,7 @@ add_compile_options(
   -Wlogical-op
   -Wcast-align
   -Wold-style-cast
+  -Wmissing-field-initializers
 )
 
 add_subdirectory(sensor_saver_impl)

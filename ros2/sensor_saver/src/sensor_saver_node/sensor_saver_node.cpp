@@ -22,12 +22,12 @@ public:
         this->declare_parameter<int>("cleanup_interval_hours", CLEANUP_INTERVAL_HOURS_DEFAULT);
 
         int64_t ttl_days = this->get_parameter("sensor_data_ttl_days").as_int();
-        DbConnectionSettings settings = DbConnectionSettings{
+        DbConnectionSettings settings {
                 this->get_parameter("db_connection.host").as_string(),
                 this->get_parameter("db_connection.dbname").as_string(),
                 this->get_parameter("db_connection.user").as_string(),
                 this->get_parameter("db_connection.password").as_string(),
-                static_cast<int>(this->get_parameter("db_connection.port").as_int())};
+                this->get_parameter("db_connection.port").as_int()};
 
         try {
             pimpl_ = std::make_unique<SensorSaverImpl>(settings, ttl_days, this->get_logger());

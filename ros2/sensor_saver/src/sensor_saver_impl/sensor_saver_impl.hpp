@@ -15,7 +15,7 @@ struct DbConnectionSettings{
     std::string dbname;
     std::string user;
     std::string password;
-    int port;
+    int64_t port;
     std::string build_connection_string() const;
 };
 
