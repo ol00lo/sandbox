@@ -30,3 +30,9 @@ pgadmin:
 	Password: SuperSecretPassword
 	Add New Server ->
 		Connection: Host name/address: db + Port: 5432 + database: mydb + Username: user + Password: password
+
+запуск тестов:
+	сборка: colcon build --packages-select sensor_saver --cmake-args -DBUILD_TESTING=ON
+	запуск: colcon test --packages-select sensor_saver
+	результаты: colcon test-result --all --verbose
+	запуск с отладкой: gdb build/sensor_saver/test/mouse_sensor_test
