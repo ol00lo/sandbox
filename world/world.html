@@ -15,83 +15,15 @@
 </head>
 
 <body>
-    <canvas id="canvas" width="{{ width }}" height="{{ height }}"></canvas>
+    <img id="frame" width="{{ width }}" height="{{ height }}" />
     <script>
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        const width = {{ width }};
-        const height = {{ height }};
-
-        const staticCanvas = document.createElement('canvas');
-        staticCanvas.width = width;
-        staticCanvas.height = height;
-        const staticCtx = staticCanvas.getContext('2d');
-
-        function drawHeart(x, y, size, color) {
-            ctx.save();
-            ctx.fillStyle = color;
-            ctx.beginPath();
-            const topCurveHeight = size * 0.3;
-            ctx.moveTo(x, y + topCurveHeight);
-            ctx.bezierCurveTo(
-                x, y,
-                x - size / 2, y,
-                x - size / 2, y + topCurveHeight
-            );
-            ctx.bezierCurveTo(
-                x - size / 2, y + (size + topCurveHeight) / 2,
-                x, y + (size + topCurveHeight) / 2,
-                x, y + size
-            );
-            ctx.bezierCurveTo(
-                x, y + (size + topCurveHeight) / 2,
-                x + size / 2, y + (size + topCurveHeight) / 2,
-                x + size / 2, y + topCurveHeight
-            );
-            ctx.bezierCurveTo(
-                x + size / 2, y,
-                x, y,
-                x, y + topCurveHeight
-            );
-            ctx.closePath();
-            ctx.fill();
-            ctx.restore();
+        const img = document.getElementById('frame');
+        function update() {
+            const url = '/frame?t=' + Date.now();
+            img.src = url;
         }
-
-
-        function drawSquare(x, y, size, color) {
-            ctx.fillStyle = color;
-            ctx.fillRect(x - size / 2, y - size / 2, size, size);
-        }
-
-        function drawStatic(){
-            staticCtx.strokeStyle = "black";
-            staticCtx.lineWidth = 3;
-            staticCtx.strokeRect(0, 0, width, height);
-        }
-
-        function updateWorld() {
-            fetch('/world')
-                .then(response => response.json())
-                .then(data => {
-                    ctx.clearRect(0, 0, width, height);
-
-                    ctx.drawImage(staticCanvas, 0, 0);
-
-                    data.preys.forEach(prey => {
-                        drawHeart(prey.x, prey.y, {{ prey_size }} * 2, '{{ prey_color }}');
-                    });
-
-                    data.predators.forEach(predator => {
-                        drawSquare(predator.x, predator.y, {{ predator_size }} * 2, '{{ predator_color }}');
-                    });
-                });
-        }
-
-
-        drawStatic();
-        setInterval(updateWorld, 500);
-        updateWorld();
+        setInterval(update, 200);
+        update();
     </script>
 </body>
 
