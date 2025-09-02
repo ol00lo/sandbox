@@ -3,6 +3,7 @@ from backend.state import State
 from boxgritem import BoxGraphicsItem
 import os
 from backend.box import Box
+from drawstate import DrawState
 
 class ImageModel(QtWidgets.QGraphicsScene):
     def __init__(self, parent=None):
@@ -11,6 +12,13 @@ class ImageModel(QtWidgets.QGraphicsScene):
         State().signals.change_boxes_signal.connect(self.update_boxes)
         State().signals.delete_box_signal.connect(self.update_boxes)
         State().signals.create_box_signal.connect(self.update_boxes)
+
+        DrawState().signals.create_mask_signal.connect(self.start_drawing_mask)
+        DrawState().signals.delete_mask_signal.connect(self.remove_drawing_mask)
+        DrawState().signals.update_mask_signal.connect(self.update_drawing_mask)
+        self.darken_mask = None
+
+        DrawState().signals.add_label_signal.connect(self.create_label_item)
 
     def set_selected_image(self, name):
         self.current_image_path = State().get_path(name)
@@ -35,27 +43,57 @@ class ImageModel(QtWidgets.QGraphicsScene):
         boxes = self.find_rects(os.path.dirname(self.current_image_path))
         for box in boxes:
             box_item = BoxGraphicsItem(box=box, image_path=self.current_image_path)
-            self.addItem(box_item)
+
+            if box_item.scene() is None: self.addItem(box_item)
             if State().need_labels:
                 self.add_labels(box_item, box.label)
 
     def add_labels(self, box, label):
-        width = self.sceneRect().width()
-        font_size = max(8, width * 0.05)
+        text_item = self.create_label_item(label, box)
+        if text_item.scene() is None: self.addItem(text_item)
 
-        font = QtGui.QFont("Times New Roman")
-        font.setPointSizeF(font_size)
+    def create_label_item(self, label_text, rect, is_hover=False, callback=None):
+        text_item = QtWidgets.QGraphicsSimpleTextItem(label_text, rect)
+        text_item.setFont(DrawState().label_font)
+        text_item.setBrush(QtGui.QBrush(DrawState().label_color))
+        text_item.setPen(DrawState().label_pen)
+        text_item.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIgnoresTransformations)
 
-        text_item = QtWidgets.QGraphicsSimpleTextItem(label, box)
+        scene = self.scene() if hasattr(self, 'scene') else self
+        view = scene.views()[0] if scene and scene.views() else None
+        scale_x = view.transform().m11() if view else 1.0
+        scale_y = view.transform().m22() if view else 1.0
 
-        step = width * 0.01
-        local_pos = QtCore.QPointF(box.rect().right() + step, box.rect().top() - step)
-        text_item.setPos(local_pos)
+        padding_pixels = 2.0
+        padding_scene_x = padding_pixels / scale_x
+        padding_scene_y = padding_pixels / scale_y
 
-        pen = QtGui.QPen(QtCore.Qt.GlobalColor.black, 1, QtCore.Qt.PenStyle.SolidLine)
-        text_item.setPen(pen)
-        text_item.setFont(font)
-        self.addItem(text_item)
+        text_height_pixels = text_item.boundingRect().height()
+        text_height_scene = text_height_pixels / scale_y
+
+        x_pos = rect.rect().left() + padding_scene_x
+        y = rect.rect().top() - text_height_scene - padding_scene_y
+        scene_top = scene.sceneRect().top() if hasattr(scene, 'sceneRect') else 0.0
+        y_pos = y if y >= scene_top else rect.rect().top() + padding_scene_y
+        text_item.setPos(QtCore.QPointF(x_pos, y_pos))
+
+        bg_color = DrawState().hover_label_background_color if is_hover else DrawState().label_background_color
+
+        background_item = QtWidgets.QGraphicsRectItem(text_item)
+        background_item.setBrush(QtGui.QBrush(bg_color))
+        background_item.setPen(QtGui.QPen(QtCore.Qt.PenStyle.NoPen))
+        background_item.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIgnoresTransformations)
+        background_item.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemStacksBehindParent)
+
+        text_rect = text_item.boundingRect()
+        background_item.setRect(
+            text_rect.adjusted(-padding_pixels, -padding_pixels, padding_pixels, padding_pixels)
+        )
+
+        if callback:
+            callback(text_item)
+
+        return text_item
 
     def find_rects(self, directory):
         if directory == '': return []
@@ -80,3 +118,34 @@ class ImageModel(QtWidgets.QGraphicsScene):
                 except ValueError:
                     continue
         return rects
+
+    def start_drawing_mask(self, box_rect):
+        if self.darken_mask:
+            self.removeItem(self.darken_mask)
+
+        mask = QtWidgets.QGraphicsPathItem()
+        path = QtGui.QPainterPath()
+        path.addRect(self.sceneRect())
+        path.addRect(box_rect)
+        mask.setPath(path)
+        mask.setBrush(DrawState().dark_mask_color)
+        mask.setPen(QtGui.QPen(QtCore.Qt.PenStyle.NoPen))
+
+        self.darken_mask = mask
+        self.addItem(mask)
+        mask.setZValue(1)
+
+    def update_drawing_mask(self, box_rect):
+        if not self.darken_mask:
+            return
+
+        mask_path = QtGui.QPainterPath()
+        mask_path.addRect(self.sceneRect())
+        mask_path.addRect(box_rect)
+
+        self.darken_mask.setPath(mask_path)
+
+    def remove_drawing_mask(self):
+        if self.darken_mask:
+            self.removeItem(self.darken_mask)
+            self.darken_mask = None

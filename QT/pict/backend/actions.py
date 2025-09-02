@@ -8,6 +8,7 @@ from .table import ImageInfo
 from .state import State
 from .box import Box
 from .commands import ActionResult, Command
+from drawstate import DrawState
 
 class BaseAction(QtGui.QAction):
     _action_name = "BaseAction"
@@ -316,7 +317,7 @@ class DeleteImageAction(BaseAction):
             model.dataChanged.emit(model.index_by_imagename(item['info'].name), model.index_by_imagename(item['info'].name))
 
             row = model.rowCount() - item['row'] - 1
-            State().signals.change_focus_signal.emit(0, 0, row)
+            DrawState().signals.change_focus_signal.emit(0, 0, row)
 
     def _redo_impl(self, indexes):
         self._do_impl(indexes)
@@ -334,7 +335,7 @@ class CreateBoxAction(BaseAction):
     def _undo_impl(self, img_name, box):
         name = os.path.basename(img_name)
         State().box_saver.delete_bbox(box, name)
-        State().signals.delete_box_signal.emit(State().current_dir + "/" + name, box)
+        State().signals.delete_box_signal.emit(os.path.join(State().current_dir, name), box)
 
     def _redo_impl(self, img_name, box):
         State().box_saver.new_bbox(Box(box.label, box), img_name)
