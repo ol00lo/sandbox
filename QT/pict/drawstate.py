@@ -1,6 +1,6 @@
 from PyQt6 import QtGui, QtCore
 
-class GUISignals(QtCore.QObject):
+class GuiSignals(QtCore.QObject):
     create_mask_signal = QtCore.pyqtSignal(QtCore.QRectF)
     update_mask_signal = QtCore.pyqtSignal(QtCore.QRectF)
     delete_mask_signal = QtCore.pyqtSignal()
@@ -19,7 +19,7 @@ class DrawState:
         return cls._instance
     
     def _init_state(self):
-        self.signals = GUISignals()
+        self.signals = GuiSignals()
         self.need_labels = False
 
         r, g, b = 255, 215, 0

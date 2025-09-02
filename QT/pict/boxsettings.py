@@ -1,5 +1,6 @@
 from PyQt6 import QtWidgets, QtGui, QtCore
 from drawstate import DrawState
+from qt_common import show_message
 
 class BBoxSettingsDialog(QtWidgets.QDialog):
     def __init__(self, parent=None):
@@ -24,7 +25,7 @@ class BBoxSettingsDialog(QtWidgets.QDialog):
         self.setup_bbox_settings()
         self.setup_label_settings()
         self.setup_preview()
-        self.acept()
+        self.build_accept_reject()
 
     def setup_bbox_settings(self):
         box_group = QtWidgets.QGroupBox("Bounding Box Settings")
@@ -68,15 +69,16 @@ class BBoxSettingsDialog(QtWidgets.QDialog):
         label_layout.addWidget(QtWidgets.QLabel("Background opacity:"), 3, 0)
 
         bg_alpha_layout = QtWidgets.QHBoxLayout()
-        self.bg_alpha.setRange(0, 255)
+        self.bg_alpha.setRange(0, 10)
         self.bg_alpha.setTickPosition(QtWidgets.QSlider.TickPosition.TicksBelow)
-        self.bg_alpha.setTickInterval(25)
-        self.bg_alpha.setSingleStep(10)
-        bg_alpha_layout.addWidget(self.bg_alpha)
+        self.bg_alpha.setTickInterval(1)
+        self.bg_alpha.setSingleStep(1)
+        self.bg_alpha.setValue(int(DrawState().label_background_alpha / 25.5))
+        bg_alpha_layout.addWidget(self.bg_alpha, 4)
 
-        self.bg_alpha_label = QtWidgets.QLabel(f"{int(self.bg_alpha.value()/255*100)}%")
+        self.bg_alpha_label = QtWidgets.QLabel(f"{int(self.bg_alpha.value() * 10)}%")
         self.bg_alpha.valueChanged.connect(self.update_bg_alpha_label)
-        bg_alpha_layout.addWidget(self.bg_alpha_label)
+        bg_alpha_layout.addWidget(self.bg_alpha_label, 1)
 
         label_layout.addLayout(bg_alpha_layout, 3, 1)
         label_group.setLayout(label_layout)
@@ -136,7 +138,7 @@ class BBoxSettingsDialog(QtWidgets.QDialog):
     def update_text_background_brush(self):
         if hasattr(self, 'preview_text_bg'):
             bg = QtGui.QColor(self.line_color)
-            bg.setAlpha(self.bg_alpha.value())
+            bg.setAlpha(int(self.bg_alpha.value()*25.5))
             self.preview_text_bg.setBrush(QtGui.QBrush(bg))
 
     def update_text_position(self):
@@ -154,8 +156,11 @@ class BBoxSettingsDialog(QtWidgets.QDialog):
                 )
 
     def update_bg_alpha_label(self):
-        percentage = int((self.bg_alpha.value() / 255) * 100)
-        self.bg_alpha_label.setText(f"{percentage}%")
+        try:
+            percentage = self.bg_alpha.value() * 10
+            self.bg_alpha_label.setText(f"{percentage}%")
+        except Exception as e:
+            show_message(message=str(e), is_error=True)
 
     def create_color_button(self, default_color):
         button = QtWidgets.QPushButton()
@@ -200,10 +205,9 @@ class BBoxSettingsDialog(QtWidgets.QDialog):
         DrawState().label_size = self.font_size.value()
         DrawState().label_color = self.label_color
         DrawState().label_type = self.font.currentFont().family()
-        DrawState().label_background_alpha = self.bg_alpha.value()
+        DrawState().label_background_alpha = int(self.bg_alpha.value()*25.5)
 
-
-    def acept(self):
+    def build_accept_reject(self):
         buttons = QtWidgets.QDialogButtonBox(
             QtWidgets.QDialogButtonBox.StandardButton.Ok | 
             QtWidgets.QDialogButtonBox.StandardButton.Cancel
