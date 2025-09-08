@@ -77,7 +77,7 @@ class BBoxSettingsDialog(QtWidgets.QDialog):
         bg_alpha_layout.addWidget(self.bg_alpha, 4)
 
         self.bg_alpha_label = QtWidgets.QLabel(f"{int(self.bg_alpha.value() * 10)}%")
-        self.bg_alpha.valueChanged.connect(self.update_bg_alpha_label)
+        self.bg_alpha.valueChanged.connect(self.change_bg_alpha_label)
         bg_alpha_layout.addWidget(self.bg_alpha_label, 1)
 
         label_layout.addLayout(bg_alpha_layout, 3, 1)
@@ -101,45 +101,54 @@ class BBoxSettingsDialog(QtWidgets.QDialog):
         self.preview_text_bg.setPen(QtGui.QPen(QtCore.Qt.PenStyle.NoPen))
         self.preview_text_bg.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemStacksBehindParent)
 
-        self.update_bbox_preview()
-        self.update_text_preview()
-        self.update_text_background_brush()
+        self.change_bbox_preview()
+        self.change_text_preview()
+        self.change_text_background_brush()
         preview_layout.addWidget(self.bbox_preview)
 
         preview_group.setLayout(preview_layout)
         self.layout.addWidget(preview_group)
 
-        self.line_width.valueChanged.connect(self.update_bbox_preview)
-        self.line_color_button.clicked.connect(self.update_bbox_preview)
-        self.line_style.currentIndexChanged.connect(self.update_bbox_preview)
-        self.font_size.valueChanged.connect(self.update_text_preview)
-        self.label_color_button.clicked.connect(self.update_text_preview)
-        self.font.currentFontChanged.connect(self.update_text_preview)
-        self.bg_alpha.valueChanged.connect(self.update_text_preview)
-        self.bg_alpha.valueChanged.connect(self.update_text_background_brush)
+        self.line_width.valueChanged.connect(self.change_bbox_preview)
+        self.line_color_button.clicked.connect(self.change_bbox_preview)
+        self.line_style.currentIndexChanged.connect(self.change_bbox_preview)
+        self.font_size.valueChanged.connect(self.change_text_preview)
+        self.label_color_button.clicked.connect(self.change_text_preview)
+        self.font.currentFontChanged.connect(self.change_text_preview)
+        self.bg_alpha.valueChanged.connect(self.change_text_preview)
+        self.bg_alpha.valueChanged.connect(self.change_text_background_brush)
 
-    def update_bbox_preview(self):
-        pen = QtGui.QPen()
-        pen.setWidth(self.line_width.value())
-        pen.setColor(self.line_color)
-        pen.setStyle(self.line_style.currentData())
-        self.preview_rect.setPen(pen)
-        self.update_text_background_brush()
-        self.update_text_position()
+    def change_bbox_preview(self):
+        try:
+            pen = QtGui.QPen()
+            pen.setWidth(self.line_width.value())
+            pen.setColor(self.line_color)
+            pen.setStyle(self.line_style.currentData())
+            self.preview_rect.setPen(pen)
+            self.change_text_background_brush()
+            self.update_text_position()
+        except Exception as e:
+            show_message(message=str(e), is_error=True)
 
-    def update_text_preview(self):
-        font = QtGui.QFont(self.font.currentFont())
-        font.setPointSize(self.font_size.value())
-        self.preview_text.setFont(font)
-        self.preview_text.setBrush(QtGui.QBrush(self.label_color))
-        self.update_text_background_brush()
-        self.update_text_position()
+    def change_text_preview(self):
+        try:
+            font = QtGui.QFont(self.font.currentFont())
+            font.setPointSize(self.font_size.value())
+            self.preview_text.setFont(font)
+            self.preview_text.setBrush(QtGui.QBrush(self.label_color))
+            self.change_text_background_brush()
+            self.update_text_position()
+        except Exception as e:
+            show_message(message=str(e), is_error=True)
 
-    def update_text_background_brush(self):
-        if hasattr(self, 'preview_text_bg'):
-            bg = QtGui.QColor(self.line_color)
-            bg.setAlpha(int(self.bg_alpha.value()*25.5))
-            self.preview_text_bg.setBrush(QtGui.QBrush(bg))
+    def change_text_background_brush(self):
+        try:
+            if hasattr(self, 'preview_text_bg'):
+                bg = QtGui.QColor(self.line_color)
+                bg.setAlpha(int(self.bg_alpha.value()*25.5))
+                self.preview_text_bg.setBrush(QtGui.QBrush(bg))
+        except Exception as e:
+            show_message(message=str(e), is_error=True)
 
     def update_text_position(self):
         if hasattr(self, 'preview_text') and hasattr(self, 'preview_rect'):
@@ -155,7 +164,7 @@ class BBoxSettingsDialog(QtWidgets.QDialog):
                     text_rect_local.adjusted(-padding, -padding, padding, padding)
                 )
 
-    def update_bg_alpha_label(self):
+    def change_bg_alpha_label(self):
         try:
             percentage = self.bg_alpha.value() * 10
             self.bg_alpha_label.setText(f"{percentage}%")
