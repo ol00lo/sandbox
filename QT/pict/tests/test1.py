@@ -1,5 +1,5 @@
 import unittest
-from PyQt6 import QtWidgets, QtCore
+from PyQt6 import QtWidgets, QtCore, QtGui
 from mainwin import MainWindow
 from tester import tester
 from gui_communicator import guicom
@@ -7,6 +7,8 @@ from backend.state import State
 from backend.box import Box
 from test_helper import create_test_folder, create_image, clear_folder
 import os
+from boxsettings import BBoxSettingsDialog
+from drawstate import DrawState
 
 class Test1(unittest.TestCase):
     def __init__(self, methodName = "runTest"):
@@ -115,8 +117,8 @@ class Test1(unittest.TestCase):
         State().need_labels = True
 
         # CreateBox
-        tester.eval_and_wait_true(State().do_action, ("CreateBox", box, img),
-                                  'a() == True', {'a': lambda: self.mwin.image_model_viewer.image_model.items().__len__() == 3})
+        State().do_action("CreateBox", box, img)
+        tester._wait_true_wrk(self.mwin.image_model_viewer.image_model.items().__len__(), 3)
 
         self.assertTrue(any(isinstance(item, QtWidgets.QGraphicsSimpleTextItem)
                             for item in self.mwin.image_model_viewer.image_model.items()))
@@ -193,6 +195,21 @@ class Test1(unittest.TestCase):
         State().undo_redo_manager.undo()
         State().undo_redo_manager.undo()
         State().undo_redo_manager.undo()
+
+    def test_settings(self):
+        self.dialog = BBoxSettingsDialog()
+        self.assertEqual(self.dialog.line_width.value(), DrawState().line_width)
+        self.assertEqual(self.dialog.font_size.value(), DrawState().label_size)
+        self.assertEqual(self.dialog.line_color, DrawState().line_color)
+        self.assertEqual(self.dialog.label_color, DrawState().label_color)
+
+        settings = self.dialog.get_settings()
+        self.assertEqual(DrawState().line_width, int(settings['line_width']))
+        self.assertEqual(DrawState().label_size, int(settings['label_size']))
+        self.assertEqual(DrawState().line_color, settings['line_color'])
+        self.assertEqual(DrawState().label_color, settings['label_color'])
+        self.assertEqual(DrawState().label_type, settings['label_type'])
+        self.assertEqual(DrawState().line_style, settings['line_style'])
 
     def draw_box(self, start_pos, end_pos):
         tester.eval_and_wait_window(guicom.drag_with_mouse, (self.widget, start_pos, end_pos, QtCore.Qt.MouseButton.LeftButton),  QtWidgets.QInputDialog)

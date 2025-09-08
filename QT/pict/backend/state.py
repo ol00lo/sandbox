@@ -14,11 +14,8 @@ class Signals(QtCore.QObject):
     delete_box_signal = QtCore.pyqtSignal(str, QtCore.QRectF)
     change_boxes_signal = QtCore.pyqtSignal(str)
 
-    change_focus_signal = QtCore.pyqtSignal(int, int, int)
-
 class State:
     _instance = None
-    signals = None
 
     def __new__(cls):
         if cls._instance is None:
@@ -41,7 +38,6 @@ class State:
         self.backup_manager = BackUp()
 
         self.undo_redo_manager.delete_backup_signal.connect(self.backup_manager.delete_files)
-
 
     @classmethod
     def register_action(cls, action_name, action_class):

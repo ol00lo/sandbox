@@ -3,6 +3,8 @@ from scene import ImageModel
 from boxgritem import BoxGraphicsItem
 from backend.state import State
 from backend.box import Box
+from qt_common import show_message
+from drawstate import DrawState
 
 class ImageViewer(QtWidgets.QGraphicsView):
     coordinates_clicked = QtCore.pyqtSignal(int, int)
@@ -28,35 +30,47 @@ class ImageViewer(QtWidgets.QGraphicsView):
     def display_image(self):
         self.image_model.display_image()
         self.fitInView(self.image_model.sceneRect(), QtCore.Qt.AspectRatioMode.KeepAspectRatio)
+        self.image_model.update_boxes()
 
     def update_image(self):
         self.image_model.update_boxes()
 
     def mousePressEvent(self, event):
         super().mousePressEvent(event)
-        if event.isAccepted():
-            return
-        if event.button() == QtCore.Qt.MouseButton.LeftButton:
-            self.start_drawing(event)
-            event.accept()
-            return
+        try:
+            if event.isAccepted():
+                return
+            items_under_cursor = self.scene().items(self.mapToScene(event.pos()))
+            is_picture = isinstance(items_under_cursor[0], QtWidgets.QGraphicsPixmapItem) if items_under_cursor else False
+            if event.button() == QtCore.Qt.MouseButton.LeftButton and is_picture:
+                self.start_drawing(event)
+                event.accept()
+                return
+        except Exception as e:
+            show_message(message=str(e), is_error=True)
 
     def mouseMoveEvent(self, event):
-        pos = event.pos()
-        scene_pos = self.mapToScene(pos)
-        item = self.itemAt(event.pos())
-        if isinstance(item, QtWidgets.QGraphicsPixmapItem):
-            self.setCursor(self.cross_cursor)
-            self.track_coordinates(event)
-        if not self.drawing:
-            self.set_cursor(scene_pos, item)
-        if self.drawing and self.current_box:
-            self.update_current_box(event)
+        try:
+            pos = event.pos()
+            scene_pos = self.mapToScene(pos)
+            item = self.itemAt(event.pos())
+            if isinstance(item, QtWidgets.QGraphicsPixmapItem):
+                self.setCursor(self.cross_cursor)
+                self.track_coordinates(event)
+            if not self.drawing:
+                self.set_cursor(scene_pos, item)
+            if self.drawing and self.current_box:
+                self.update_current_box(event)
+        except Exception as e:
+            show_message(message=str(e), is_error=True)
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
-        if event.button() == QtCore.Qt.MouseButton.LeftButton and self.drawing:
-            self.finish_drawing()
+        try:
+            if event.button() == QtCore.Qt.MouseButton.LeftButton and self.drawing:
+                self.finish_drawing()
+        except Exception as e:
+            show_message(message=str(e), is_error=True)
         super().mouseReleaseEvent(event)
 
     def track_coordinates(self, event):
@@ -87,6 +101,7 @@ class ImageViewer(QtWidgets.QGraphicsView):
 
         scene_rect = Box("", QtCore.QRectF(self.start_point, self.start_point))
         self.current_box = BoxGraphicsItem(box = scene_rect, image_path=self.image_model.current_image_path)
+        DrawState().signals.create_mask_signal.emit(scene_rect)
         self.image_model.addItem(self.current_box)
 
     def finish_drawing(self):
@@ -117,20 +132,28 @@ class ImageViewer(QtWidgets.QGraphicsView):
         if State().need_labels:
             self.image_model.add_labels(self.current_box, label)
         self.current_box = None
+        DrawState().signals.delete_mask_signal.emit()
 
     def cancel_drawing(self):
         self.image_model.removeItem(self.current_box)
         self.current_box = None
+        DrawState().signals.delete_mask_signal.emit()
 
     def set_cursor(self, pos, item):
         if isinstance(item, QtWidgets.QGraphicsPixmapItem):
             self.setCursor(self.cross_cursor)
         elif isinstance(item, BoxGraphicsItem) and item.contains(pos):
-            self.setCursor(item.resize_cursors(pos))
+            if item.resizing:
+                self.setCursor(self.default_cursor)
+            else:
+                self.setCursor(item.resize_cursors(pos))
         else:
             self.setCursor(self.default_cursor)
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        if self.image_model.items():
+        try:
             self.fitInView(self.image_model.sceneRect(), QtCore.Qt.AspectRatioMode.KeepAspectRatio)
+            self.image_model.update_boxes()
+        except Exception as e:
+            show_message(message=str(e), is_error=True)

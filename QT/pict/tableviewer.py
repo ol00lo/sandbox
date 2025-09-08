@@ -1,6 +1,7 @@
 from PyQt6 import QtCore, QtWidgets
 from backend.actions import BaseAction
 from backend.state import State
+from drawstate import DrawState
 
 class TableViewer (QtWidgets.QWidget):
     image_selected = QtCore.pyqtSignal(str)
@@ -28,7 +29,7 @@ class TableViewer (QtWidgets.QWidget):
 
         State().signals.load_images_signal.connect(self.init_connections)
         State().signals.all_images_deleted_signal.connect(lambda: self.image_selected.emit(None))
-        State().signals.change_focus_signal.connect(self.update_row_focus)
+        DrawState().signals.change_focus_signal.connect(self.update_row_focus)
 
         self.delete_images_button = QtWidgets.QPushButton("Delete All Images")
         self.delete_images_button.clicked.connect(self.delete_all)
@@ -69,12 +70,15 @@ class TableViewer (QtWidgets.QWidget):
         rename_action.triggered.disconnect()
 
     def keyPressEvent(self, event):
-        if event.key() == QtCore.Qt.Key.Key_Delete:
-            selected_rows = self.table_view.selectionModel().selectedRows()
-            source_indexes = [self.proxy_model.mapToSource(index) for index in selected_rows]
-            State().do_action("DeleteImage", source_indexes)
-        else:
-            super().keyPressEvent(event)
+        try:
+            if event.key() == QtCore.Qt.Key.Key_Delete:
+                selected_rows = self.table_view.selectionModel().selectedRows()
+                source_indexes = [self.proxy_model.mapToSource(index) for index in selected_rows]
+                State().do_action("DeleteImage", source_indexes)
+            else:
+                super().keyPressEvent(event)
+        except Exception as e:
+            print(e)
 
     def init_connections(self):
         self.table_view.setModel(self.proxy_model)

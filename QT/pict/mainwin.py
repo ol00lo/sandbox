@@ -2,6 +2,9 @@ from PyQt6 import QtWidgets, QtGui, QtCore
 from imageviewer import ImageViewer
 from tableviewer import TableViewer
 from backend.state import State
+from boxsettings import BBoxSettingsDialog
+from drawstate import DrawState
+from qt_common import show_message
 import resources
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -39,11 +42,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.create_toolbar()
 
     def create_toolbar(self):
-        #toolbar = self.addToolBar("Main Toolbar")
         self.toolbar = self.addToolBar("Main Toolbar")
         toolbar = self.toolbar
         toolbar.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonIconOnly)
-        #toolbar.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         toolbar.setIconSize(QtCore.QSize(15, 15))
 
         self.undo_action = QtGui.QAction(QtGui.QIcon(":/gundo"), "Undo", self)
@@ -60,6 +61,10 @@ class MainWindow(QtWidgets.QMainWindow):
         State().undo_redo_manager.redo_stack_empty_signal.connect(self.update_redo_icon)
 
         toolbar.addSeparator()
+
+        bbox_settings_action = QtGui.QAction(QtGui.QIcon(":/settings"), "BBox Settings...", self)
+        bbox_settings_action.triggered.connect(self.get_boxes_parameters)
+        toolbar.addAction(bbox_settings_action)
 
         toolbar.addAction(State().actions["LoadImages"])
 
@@ -109,3 +114,12 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             self.redo_action.setIcon(QtGui.QIcon(":/redo"))
             self.redo_action.setEnabled(True)
+
+    def get_boxes_parameters(self):
+        dialog = BBoxSettingsDialog(self)
+        try:
+            if dialog.exec() == QtWidgets.QDialog.DialogCode.Accepted:
+                dialog.set_current_settings()
+                self.image_model_viewer.update_image()
+        except Exception as e:
+            show_message(message=str(e), is_error=True)
