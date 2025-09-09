@@ -37,26 +37,24 @@ class Sensor:
         )
 
     def get_sensor_data(self, world, entity):
+        angles_rad = np.radians(self.ray_angles + entity.direction)
+        dxs = np.cos(angles_rad).astype(np.float32)
+        dys = np.sin(angles_rad).astype(np.float32)
+
+        hit_distances, hit_types = world.cast_ray(
+            entity.x,
+            entity.y,
+            dxs,
+            dys,
+            float(self.detection_range),
+            entity.id,
+        )
+
         distances = np.zeros(self.resolution, dtype=np.float32)
-        types = np.zeros(self.resolution, dtype=np.uint8)
+        types = hit_types.astype(np.uint8, copy=False)
 
-        for i, angle_deg in enumerate(self.ray_angles):
-            angle_rad = math.radians(angle_deg + entity.direction)
-
-            dx = math.cos(angle_rad)
-            dy = math.sin(angle_rad)
-
-            hit_distance, hit_type = world.cast_ray(
-                entity.x, entity.y, dx, dy, self.detection_range, entity.id
-            )
-
-            if hit_distance < float('inf'):
-                distances[i] = 1.0 / (hit_distance + 1)
-                types[i] = hit_type
-            else:
-                distances[i] = 0.0
-                types[i] = 0
-
+        valid_mask = np.isfinite(hit_distances)
+        distances[valid_mask] = 1.0 / (hit_distances[valid_mask] + 1.0)
         return distances, types
 
 @dataclass
@@ -135,21 +133,69 @@ class World:
                 entities.append(entity)
             return entities
 
-    def cast_ray(self, start_x, start_y, dx, dy, max_distance, source_id):
-        closest_distance = float('inf')
-        closest_type = 0
+    def cast_ray(self, start_x, start_y, dxs: np.ndarray, dys: np.ndarray, max_distance: float, source_id: int):
+        if dxs.ndim != 1 or dys.ndim != 1 or dxs.shape[0] != dys.shape[0]:
+            raise ValueError("dxs and dys must be 1D arrays of the same length")
 
-        for entity in self.entities.values():
-            if entity.id == source_id or not entity.alive:
-                continue
+        num_rays = dxs.shape[0]
 
-            distance = self._ray_entity_distance(start_x, start_y, dx, dy, entity)
+        if not self.entities:
+            return np.full(num_rays, np.inf, dtype=np.float32), np.zeros(num_rays, dtype=np.uint8)
 
-            if distance < closest_distance and distance <= max_distance:
-                closest_distance = distance
-                closest_type = entity.type.value
+        entities = list(self.entities.values())
 
-        return closest_distance, closest_type
+        ids = np.fromiter((e.id for e in entities), dtype=np.int64)
+        alive = np.fromiter((e.alive for e in entities), dtype=bool)
+        xs = np.fromiter((e.x for e in entities), dtype=np.float32)
+        ys = np.fromiter((e.y for e in entities), dtype=np.float32)
+        types = np.fromiter((e.type.value for e in entities), dtype=np.uint8)
+
+        sizes = np.where(
+            types == EntityType.PREY.value,
+            float(WorldConfig.PREY_SIZE),
+            float(WorldConfig.PREDATOR_SIZE),
+        ).astype(np.float32)
+
+        valid_entities_mask = alive & (ids != int(source_id))
+        if not np.any(valid_entities_mask):
+            return np.full(num_rays, np.inf, dtype=np.float32), np.zeros(num_rays, dtype=np.uint8)
+
+        ids = ids[valid_entities_mask]
+        xs = xs[valid_entities_mask]
+        ys = ys[valid_entities_mask]
+        types = types[valid_entities_mask]
+        sizes = sizes[valid_entities_mask]
+
+        ex = xs - float(start_x)
+        ey = ys - float(start_y)
+
+        r2 = ex * ex + ey * ey
+
+        projections = ex[:, None] * dxs[None, :] + ey[:, None] * dys[None, :]
+
+        ahead_mask = projections >= 0.0
+
+        perp2 = r2[:, None] - projections * projections
+        np.maximum(perp2, 0.0, out=perp2)
+        perp_dist = np.sqrt(perp2, dtype=np.float32)
+
+        hit_mask = perp_dist <= sizes[:, None]
+        within_range_mask = projections <= float(max_distance)
+
+        valid_mask = ahead_mask & hit_mask & within_range_mask
+
+        candidate_proj = np.where(valid_mask, projections, np.inf)
+
+        min_indices = np.argmin(candidate_proj, axis=0)
+        ray_indices = np.arange(num_rays)
+        min_distances = candidate_proj[min_indices, ray_indices].astype(np.float32)
+
+        hit_types = np.zeros(num_rays, dtype=np.uint8)
+        has_hit = np.isfinite(min_distances)
+        if np.any(has_hit):
+            hit_types[has_hit] = types[min_indices[has_hit]]
+
+        return min_distances, hit_types
 
     def _ray_entity_distance(self, start_x, start_y, dx, dy, entity):
         ex = entity.x - start_x
@@ -185,20 +231,23 @@ class World:
                 return []
 
             predator = self.entities[predator_id]
-            nearby = []
+            prey_list = [e for e in self.entities.values() if e.type == EntityType.PREY and e.alive]
+            if not prey_list:
+                return []
 
-            for entity in self.entities.values():
-                if entity.type != EntityType.PREY or not entity.alive:
-                    continue
-                dx = abs(entity.x - predator.x)
-                dy = abs(entity.y - predator.y)
-                dx = min(dx, WorldConfig.WIDTH - dx)
-                dy = min(dy, WorldConfig.HEIGHT - dy)
-                d = math.hypot(dx, dy)
-                if d < distance:
-                    nearby.append(entity)
+            prey_x = np.asarray([e.x for e in prey_list], dtype=np.float32)
+            prey_y = np.asarray([e.y for e in prey_list], dtype=np.float32)
 
-            return nearby
+            dx = np.abs(prey_x - float(predator.x))
+            dy = np.abs(prey_y - float(predator.y))
+            dx = np.minimum(dx, float(WorldConfig.WIDTH) - dx)
+            dy = np.minimum(dy, float(WorldConfig.HEIGHT) - dy)
+            d = np.hypot(dx, dy)
+
+            mask = d < float(distance)
+            if not np.any(mask):
+                return []
+            return [prey_list[i] for i in np.nonzero(mask)[0].tolist()]
 
     async def kill_entity(self, entity_id: int) -> None:
         async with self.lock:
@@ -215,7 +264,8 @@ async def prey_behavior(world: World, prey_id: int):
         distances, types = await world.get_sensor_data(prey_id)
 
         predator_mask = (types == 2)
-        if np.any(predator_mask):
+        #if np.any(predator_mask):
+        if False:
             predator_angles = prey.sensor.ray_angles[predator_mask]
             sin_mean = np.mean(np.sin(np.radians(predator_angles)))
             cos_mean = np.mean(np.cos(np.radians(predator_angles)))
@@ -242,7 +292,8 @@ async def predator_behavior(world: World, predator_id: int):
         distances, types = await world.get_sensor_data(predator_id)
 
         prey_mask = (types == 1)
-        if np.any(prey_mask):
+        #if np.any(prey_mask):
+        if False:
             prey_angles = predator.sensor.ray_angles[prey_mask]
             sin_mean = np.mean(np.sin(np.radians(prey_angles)))
             cos_mean = np.mean(np.cos(np.radians(prey_angles)))
@@ -260,6 +311,9 @@ async def predator_behavior(world: World, predator_id: int):
             dx = random.randint(-10, 10)
             dy = random.randint(-10, 10)
             await world.move_entity(predator_id, dx, dy)
+            nearby_prey = await world.find_nearby_prey(predator_id, 20)
+            if nearby_prey:
+                await world.kill_entity(nearby_prey[0].id)
 
         await asyncio.sleep(0.2)
 
