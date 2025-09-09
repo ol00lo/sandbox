@@ -1,54 +1,42 @@
 import asyncio
-from flask import Flask, render_template, Response
 import threading
-from world import World, WorldConfig, spawn_initial_entities
+from world import World, spawn_initial_entities, EntityType, prey_behavior, predator_behavior
 from draw import render_frame, encode_png
-
-app = Flask(__name__, template_folder='.')
+from web_server import run_flask, set_latest_png
 
 world = World()
-event_loop = None
 
-@app.route('/')
-def index():
-    return render_template('world.html',
-                            width=WorldConfig.WIDTH,
-                            height=WorldConfig.HEIGHT)
+async def update_frame_cache_task():
+    while True:
+        entities = await world.get_entities_snapshot()
+        img = render_frame(entities)
+        png = encode_png(img)
+        set_latest_png(png)
+        await asyncio.sleep(0.066)
 
-
-@app.route('/frame')
-def get_frame():
-    global event_loop
-    if event_loop is not None:
-        try:
-            fut = asyncio.run_coroutine_threadsafe(world.get_entities_snapshot(), event_loop)
-            entities = fut.result(timeout=0.5)
-            img = render_frame(entities)
-        except Exception:
-            img = render_frame(list(world.entities.values()))
-    else:
-        img = render_frame(list(world.entities.values()))
+async def run():
+    entities = await world.get_entities_snapshot()
+    img = render_frame(entities)
     png = encode_png(img)
-    return Response(png, mimetype='image/png')
+    set_latest_png(png)
 
+    for e in entities:
+        if e.type == EntityType.PREY:
+            asyncio.create_task(prey_behavior(world, e.id))
+        elif e.type == EntityType.PREDATOR:
+            asyncio.create_task(predator_behavior(world, e.id))
 
-def run_flask():
-    app.run(port=5000, use_reloader=False)
-
-
-async def main():
-    flask_thread = threading.Thread(target=run_flask)
-    flask_thread.daemon = True
-    flask_thread.start()
-
-    global event_loop
-    event_loop = asyncio.get_running_loop()
-
-    await spawn_initial_entities(world)
+    asyncio.create_task(update_frame_cache_task())
 
     while True:
         await asyncio.sleep(1)
 
+def main():
+    flask_thread = threading.Thread(target=run_flask, daemon=True)
+    flask_thread.start()
+
+    spawn_initial_entities(world)
+    asyncio.run(run())
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    main()

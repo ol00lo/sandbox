@@ -263,7 +263,7 @@ async def predator_behavior(world: World, predator_id: int):
 
         await asyncio.sleep(0.2)
 
-async def spawn_initial_entities(world: World, n_preys=30, n_predators=5):
+def spawn_initial_entities(world: World, n_preys=30, n_predators=5):
     for _ in range(n_preys):
         prey = Entity(
             id=world.next_id,
@@ -274,7 +274,6 @@ async def spawn_initial_entities(world: World, n_preys=30, n_predators=5):
         )
         world.next_id += 1
         world.add_entity(prey)
-        asyncio.create_task(prey_behavior(world, prey.id))
 
     for _ in range(n_predators):
         predator = Entity(
@@ -286,4 +285,3 @@ async def spawn_initial_entities(world: World, n_preys=30, n_predators=5):
         )
         world.next_id += 1
         world.add_entity(predator)
-        asyncio.create_task(predator_behavior(world, predator.id))
