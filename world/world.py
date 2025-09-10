@@ -13,7 +13,7 @@ class WorldConfig:
     PREY_COLOR_BGR = (255, 0, 255) #pink
     PREDATOR_COLOR_BGR = (0, 0, 0) #black
     PREY_SIZE = 12
-    PREDATOR_SIZE = 25
+    PREDATOR_SIZE = 13
 
     PREY_FOV = 60  # degrees
     PREDATOR_FOV = 30  # degrees
@@ -69,19 +69,33 @@ class Entity:
     sensor_distances: np.ndarray = None
     sensor_types: np.ndarray = None
 
-    def __post_init__(self):
-        if self.type == EntityType.PREY:
-            self.sensor = Sensor(
-                WorldConfig.PREY_FOV,
-                WorldConfig.PREY_DETECTION_RANGE,
-                WorldConfig.PREY_RESOLUTION
-            )
-        elif self.type == EntityType.PREDATOR:
-            self.sensor = Sensor(
-                WorldConfig.PREDATOR_FOV,
-                WorldConfig.PREDATOR_DETECTION_RANGE,
-                WorldConfig.PREDATOR_RESOLUTION
-            )
+class Prey(Entity):
+    def __init__(self, id, x, y, direction = 0.0, alive = True):
+        super().__init__(
+            id=id, type=EntityType.PREY,
+            x=x, y=y,
+            direction=direction,
+            alive=alive
+        )
+        self.sensor = Sensor(
+            WorldConfig.PREY_FOV,
+            WorldConfig.PREY_DETECTION_RANGE,
+            WorldConfig.PREY_RESOLUTION
+        )
+
+class Predator(Entity):
+    def __init__(self, id, x, y, direction = 0.0, alive = True):
+        super().__init__(
+            id=id, type=EntityType.PREDATOR,
+            x=x, y=y,
+            direction=direction,
+            alive=alive
+        )
+        self.sensor = Sensor(
+            WorldConfig.PREDATOR_FOV,
+            WorldConfig.PREDATOR_DETECTION_RANGE,
+            WorldConfig.PREDATOR_RESOLUTION
+        )
 
 class World:
     def __init__(self):
@@ -120,16 +134,18 @@ class World:
             entities = []
             for e in self.entities.values():
                 distances, types = e.sensor.get_sensor_data(self, e)
-                entity = Entity(
-                    id=e.id,
-                    type=e.type,
-                    x=e.x,
-                    y=e.y,
-                    direction=e.direction,
-                    alive=e.alive,
-                    sensor_distances=distances,
-                    sensor_types=types
-                )
+                if isinstance(e, Prey):
+                    entity = Prey(
+                        id=e.id, x=e.x, y=e.y,
+                        direction=e.direction, alive=e.alive
+                    )
+                else:
+                    entity = Predator(
+                        id=e.id, x=e.x, y=e.y,
+                        direction=e.direction, alive=e.alive
+                    )
+                entity.sensor_distances = distances
+                entity.sensor_types = types
                 entities.append(entity)
             return entities
 
@@ -231,7 +247,7 @@ class World:
                 return []
 
             predator = self.entities[predator_id]
-            prey_list = [e for e in self.entities.values() if e.type == EntityType.PREY and e.alive]
+            prey_list = [e for e in self.entities.values() if isinstance(e, Prey) and e.alive]
             if not prey_list:
                 return []
 
@@ -319,9 +335,8 @@ async def predator_behavior(world: World, predator_id: int):
 
 def spawn_initial_entities(world: World, n_preys=30, n_predators=5):
     for _ in range(n_preys):
-        prey = Entity(
+        prey = Prey(
             id=world.next_id,
-            type=EntityType.PREY,
             x=random.randint(0, WorldConfig.WIDTH),
             y=random.randint(0, WorldConfig.HEIGHT),
             direction=random.uniform(0, 360)
@@ -330,9 +345,8 @@ def spawn_initial_entities(world: World, n_preys=30, n_predators=5):
         world.add_entity(prey)
 
     for _ in range(n_predators):
-        predator = Entity(
+        predator = Predator(
             id=world.next_id,
-            type=EntityType.PREDATOR,
             x=random.randint(0, WorldConfig.WIDTH),
             y=random.randint(0, WorldConfig.HEIGHT),
             direction=random.uniform(0, 360)
