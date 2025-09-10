@@ -2,7 +2,6 @@ import asyncio
 import random
 import math
 from dataclasses import dataclass
-from enum import Enum
 from typing import List, Dict
 import numpy as np
 
@@ -21,10 +20,6 @@ class WorldConfig:
     PREDATOR_DETECTION_RANGE = 400  # pixels
     PREY_RESOLUTION = 40  # number of vision rays
     PREDATOR_RESOLUTION = 40  # number of vision rays
-
-class EntityType(Enum):
-    PREY = 1
-    PREDATOR = 2
 
 class Sensor:
     def __init__(self, fov, detection_range, resolution):
@@ -60,7 +55,6 @@ class Sensor:
 @dataclass
 class Entity:
     id: int
-    type: EntityType
     x: int
     y: int
     direction: float = 0.0
@@ -72,8 +66,7 @@ class Entity:
 class Prey(Entity):
     def __init__(self, id, x, y, direction = 0.0, alive = True):
         super().__init__(
-            id=id, type=EntityType.PREY,
-            x=x, y=y,
+            id=id, x=x, y=y,
             direction=direction,
             alive=alive
         )
@@ -86,8 +79,7 @@ class Prey(Entity):
 class Predator(Entity):
     def __init__(self, id, x, y, direction = 0.0, alive = True):
         super().__init__(
-            id=id, type=EntityType.PREDATOR,
-            x=x, y=y,
+            id=id, x=x, y=y,
             direction=direction,
             alive=alive
         )
@@ -164,10 +156,10 @@ class World:
         alive = np.fromiter((e.alive for e in entities), dtype=bool)
         xs = np.fromiter((e.x for e in entities), dtype=np.float32)
         ys = np.fromiter((e.y for e in entities), dtype=np.float32)
-        types = np.fromiter((e.type.value for e in entities), dtype=np.uint8)
 
+        types = np.fromiter((1 if isinstance(e, Prey) else 2 for e in entities), dtype=np.uint8)
         sizes = np.where(
-            types == EntityType.PREY.value,
+            types == 1,
             float(WorldConfig.PREY_SIZE),
             float(WorldConfig.PREDATOR_SIZE),
         ).astype(np.float32)
@@ -227,7 +219,7 @@ class World:
 
         distance = math.sqrt((entity.x - closest_x)**2 + (entity.y - closest_y)**2)
 
-        entity_size = WorldConfig.PREY_SIZE if entity.type == EntityType.PREY else WorldConfig.PREDATOR_SIZE
+        entity_size = WorldConfig.PREY_SIZE if isinstance(entity, Prey) else WorldConfig.PREDATOR_SIZE
         if distance <= entity_size:
             return projection
 
