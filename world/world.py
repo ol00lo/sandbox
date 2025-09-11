@@ -21,6 +21,9 @@ class WorldConfig:
     PREY_RESOLUTION = 40  # number of vision rays
     PREDATOR_RESOLUTION = 40  # number of vision rays
 
+    PREY_WAIT_TIME = 0.1
+    PREDATOR_WAIT_TIME = 0.2
+
 class Sensor:
     def __init__(self, fov, detection_range, resolution):
         self.fov = fov
@@ -62,6 +65,14 @@ class Entity:
     sensor_distances: np.ndarray = None
     sensor_types: np.ndarray = None
 
+    async def behavior(self, world):
+        while True:
+            if self.id not in world.entities:
+                break
+            self.sensor.scan(world, self)
+            await self.act(world)
+            await asyncio.sleep(self.delay())
+
 class Prey(Entity):
     def __init__(self, id, x, y, direction = 0.0):
         super().__init__(
@@ -73,6 +84,30 @@ class Prey(Entity):
             WorldConfig.PREY_DETECTION_RANGE,
             WorldConfig.PREY_RESOLUTION
         )
+
+    async def act(self, world):
+        types = self.sensor.hit_types
+        predator_mask = (types == 2)
+        #if np.any(predator_mask):
+        if False:
+            predator_angles = self.sensor.ray_angles[predator_mask]
+            sin_mean = np.mean(np.sin(np.radians(predator_angles)))
+            cos_mean = np.mean(np.cos(np.radians(predator_angles)))
+            avg_angle = (math.degrees(math.atan2(sin_mean, cos_mean)) + 360) % 360
+
+            flee_angle = (avg_angle + 180) % 360
+            flee_dx = int(5 * math.cos(math.radians(flee_angle)))
+            flee_dy = int(5 * math.sin(math.radians(flee_angle)))
+
+            await world.move_entity(self.id, flee_dx, flee_dy)
+        else:
+            if random.random() < 0.7:
+                dx = random.randint(-5, 5)
+                dy = random.randint(-5, 5)
+                await world.move_entity(self.id, dx, dy)
+
+    def delay(self):
+        return WorldConfig.PREY_WAIT_TIME
 
 class Predator(Entity):
     def __init__(self, id, x, y, direction = 0.0):
@@ -86,6 +121,35 @@ class Predator(Entity):
             WorldConfig.PREDATOR_DETECTION_RANGE,
             WorldConfig.PREDATOR_RESOLUTION
         )
+
+    async def act(self, world):
+        types = self.sensor.hit_types
+        prey_mask = (types == 1)
+        #if np.any(prey_mask):
+        if False:
+            prey_angles = self.sensor.ray_angles[prey_mask]
+            sin_mean = np.mean(np.sin(np.radians(prey_angles)))
+            cos_mean = np.mean(np.cos(np.radians(prey_angles)))
+            avg_angle = (math.degrees(math.atan2(sin_mean, cos_mean)) + 360) % 360
+
+            chase_dx = int(8 * math.cos(math.radians(avg_angle)))
+            chase_dy = int(8 * math.sin(math.radians(avg_angle)))
+
+            await world.move_entity(self.id, chase_dx, chase_dy)
+
+            nearby_prey = await world.find_nearby_prey(self.id, 20)
+            if nearby_prey:
+                await world.kill_entity(nearby_prey[0].id)
+        else:
+            dx = random.randint(-10, 10)
+            dy = random.randint(-10, 10)
+            await world.move_entity(self.id, dx, dy)
+            nearby_prey = await world.find_nearby_prey(self.id, self.eat_distance)
+            if nearby_prey:
+                await world.kill_entity(nearby_prey[0].id)
+
+    def delay(self):
+        return WorldConfig.PREDATOR_WAIT_TIME
 
 class World:
     def __init__(self):
@@ -232,70 +296,6 @@ class World:
             if entity_id in self.entities:
                 self.remove_entity(entity_id)
 
-async def prey_behavior(world: World, prey_id: int):
-    while True:
-        prey = world.entities.get(prey_id)
-        if not prey:
-            break
-
-        prey.sensor.scan(world, prey)
-        types = prey.sensor.hit_types
-
-        predator_mask = (types == 2)
-        #if np.any(predator_mask):
-        if False:
-            predator_angles = prey.sensor.ray_angles[predator_mask]
-            sin_mean = np.mean(np.sin(np.radians(predator_angles)))
-            cos_mean = np.mean(np.cos(np.radians(predator_angles)))
-            avg_angle = (math.degrees(math.atan2(sin_mean, cos_mean)) + 360) % 360
-
-            flee_angle = (avg_angle + 180) % 360
-            flee_dx = int(5 * math.cos(math.radians(flee_angle)))
-            flee_dy = int(5 * math.sin(math.radians(flee_angle)))
-
-            await world.move_entity(prey_id, flee_dx, flee_dy)
-        else:
-            if random.random() < 0.7:
-                dx = random.randint(-5, 5)
-                dy = random.randint(-5, 5)
-                await world.move_entity(prey_id, dx, dy)
-
-        await asyncio.sleep(0.1)
-
-async def predator_behavior(world: World, predator_id: int):
-    while True:
-        predator = world.entities.get(predator_id)
-        if not predator:
-            break
-        
-        predator.sensor.scan(world, predator)
-        types = predator.sensor.hit_types
-
-        prey_mask = (types == 1)
-        #if np.any(prey_mask):
-        if False:
-            prey_angles = predator.sensor.ray_angles[prey_mask]
-            sin_mean = np.mean(np.sin(np.radians(prey_angles)))
-            cos_mean = np.mean(np.cos(np.radians(prey_angles)))
-            avg_angle = (math.degrees(math.atan2(sin_mean, cos_mean)) + 360) % 360
-
-            chase_dx = int(8 * math.cos(math.radians(avg_angle)))
-            chase_dy = int(8 * math.sin(math.radians(avg_angle)))
-
-            await world.move_entity(predator_id, chase_dx, chase_dy)
-
-            nearby_prey = await world.find_nearby_prey(predator_id, 20)
-            if nearby_prey:
-                await world.kill_entity(nearby_prey[0].id)
-        else:
-            dx = random.randint(-10, 10)
-            dy = random.randint(-10, 10)
-            await world.move_entity(predator_id, dx, dy)
-            nearby_prey = await world.find_nearby_prey(predator_id, predator.eat_distance)
-            if nearby_prey:
-                await world.kill_entity(nearby_prey[0].id)
-
-        await asyncio.sleep(0.2)
 
 def spawn_initial_entities(world: World, n_preys=30, n_predators=5):
     for _ in range(n_preys):
