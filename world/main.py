@@ -32,8 +32,11 @@ def main():
     flask_thread = threading.Thread(target=run_flask, daemon=True)
     flask_thread.start()
 
-    spawn_initial_entities(world)
-    asyncio.run(run())
+    asyncio.run(async_func())
+
+async def async_func():
+    await spawn_initial_entities(world)
+    await run()
 
 if __name__ == '__main__':
     main()

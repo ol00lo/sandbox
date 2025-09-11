@@ -79,12 +79,12 @@ class Prey(Entity):
             flee_dx = int(5 * math.cos(math.radians(flee_angle)))
             flee_dy = int(5 * math.sin(math.radians(flee_angle)))
 
-            await world.move_entity(self.id, flee_dx, flee_dy)
+            world.move_entity(self.id, flee_dx, flee_dy)
         else:
             if random.random() < 0.7:
                 dx = random.randint(-5, 5)
                 dy = random.randint(-5, 5)
-                await world.move_entity(self.id, dx, dy)
+                world.move_entity(self.id, dx, dy)
 
     def delay(self):
         return WorldConfig.PREY_WAIT_TIME
@@ -115,7 +115,7 @@ class Predator(Entity):
             chase_dx = int(8 * math.cos(math.radians(avg_angle)))
             chase_dy = int(8 * math.sin(math.radians(avg_angle)))
 
-            await world.move_entity(self.id, chase_dx, chase_dy)
+            world.move_entity(self.id, chase_dx, chase_dy)
 
             nearby_prey = await world.find_nearby_prey(self.id, 20)
             if nearby_prey:
@@ -123,7 +123,7 @@ class Predator(Entity):
         else:
             dx = random.randint(-10, 10)
             dy = random.randint(-10, 10)
-            await world.move_entity(self.id, dx, dy)
+            world.move_entity(self.id, dx, dy)
             nearby_prey = await world.find_nearby_prey(self.id, self.eat_distance)
             if nearby_prey:
                 await world.kill_entity(nearby_prey[0].id)

@@ -12,51 +12,51 @@ class World:
         self.next_id = 1
         self.lock = asyncio.Lock()
     
-    def add_entity(self, entity: Entity) -> None:
-        self.entities[entity.id] = entity
-    
-    def remove_entity(self, entity_id: int) -> None:
-        if entity_id in self.entities:
-            del self.entities[entity_id]
-    
-    async def move_entity(self, entity_id, dx, dy):
+    async def add_entity(self, entity: Entity) -> None:
         async with self.lock:
-            if entity_id not in self.entities:
-                return False
+            self.entities[entity.id] = entity
 
-            entity = self.entities[entity_id]
-            new_x = entity.x + dx
-            new_y = entity.y + dy
+    async def remove_entity(self, entity_id: int) -> None:
+        async with self.lock:
+            if entity_id in self.entities:
+                del self.entities[entity_id]
 
-            new_x %= DrawConfig.WIDTH
-            new_y %= DrawConfig.HEIGHT
+    def move_entity(self, entity_id, dx, dy):
+        if entity_id not in self.entities:
+            return False
 
-            entity.x = new_x
-            entity.y = new_y
+        entity = self.entities[entity_id]
+        new_x = entity.x + dx
+        new_y = entity.y + dy
 
-            if dx != 0 or dy != 0:
-                entity.direction = math.degrees(math.atan2(dy, dx))
-            return True
+        new_x %= DrawConfig.WIDTH
+        new_y %= DrawConfig.HEIGHT
+
+        entity.x = new_x
+        entity.y = new_y
+
+        if dx != 0 or dy != 0:
+            entity.direction = math.degrees(math.atan2(dy, dx))
+        return True
 
     async def get_entities_snapshot(self) -> List[Entity]:
-        async with self.lock:
-            entities = []
-            for e in self.entities.values():
-                e.sensor.scan(self, e)
-                if isinstance(e, Prey):
-                    entity = Prey(
-                        id=e.id, x=e.x, y=e.y,
-                        direction=e.direction
-                    )
-                else:
-                    entity = Predator(
-                        id=e.id, x=e.x, y=e.y,
-                        direction=e.direction
-                    )
-                entity.sensor_distances = e.sensor.distances
-                entity.sensor_types = e.sensor.hit_types
-                entities.append(entity)
-            return entities
+        entities = []
+        for e in self.entities.values():
+            e.sensor.scan(self, e)
+            if isinstance(e, Prey):
+                entity = Prey(
+                    id=e.id, x=e.x, y=e.y,
+                    direction=e.direction
+                )
+            else:
+                entity = Predator(
+                    id=e.id, x=e.x, y=e.y,
+                    direction=e.direction
+                )
+            entity.sensor_distances = e.sensor.distances
+            entity.sensor_types = e.sensor.hit_types
+            entities.append(entity)
+        return entities
 
     def cast_ray(self, start_x, start_y, dxs: np.ndarray, dys: np.ndarray, max_distance: float, source_id: int):
         num_rays = dxs.shape[0]
@@ -147,11 +147,10 @@ class World:
             return [prey_list[i] for i in prey_indices.tolist()]
 
     async def kill_entity(self, entity_id: int) -> None:
-        async with self.lock:
-            if entity_id in self.entities:
-                self.remove_entity(entity_id)
+        if entity_id in self.entities:
+            await self.remove_entity(entity_id)
 
-def spawn_initial_entities(world: World, n_preys=30, n_predators=5):
+async def spawn_initial_entities(world: World, n_preys=30, n_predators=5):
     for _ in range(n_preys):
         prey = Prey(
             id=world.next_id,
@@ -160,7 +159,7 @@ def spawn_initial_entities(world: World, n_preys=30, n_predators=5):
             direction=random.uniform(0, 360)
         )
         world.next_id += 1
-        world.add_entity(prey)
+        await world.add_entity(prey)
 
     for _ in range(n_predators):
         predator = Predator(
@@ -170,4 +169,4 @@ def spawn_initial_entities(world: World, n_preys=30, n_predators=5):
             direction=random.uniform(0, 360)
         )
         world.next_id += 1
-        world.add_entity(predator)
+        await world.add_entity(predator)
