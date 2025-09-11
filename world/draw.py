@@ -189,7 +189,7 @@ def create_predator_pupil_image(size, color_bgr):
     return pupil_img
 
 
-def draw_direction_arrow(img, center_x, center_y, direction_deg, fov_deg, range_px, color_bgr, thickness=1):
+def draw_sensor(img, center_x, center_y, direction_deg, fov_deg, range_px, color_bgr, thickness=1):
     start_deg = direction_deg - fov_deg / 2.0
     end_deg = direction_deg + fov_deg / 2.0
 
@@ -213,7 +213,10 @@ def render_frame(entities):
     frame = np.full((height, width, 3), 255, dtype=np.uint8)
     cv2.rectangle(frame, (0, 0), (width - 1, height - 1), (0, 0, 0), thickness=3)
 
-    global prey_eye_image, predator_eye_image, prey_pupil_image, predator_pupil_image, predator_blue_pupil_image, predator_red_pupil_image
+    global prey_eye_image, predator_eye_image,\
+            prey_pupil_image, predator_pupil_image,\
+             predator_blue_pupil_image, predator_red_pupil_image
+
     if prey_eye_image is None or predator_eye_image is None:
         initialize_eye_images()
 
@@ -236,8 +239,8 @@ def render_frame(entities):
             add_pupil_to_image(frame, pupil, entity.x, entity.y,
                                entity.direction, WorldConfig.PREDATOR_SIZE // 2)
             add_eye_to_image(frame, predator_eye_image, entity.x, entity.y)
-            draw_direction_arrow(frame, entity.x, entity.y, entity.direction,
-                                 WorldConfig.PREDATOR_FOV, WorldConfig.PREDATOR_DETECTION_RANGE, (0, 200, 0), 1)
+            draw_sensor(frame, entity.x, entity.y, entity.direction, WorldConfig.PREDATOR_FOV,
+                                WorldConfig.PREDATOR_DETECTION_RANGE, (0, 200, 0), 1)
         else: raise NotImplementedError("...")
     return frame
 

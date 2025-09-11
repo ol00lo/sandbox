@@ -31,12 +31,15 @@ class Sensor:
             -fov / 2, fov / 2, resolution
         )
 
-    def get_sensor_data(self, world, entity):
+        self.hit_distances = np.full(resolution, np.inf, dtype=np.float32)
+        self.hit_types = np.zeros(resolution, dtype=np.uint8)
+        self.distances = np.zeros(resolution, dtype=np.float32)
+
+    def scan(self, world, entity):
         angles_rad = np.radians(self.ray_angles + entity.direction)
         dxs = np.cos(angles_rad).astype(np.float32)
         dys = np.sin(angles_rad).astype(np.float32)
-
-        hit_distances, hit_types = world.cast_ray(
+        self.hit_distances, self.hit_types = world.cast_ray(
             entity.x,
             entity.y,
             dxs,
@@ -44,13 +47,10 @@ class Sensor:
             float(self.detection_range),
             entity.id,
         )
+        self.distances.fill(0.0)
+        valid_mask = np.isfinite(self.hit_distances)
+        self.distances[valid_mask] = 1.0 / (self.hit_distances[valid_mask] + 1.0)
 
-        distances = np.zeros(self.resolution, dtype=np.float32)
-        types = hit_types.astype(np.uint8, copy=False)
-
-        valid_mask = np.isfinite(hit_distances)
-        distances[valid_mask] = 1.0 / (hit_distances[valid_mask] + 1.0)
-        return distances, types
 
 @dataclass
 class Entity:
@@ -58,17 +58,15 @@ class Entity:
     x: int
     y: int
     direction: float = 0.0
-    alive: bool = True
     sensor: Sensor = None
     sensor_distances: np.ndarray = None
     sensor_types: np.ndarray = None
 
 class Prey(Entity):
-    def __init__(self, id, x, y, direction = 0.0, alive = True):
+    def __init__(self, id, x, y, direction = 0.0):
         super().__init__(
             id=id, x=x, y=y,
-            direction=direction,
-            alive=alive
+            direction=direction
         )
         self.sensor = Sensor(
             WorldConfig.PREY_FOV,
@@ -77,12 +75,12 @@ class Prey(Entity):
         )
 
 class Predator(Entity):
-    def __init__(self, id, x, y, direction = 0.0, alive = True):
+    def __init__(self, id, x, y, direction = 0.0):
         super().__init__(
             id=id, x=x, y=y,
-            direction=direction,
-            alive=alive
+            direction=direction
         )
+        self.eat_distance = 40
         self.sensor = Sensor(
             WorldConfig.PREDATOR_FOV,
             WorldConfig.PREDATOR_DETECTION_RANGE,
@@ -125,35 +123,31 @@ class World:
         async with self.lock:
             entities = []
             for e in self.entities.values():
-                distances, types = e.sensor.get_sensor_data(self, e)
+                e.sensor.scan(self, e)
                 if isinstance(e, Prey):
                     entity = Prey(
                         id=e.id, x=e.x, y=e.y,
-                        direction=e.direction, alive=e.alive
+                        direction=e.direction
                     )
                 else:
                     entity = Predator(
                         id=e.id, x=e.x, y=e.y,
-                        direction=e.direction, alive=e.alive
+                        direction=e.direction
                     )
-                entity.sensor_distances = distances
-                entity.sensor_types = types
+                entity.sensor_distances = e.sensor.distances
+                entity.sensor_types = e.sensor.hit_types
                 entities.append(entity)
             return entities
 
     def cast_ray(self, start_x, start_y, dxs: np.ndarray, dys: np.ndarray, max_distance: float, source_id: int):
-        if dxs.ndim != 1 or dys.ndim != 1 or dxs.shape[0] != dys.shape[0]:
-            raise ValueError("dxs and dys must be 1D arrays of the same length")
-
         num_rays = dxs.shape[0]
 
         if not self.entities:
             return np.full(num_rays, np.inf, dtype=np.float32), np.zeros(num_rays, dtype=np.uint8)
 
-        entities = list(self.entities.values())
+        entities = [e for e in self.entities.values() if e.id != int(source_id)]
 
         ids = np.fromiter((e.id for e in entities), dtype=np.int64)
-        alive = np.fromiter((e.alive for e in entities), dtype=bool)
         xs = np.fromiter((e.x for e in entities), dtype=np.float32)
         ys = np.fromiter((e.y for e in entities), dtype=np.float32)
 
@@ -164,19 +158,8 @@ class World:
             float(WorldConfig.PREDATOR_SIZE),
         ).astype(np.float32)
 
-        valid_entities_mask = alive & (ids != int(source_id))
-        if not np.any(valid_entities_mask):
-            return np.full(num_rays, np.inf, dtype=np.float32), np.zeros(num_rays, dtype=np.uint8)
-
-        ids = ids[valid_entities_mask]
-        xs = xs[valid_entities_mask]
-        ys = ys[valid_entities_mask]
-        types = types[valid_entities_mask]
-        sizes = sizes[valid_entities_mask]
-
         ex = xs - float(start_x)
         ey = ys - float(start_y)
-
         r2 = ex * ex + ey * ey
 
         projections = ex[:, None] * dxs[None, :] + ey[:, None] * dys[None, :]
@@ -205,33 +188,14 @@ class World:
 
         return min_distances, hit_types
 
-    def _ray_entity_distance(self, start_x, start_y, dx, dy, entity):
-        ex = entity.x - start_x
-        ey = entity.y - start_y
-
-        projection = ex * dx + ey * dy
-
-        if projection < 0:
-            return float('inf')
-
-        closest_x = start_x + dx * projection
-        closest_y = start_y + dy * projection
-
-        distance = math.sqrt((entity.x - closest_x)**2 + (entity.y - closest_y)**2)
-
-        entity_size = WorldConfig.PREY_SIZE if isinstance(entity, Prey) else WorldConfig.PREDATOR_SIZE
-        if distance <= entity_size:
-            return projection
-
-        return float('inf')
-
     async def get_sensor_data(self, entity_id):
         async with self.lock:
             if entity_id not in self.entities:
                 return np.array([]), np.array([])
 
             entity = self.entities[entity_id]
-            return entity.sensor.get_sensor_data(self, entity)
+            entity.sensor.scan(self, entity)
+            return entity.sensor.distances, entity.sensor.hit_types
 
     async def find_nearby_prey(self, predator_id: int, distance: int = 10) -> List[Entity]:
         async with self.lock:
@@ -239,7 +203,13 @@ class World:
                 return []
 
             predator = self.entities[predator_id]
-            prey_list = [e for e in self.entities.values() if isinstance(e, Prey) and e.alive]
+            predator.sensor.scan(self, predator)
+
+            prey_mask = (predator.sensor.hit_types == 1) & (predator.sensor.hit_distances <= float(distance))
+            if not np.any(prey_mask):
+                return []
+
+            prey_list = [e for e in self.entities.values() if isinstance(e, Prey)]
             if not prey_list:
                 return []
 
@@ -253,23 +223,23 @@ class World:
             d = np.hypot(dx, dy)
 
             mask = d < float(distance)
-            if not np.any(mask):
-                return []
-            return [prey_list[i] for i in np.nonzero(mask)[0].tolist()]
+            prey_indices = np.nonzero(mask)[0]
+
+            return [prey_list[i] for i in prey_indices.tolist()]
 
     async def kill_entity(self, entity_id: int) -> None:
         async with self.lock:
             if entity_id in self.entities:
-                self.entities[entity_id].alive = False
                 self.remove_entity(entity_id)
 
 async def prey_behavior(world: World, prey_id: int):
     while True:
         prey = world.entities.get(prey_id)
-        if not prey or not prey.alive:
+        if not prey:
             break
 
-        distances, types = await world.get_sensor_data(prey_id)
+        prey.sensor.scan(world, prey)
+        types = prey.sensor.hit_types
 
         predator_mask = (types == 2)
         #if np.any(predator_mask):
@@ -295,9 +265,11 @@ async def prey_behavior(world: World, prey_id: int):
 async def predator_behavior(world: World, predator_id: int):
     while True:
         predator = world.entities.get(predator_id)
-        if not predator or not predator.alive:
+        if not predator:
             break
-        distances, types = await world.get_sensor_data(predator_id)
+        
+        predator.sensor.scan(world, predator)
+        types = predator.sensor.hit_types
 
         prey_mask = (types == 1)
         #if np.any(prey_mask):
@@ -319,7 +291,7 @@ async def predator_behavior(world: World, predator_id: int):
             dx = random.randint(-10, 10)
             dy = random.randint(-10, 10)
             await world.move_entity(predator_id, dx, dy)
-            nearby_prey = await world.find_nearby_prey(predator_id, 20)
+            nearby_prey = await world.find_nearby_prey(predator_id, predator.eat_distance)
             if nearby_prey:
                 await world.kill_entity(nearby_prey[0].id)
 
