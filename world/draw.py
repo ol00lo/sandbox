@@ -1,7 +1,8 @@
 import cv2
 import numpy as np
 import math
-from world import WorldConfig, Prey, Predator
+from world import Prey, Predator
+from config import DrawConfig, WorldConfig
 
 prey_eye_image = None
 predator_eye_image = None
@@ -16,8 +17,8 @@ def initialize_eye_images():
     prey_eye_image = create_prey_eye_image(WorldConfig.PREY_SIZE)
     predator_eye_image = create_predator_eye_image(WorldConfig.PREDATOR_SIZE)
 
-    prey_pupil_image = create_prey_pupil_image(WorldConfig.PREY_SIZE, WorldConfig.PREY_COLOR_BGR)
-    predator_pupil_image = create_predator_pupil_image(WorldConfig.PREDATOR_SIZE, WorldConfig.PREDATOR_COLOR_BGR)
+    prey_pupil_image = create_prey_pupil_image(WorldConfig.PREY_SIZE, DrawConfig.PREY_COLOR_BGR)
+    predator_pupil_image = create_predator_pupil_image(WorldConfig.PREDATOR_SIZE, DrawConfig.PREDATOR_COLOR_BGR)
 
     predator_red_pupil_image = create_predator_pupil_image(WorldConfig.PREDATOR_SIZE, (255, 0, 0))
     predator_blue_pupil_image = create_predator_pupil_image(WorldConfig.PREDATOR_SIZE, (0, 0, 255))
@@ -207,8 +208,8 @@ def draw_sensor(img, center_x, center_y, direction_deg, fov_deg, range_px, color
                 start_deg, end_deg, color_bgr, thickness)
 
 def render_frame(entities):
-    width = WorldConfig.WIDTH
-    height = WorldConfig.HEIGHT
+    width = DrawConfig.WIDTH
+    height = DrawConfig.HEIGHT
 
     frame = np.full((height, width, 3), 255, dtype=np.uint8)
     cv2.rectangle(frame, (0, 0), (width - 1, height - 1), (0, 0, 0), thickness=3)
