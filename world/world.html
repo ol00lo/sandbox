@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title> Eyes world </title>
+    <title>Eyes World</title>
     <style>
         body {
             margin: 0;
@@ -15,14 +15,17 @@
 </head>
 
 <body>
-    <img id="frame" width="{{ width }}" height="{{ height }} "update_interval="{{update_interval}} " />
+    <img id="frame" width="{{ width }}" height="{{ height }}" data-interval="{{ update_interval }}" />
     <script>
         const img = document.getElementById('frame');
+        const updateInterval = parseInt(img.getAttribute('data-interval'));
+
         function update() {
             const url = '/frame?t=' + Date.now();
             img.src = url;
         }
-        setInterval(update, update_interval);
+
+        setInterval(update, updateInterval);
     </script>
 </body>
 
