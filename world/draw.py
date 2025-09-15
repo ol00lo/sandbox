@@ -209,7 +209,7 @@ def draw_sensor(img, center_x, center_y, direction_deg, fov_deg, range_px, color
     cv2.ellipse(img, (int(center_x), int(center_y)), (int(range_px), int(range_px)), 0,
                 start_deg, end_deg, color_bgr, thickness)
 
-def render_frame(entities):
+def render_frame(entities, world):
     global _prey_eye_image, _predator_eye_image,\
             _prey_pupil_image, _predator_pupil_image,\
              _predator_blue_pupil_image, _predator_red_pupil_image
@@ -232,15 +232,11 @@ def render_frame(entities):
                                 WorldConfig.PREY_DETECTION_RANGE, (150, 0, 150), 1)
         elif isinstance(entity, Predator):
             pupil = _predator_pupil_image
-            if entity.sensor_distances is not None and entity.sensor_types is not None:
-                valid_mask = entity.sensor_distances > 0
-                if np.any(valid_mask):
-                    closest_idx = np.argmax(entity.sensor_distances[valid_mask])
-                    closest_type = entity.sensor_types[valid_mask][closest_idx]
-                    if closest_type == 1:
-                        pupil = _predator_blue_pupil_image
-                    elif closest_type == 2:
-                        pupil = _predator_red_pupil_image
+            nearby_preys = entity.find_nearby_entities(world.entities, WorldConfig.PREDATOR_DETECTION_RANGE)
+            if nearby_preys:
+                pupil = (_predator_blue_pupil_image if isinstance(nearby_preys[0], Predator)
+                            else _predator_red_pupil_image)
+
             add_pupil_to_image(frame, pupil, entity.x, entity.y,
                                entity.direction, WorldConfig.PREDATOR_SIZE // 2)
             add_eye_to_image(frame, _predator_eye_image, entity.x, entity.y)

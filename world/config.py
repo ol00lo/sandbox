@@ -21,3 +21,6 @@ class WorldConfig:
 
     PREY_WAIT_TIME = 0.1
     PREDATOR_WAIT_TIME = 0.2
+
+    UPDATE_HTML_INTERVAL = 200 # ms
+    DRAW_TIME = 50 # ms

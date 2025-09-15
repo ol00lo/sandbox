@@ -15,14 +15,14 @@
 </head>
 
 <body>
-    <img id="frame" width="{{ width }}" height="{{ height }}" />
+    <img id="frame" width="{{ width }}" height="{{ height }} "update_interval="{{update_interval}} " />
     <script>
         const img = document.getElementById('frame');
         function update() {
             const url = '/frame?t=' + Date.now();
             img.src = url;
         }
-        setInterval(update, 200);
+        setInterval(update, update_interval);
     </script>
 </body>
 
