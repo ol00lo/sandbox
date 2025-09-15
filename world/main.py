@@ -32,7 +32,7 @@ async def run():
 def main():
     flask_thread = threading.Thread(target=run_flask, daemon=True)
     flask_thread.start()
-    spawn_initial_entities(world, 10, 10)
+    spawn_initial_entities(world)
 
     asyncio.run(run())
 
