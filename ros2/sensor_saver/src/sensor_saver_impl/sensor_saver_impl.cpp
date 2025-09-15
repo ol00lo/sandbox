@@ -1,12 +1,10 @@
 #include "sensor_saver_impl.hpp"
+#include "fmt_format.hpp"
 
 std::string DbConnectionSettings::build_connection_string() const {
-    std::string res = "host=" + host +
-                " dbname=" + dbname +
-                " user=" + user +
-                " password=" + password +
-                " port=" + std::to_string(port);
-    return res;
+    return fmt_format(
+        "host={} dbname={} user={} password={} port={}",
+        host, dbname, user, password, port);
 }
 
 SensorSaverImpl::SensorSaverImpl(const DbConnectionSettings& settings, int64_t ttl_days, rclcpp::Logger logger,
@@ -15,14 +13,15 @@ SensorSaverImpl::SensorSaverImpl(const DbConnectionSettings& settings, int64_t t
     db_conn_ = std::make_unique<pqxx::connection>(settings.build_connection_string());
     pqxx::work txn(*db_conn_);
 
-    std::string sql =
-        "CREATE TABLE IF NOT EXISTS " + txn.quote_name(table_name_) + R"( (
+    auto create_sql = fmt_format(
+        R"(CREATE TABLE IF NOT EXISTS {} (
         id SERIAL PRIMARY KEY,
         x REAL NOT NULL,
         y REAL NOT NULL,
         timestamp TIMESTAMP NOT NULL
-    ))";
-    txn.exec(sql);
+    ))",
+        txn.quote_name(table_name_));
+    txn.exec(create_sql);
 
     txn.commit();
     RCLCPP_INFO(logger_, "Database initialized successfully");
@@ -36,9 +35,9 @@ SensorSaverImpl::~SensorSaverImpl() {
 
 void SensorSaverImpl::cleanup_old_data() {
     pqxx::work txn(*db_conn_);
-    std::string sql = "DELETE FROM " + txn.quote_name(table_name_) + " "
-                      "WHERE timestamp < CURRENT_TIMESTAMP - INTERVAL '" +
-                      std::to_string(ttl_days_) + " days'";
+    auto sql = fmt_format(
+        "DELETE FROM {} WHERE timestamp < CURRENT_TIMESTAMP - INTERVAL '{} days'",
+        txn.quote_name(table_name_), ttl_days_);
 
     auto result = txn.exec(sql);
     txn.commit();
@@ -55,8 +54,9 @@ void SensorSaverImpl::save_to_db(double x, double y, std::chrono::system_clock::
     const auto epoch_secs = secs.time_since_epoch().count();
 
     pqxx::work txn(*db_conn_);
-    txn.exec_params("INSERT INTO " + txn.quote_name(table_name_) +
-                    " (x, y, timestamp) VALUES ($1, $2, to_timestamp($3))",
+    txn.exec_params(fmt_format(
+                        "INSERT INTO {} (x, y, timestamp) VALUES ($1, $2, to_timestamp($3))",
+                        txn.quote_name(table_name_)),
                     x, y, epoch_secs);
     txn.commit();
     RCLCPP_INFO(logger_, "Saved coordinates: x=%f, y=%f, timestamp=%ld", x, y, static_cast<long>(epoch_secs));
