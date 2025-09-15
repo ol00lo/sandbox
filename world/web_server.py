@@ -1,6 +1,6 @@
 from flask import Flask, render_template, Response
 import threading
-from world import WorldConfig
+from world import DrawConfig
 
 app = Flask(__name__, template_folder='.')
 
@@ -16,8 +16,8 @@ def set_latest_png(png: bytes) -> None:
 @app.route('/')
 def index():
     return render_template('world.html',
-                            width=WorldConfig.WIDTH,
-                            height=WorldConfig.HEIGHT)
+                            width=DrawConfig.WIDTH,
+                            height=DrawConfig.HEIGHT)
 
 @app.route('/frame')
 def get_frame():

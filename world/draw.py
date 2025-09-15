@@ -4,24 +4,26 @@ import math
 from world import Prey, Predator
 from config import DrawConfig, WorldConfig
 
-prey_eye_image = None
-predator_eye_image = None
-prey_pupil_image = None
-predator_pupil_image = None
-predator_red_pupil_image = None
-predator_blue_pupil_image = None
+_prey_eye_image = None
+_predator_eye_image = None
+_prey_pupil_image = None
+_predator_pupil_image = None
+_predator_red_pupil_image = None
+_predator_blue_pupil_image = None
 
 def initialize_eye_images():
-    global prey_eye_image, predator_eye_image, prey_pupil_image, predator_pupil_image, predator_red_pupil_image, predator_blue_pupil_image
+    global _prey_eye_image, _predator_eye_image,\
+             _prey_pupil_image, _predator_pupil_image,\
+                _predator_red_pupil_image, _predator_blue_pupil_image
 
-    prey_eye_image = create_prey_eye_image(WorldConfig.PREY_SIZE)
-    predator_eye_image = create_predator_eye_image(WorldConfig.PREDATOR_SIZE)
+    _prey_eye_image = create_prey_eye_image(WorldConfig.PREY_SIZE)
+    _predator_eye_image = create_predator_eye_image(WorldConfig.PREDATOR_SIZE)
 
-    prey_pupil_image = create_prey_pupil_image(WorldConfig.PREY_SIZE, DrawConfig.PREY_COLOR_BGR)
-    predator_pupil_image = create_predator_pupil_image(WorldConfig.PREDATOR_SIZE, DrawConfig.PREDATOR_COLOR_BGR)
+    _prey_pupil_image = create_prey_pupil_image(WorldConfig.PREY_SIZE, DrawConfig.PREY_COLOR_BGR)
+    _predator_pupil_image = create_predator_pupil_image(WorldConfig.PREDATOR_SIZE, DrawConfig.PREDATOR_COLOR_BGR)
 
-    predator_red_pupil_image = create_predator_pupil_image(WorldConfig.PREDATOR_SIZE, (255, 0, 0))
-    predator_blue_pupil_image = create_predator_pupil_image(WorldConfig.PREDATOR_SIZE, (0, 0, 255))
+    _predator_red_pupil_image = create_predator_pupil_image(WorldConfig.PREDATOR_SIZE, (255, 0, 0))
+    _predator_blue_pupil_image = create_predator_pupil_image(WorldConfig.PREDATOR_SIZE, (0, 0, 255))
 
 
 def add_eye_to_image(img, eye_img, center_x, center_y):
@@ -208,41 +210,43 @@ def draw_sensor(img, center_x, center_y, direction_deg, fov_deg, range_px, color
                 start_deg, end_deg, color_bgr, thickness)
 
 def render_frame(entities):
+    global _prey_eye_image, _predator_eye_image,\
+            _prey_pupil_image, _predator_pupil_image,\
+             _predator_blue_pupil_image, _predator_red_pupil_image
+
     width = DrawConfig.WIDTH
     height = DrawConfig.HEIGHT
 
     frame = np.full((height, width, 3), 255, dtype=np.uint8)
     cv2.rectangle(frame, (0, 0), (width - 1, height - 1), (0, 0, 0), thickness=3)
 
-    global prey_eye_image, predator_eye_image,\
-            prey_pupil_image, predator_pupil_image,\
-             predator_blue_pupil_image, predator_red_pupil_image
-
-    if prey_eye_image is None or predator_eye_image is None:
+    if _prey_eye_image is None or _predator_eye_image is None:
         initialize_eye_images()
 
     for entity in entities:
         if isinstance(entity, Prey):
-            add_pupil_to_image(frame, prey_pupil_image, entity.x, entity.y, 
+            add_pupil_to_image(frame, _prey_pupil_image, entity.x, entity.y, 
                                entity.direction, WorldConfig.PREY_SIZE)
-            add_eye_to_image(frame, prey_eye_image, entity.x, entity.y)
+            add_eye_to_image(frame, _prey_eye_image, entity.x, entity.y)
+            draw_sensor(frame, entity.x, entity.y, entity.direction, WorldConfig.PREY_FOV,
+                                WorldConfig.PREY_DETECTION_RANGE, (150, 0, 150), 1)
         elif isinstance(entity, Predator):
-            pupil = predator_pupil_image
+            pupil = _predator_pupil_image
             if entity.sensor_distances is not None and entity.sensor_types is not None:
                 valid_mask = entity.sensor_distances > 0
                 if np.any(valid_mask):
                     closest_idx = np.argmax(entity.sensor_distances[valid_mask])
                     closest_type = entity.sensor_types[valid_mask][closest_idx]
                     if closest_type == 1:
-                        pupil = predator_blue_pupil_image
+                        pupil = _predator_blue_pupil_image
                     elif closest_type == 2:
-                        pupil = predator_red_pupil_image
+                        pupil = _predator_red_pupil_image
             add_pupil_to_image(frame, pupil, entity.x, entity.y,
                                entity.direction, WorldConfig.PREDATOR_SIZE // 2)
-            add_eye_to_image(frame, predator_eye_image, entity.x, entity.y)
+            add_eye_to_image(frame, _predator_eye_image, entity.x, entity.y)
             draw_sensor(frame, entity.x, entity.y, entity.direction, WorldConfig.PREDATOR_FOV,
                                 WorldConfig.PREDATOR_DETECTION_RANGE, (0, 200, 0), 1)
-        else: raise NotImplementedError("...")
+        else: raise NotImplementedError(f"uknown entity type: {type(entity).name}")
     return frame
 
 def encode_png(img):

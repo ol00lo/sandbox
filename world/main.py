@@ -8,14 +8,14 @@ world = World()
 
 async def update_frame_cache_task():
     while True:
-        entities = await world.get_entities_snapshot()
+        entities = world.get_entities_snapshot()
         img = render_frame(entities)
         png = encode_png(img)
         set_latest_png(png)
         await asyncio.sleep(0.066)
 
 async def run():
-    entities = await world.get_entities_snapshot()
+    entities = world.get_entities_snapshot()
     img = render_frame(entities)
     png = encode_png(img)
     set_latest_png(png)
@@ -31,12 +31,9 @@ async def run():
 def main():
     flask_thread = threading.Thread(target=run_flask, daemon=True)
     flask_thread.start()
+    spawn_initial_entities(world, 10, 10)
 
-    asyncio.run(async_func())
-
-async def async_func():
-    await spawn_initial_entities(world)
-    await run()
+    asyncio.run(run())
 
 if __name__ == '__main__':
     main()

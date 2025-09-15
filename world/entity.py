@@ -17,7 +17,7 @@ class Sensor:
 
         self.hit_distances = np.full(resolution, np.inf, dtype=np.float32)
         self.hit_types = np.zeros(resolution, dtype=np.uint8)
-        self.distances = np.zeros(resolution, dtype=np.float32)
+        self.rdistances = np.zeros(resolution, dtype=np.float32)
 
     def scan(self, world, entity):
         angles_rad = np.radians(self.ray_angles + entity.direction)
@@ -31,9 +31,9 @@ class Sensor:
             float(self.detection_range),
             entity.id,
         )
-        self.distances.fill(0.0)
+        self.rdistances.fill(0.0)
         valid_mask = np.isfinite(self.hit_distances)
-        self.distances[valid_mask] = 1.0 / (self.hit_distances[valid_mask] + 1.0)
+        self.rdistances[valid_mask] = 1.0 / (self.hit_distances[valid_mask] + 1.0)
 
 @dataclass
 class Entity:
@@ -50,8 +50,14 @@ class Entity:
             if self.id not in world.entities:
                 break
             self.sensor.scan(world, self)
-            await self.act(world)
+            self.act(world)
             await asyncio.sleep(self.delay())
+
+    def act(self):
+        raise NotImplementedError()
+
+    def delay(self):
+        raise NotImplementedError()
 
 class Prey(Entity):
     def __init__(self, id, x, y, direction = 0.0):
@@ -65,11 +71,10 @@ class Prey(Entity):
             WorldConfig.PREY_RESOLUTION
         )
 
-    async def act(self, world):
+    def act(self, world):
         types = self.sensor.hit_types
         predator_mask = (types == 2)
-        #if np.any(predator_mask):
-        if False:
+        if np.any(predator_mask):
             predator_angles = self.sensor.ray_angles[predator_mask]
             sin_mean = np.mean(np.sin(np.radians(predator_angles)))
             cos_mean = np.mean(np.cos(np.radians(predator_angles)))
@@ -102,11 +107,10 @@ class Predator(Entity):
             WorldConfig.PREDATOR_RESOLUTION
         )
 
-    async def act(self, world):
+    def act(self, world):
         types = self.sensor.hit_types
         prey_mask = (types == 1)
-        #if np.any(prey_mask):
-        if False:
+        if np.any(prey_mask):
             prey_angles = self.sensor.ray_angles[prey_mask]
             sin_mean = np.mean(np.sin(np.radians(prey_angles)))
             cos_mean = np.mean(np.cos(np.radians(prey_angles)))
@@ -117,16 +121,16 @@ class Predator(Entity):
 
             world.move_entity(self.id, chase_dx, chase_dy)
 
-            nearby_prey = await world.find_nearby_prey(self.id, 20)
+            nearby_prey = world.find_nearby_prey(self.id, 20)
             if nearby_prey:
-                await world.kill_entity(nearby_prey[0].id)
+                world.kill_entity(nearby_prey[0].id)
         else:
             dx = random.randint(-10, 10)
             dy = random.randint(-10, 10)
             world.move_entity(self.id, dx, dy)
-            nearby_prey = await world.find_nearby_prey(self.id, self.eat_distance)
+            nearby_prey = world.find_nearby_prey(self.id, self.eat_distance)
             if nearby_prey:
-                await world.kill_entity(nearby_prey[0].id)
+                 world.kill_entity(nearby_prey[0].id)
 
     def delay(self):
         return WorldConfig.PREDATOR_WAIT_TIME
