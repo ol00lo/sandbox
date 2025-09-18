@@ -35,8 +35,7 @@ add_compile_options(
   -Wmissing-field-initializers
 )
 
-ament_export_include_directories(include)
-ament_export_libraries(core_utils)
+ament_export_include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 ament_export_dependencies(fmt)
 
