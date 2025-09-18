@@ -7,6 +7,7 @@ include(FetchContent)
 
 add_subdirectory(lib)
 add_subdirectory(tests)
+add_subdirectory(python)
 
 set(FORMAT_SOURCE_DIRS  lib tests)
 add_custom_target(clangformat
