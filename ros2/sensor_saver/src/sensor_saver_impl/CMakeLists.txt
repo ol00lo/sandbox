@@ -3,7 +3,7 @@ find_package(core_utils REQUIRED)
 set(PQXX_INCLUDE_DIR "/usr/include")
 set(PQXX_LIBRARY "/usr/lib/x86_64-linux-gnu/libpqxx.so")
 
-add_library(sensor_saver_impl sensor_saver_impl.cpp)
+add_library(sensor_saver_impl src/sensor_saver_impl.cpp)
 
 target_include_directories(sensor_saver_impl
     PUBLIC

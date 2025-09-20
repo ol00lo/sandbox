@@ -1,8 +1,10 @@
 cmake_minimum_required(VERSION 3.8)
 project(core_utils)
 
-find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_auto REQUIRED)
 find_package(fmt REQUIRED)
+
+ament_auto_find_build_dependencies()
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -35,8 +37,4 @@ add_compile_options(
   -Wmissing-field-initializers
 )
 
-ament_export_include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
-ament_export_dependencies(fmt)
-
-ament_package()
+ament_auto_package()
