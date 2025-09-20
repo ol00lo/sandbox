@@ -10,15 +10,12 @@ namespace py = pybind11;
 using namespace g;
 
 PYBIND11_MODULE(py_graph_pr, m) {
-    m.doc() = "Python bindings for graph_lib (Tensor only)";
-
     // Tensor
     py::class_<Tensor>(m, "Tensor")
         .def(py::init<>())
         .def(py::init<const std::vector<double>&>())
         .def(py::init<Shape,double>())
         .def(py::init<Shape,const std::vector<double>&>())
-
 
         .def_property_readonly("shape",
             [](const Tensor& t){
@@ -28,7 +25,6 @@ PYBIND11_MODULE(py_graph_pr, m) {
         )
         .def_property_readonly("data",  &Tensor::data)
 
-
         .def("set_zero", &Tensor::set_zero)
         .def("add", &Tensor::add)
         .def("sub", &Tensor::sub)
@@ -37,8 +33,7 @@ PYBIND11_MODULE(py_graph_pr, m) {
         .def("scalar_mult", &Tensor::scalar_mult)
         .def("__repr__", [](const Tensor& t) {
             std::ostringstream oss; t.write(oss); return oss.str();
-        })
-        ;
+        });
 
     //INode
     py::class_<g::INode, std::shared_ptr<g::INode>>(m, "INode")
@@ -48,8 +43,7 @@ PYBIND11_MODULE(py_graph_pr, m) {
                const std::string &nodename) {
                  return g::INode::factory(classname, nodename);
             },
-            py::arg("classname"), py::arg("nodename") = ""
-        );
+            py::arg("classname"), py::arg("nodename") = "");
 
     // DataNode
     py::class_<g::DataNode, g::INode, std::shared_ptr<g::DataNode>>(m, "DataNode")
@@ -57,16 +51,16 @@ PYBIND11_MODULE(py_graph_pr, m) {
         .def("set_value", &g::DataNode::set_value)
         .def("value", &g::DataNode::value);
 
-
-    m.def( "set_dep",
-    [](std::shared_ptr<g::INode> node,
-       const std::vector<std::shared_ptr<g::INode>>& deps)
-    {
-        for (auto& d : deps) {
-            g::set_dep(node, { d });
-        }
-    },
-    py::arg("node"),
-    py::arg("deps")
-);
+    m.def("set_dep",
+          [](std::shared_ptr<g::INode> node,
+             const std::vector<std::shared_ptr<g::INode>>& deps)
+          {
+              switch (deps.size()) {
+                  case 0: g::set_dep(node, {}); break;
+                  case 1: g::set_dep(node, { deps[0] }); break;
+                  case 2: g::set_dep(node, { deps[0], deps[1] }); break;
+                  case 3: g::set_dep(node, { deps[0], deps[1], deps[2] }); break;
+                  default: _THROW_NOT_IMP_; break;
+              }
+          });
 }
