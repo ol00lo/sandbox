@@ -1,5 +1,3 @@
-find_package(rclcpp REQUIRED)
-
 add_compile_options(
   $<$<CONFIG:Release>:-Werror>
   $<$<CONFIG:Debug>:-Wno-error>
