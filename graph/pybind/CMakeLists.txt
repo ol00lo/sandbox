@@ -7,7 +7,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(pybind11)
 
-pybind11_add_module(py_graph_pr bindings.cpp)
+pybind11_add_module(py_graph_pr pybind_graph_pr.cpp)
 
 target_include_directories(py_graph_pr PRIVATE ${PROJECT_SOURCE_DIR}/lib)
 target_link_libraries(py_graph_pr PRIVATE graph_lib)

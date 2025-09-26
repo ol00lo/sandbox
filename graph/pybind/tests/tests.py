@@ -3,8 +3,6 @@ import os
 import unittest
 import math
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "build", "python", "Debug"))
-
 import py_graph_pr as graph
 
 class TestTensor(unittest.TestCase):
@@ -185,10 +183,6 @@ class TestSinModel(unittest.TestCase):
         # self.assertAlmostEqual(C.value()[0], c, delta=0.1)  # при желании
         self.assertAlmostEqual(D.value().data[0], d, delta=0.01)
         self.assertAlmostEqual(E.value().data[0], e, delta=0.01)
-
-
-if __name__ == "__main__":
-    unittest.main()
 
 
 if __name__ == "__main__":
