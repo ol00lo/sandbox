@@ -1,6 +1,6 @@
 from flask import Flask, render_template, Response
 import threading
-from world import DrawConfig, WorldConfig
+from world import DrawConfig
 
 app = Flask(__name__, template_folder='.')
 
@@ -18,7 +18,7 @@ def index():
     return render_template('world.html',
                             width=DrawConfig.WIDTH,
                             height=DrawConfig.HEIGHT,
-                            update_interval=WorldConfig.UPDATE_HTML_INTERVAL)
+                            update_interval=DrawConfig.UPDATE_HTML_INTERVAL)
 
 @app.route('/frame')
 def get_frame():

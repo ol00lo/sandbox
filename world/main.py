@@ -3,17 +3,20 @@ import threading
 from world import World, spawn_initial_entities
 from draw import render_frame, encode_png
 from web_server import run_flask, set_latest_png
-from config import WorldConfig
+from config import DrawConfig
+import time
 
 world = World()
 
 async def update_frame_cache_task():
     while True:
+        start = time.time()
         entities = world.get_entities_snapshot()
         img = render_frame(entities, world)
         png = encode_png(img)
         set_latest_png(png)
-        await asyncio.sleep((WorldConfig.UPDATE_HTML_INTERVAL - WorldConfig.DRAW_TIME)/1000)
+        sleep_time = max(0, DrawConfig.UPDATE_HTML_INTERVAL / 1000.0 - (time.time() - start))
+        await asyncio.sleep(sleep_time)
 
 async def run():
     entities = world.get_entities_snapshot()

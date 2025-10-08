@@ -224,12 +224,13 @@ def render_frame(entities, world):
         initialize_eye_images()
 
     for entity in entities:
+        entity.sensor.scan(world.entities, entity)
         if isinstance(entity, Prey):
             add_pupil_to_image(frame, _prey_pupil_image, entity.x, entity.y, 
                                entity.direction, WorldConfig.PREY_SIZE)
             add_eye_to_image(frame, _prey_eye_image, entity.x, entity.y)
-            draw_sensor(frame, entity.x, entity.y, entity.direction, WorldConfig.PREY_FOV,
-                                WorldConfig.PREY_DETECTION_RANGE, (150, 0, 150), 1)
+            # draw_sensor(frame, entity.x, entity.y, entity.direction, WorldConfig.PREY_FOV,
+            #                    WorldConfig.PREY_DETECTION_RANGE, (150, 0, 150), 1)
         elif isinstance(entity, Predator):
             pupil = _predator_pupil_image
             nearby_preys = entity.find_nearby_entities(world.entities, WorldConfig.PREDATOR_DETECTION_RANGE)
