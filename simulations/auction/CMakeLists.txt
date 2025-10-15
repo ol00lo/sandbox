@@ -10,4 +10,14 @@ include_directories(include)
 add_executable(auction 
 	src/main.cpp
 	src/game.cpp
+	src/awaiter.cpp
+	src/task.cpp
 )
+
+find_program(CLANG_FORMAT clang-format)
+if(CLANG_FORMAT)
+    add_custom_target(format
+        COMMAND ${CLANG_FORMAT} -i src/*.cpp include/*.h
+        COMMENT "Formatting code..."
+    )
+endif()
