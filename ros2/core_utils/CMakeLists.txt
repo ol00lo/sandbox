@@ -1,14 +1,12 @@
 cmake_minimum_required(VERSION 3.8)
 project(core_utils)
 
-find_package(ament_cmake REQUIRED)
-find_package(fmt REQUIRED)
-
-#ament_auto_find_build_dependencies()
+# Используем ament_auto
+find_package(ament_cmake_auto REQUIRED)
+ament_auto_find_build_dependencies()  # Автоматически найдет зависимости из package.xml
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 
 add_compile_options(
   $<$<CONFIG:Release>:-Werror>
@@ -35,24 +33,10 @@ add_compile_options(
   -Wmissing-field-initializers
 )
 
-
 add_subdirectory(src)
-#add_subdirectory(test)
 
-# Установка целей
-install(TARGETS
-  core_utils
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
-)
-
-# Установка include файлов
-install(DIRECTORY include/
-  DESTINATION include
-)
-
-ament_export_include_directories(include)
-ament_export_libraries(core_utils)
+# ДОПОЛНИТЕЛЬНЫЕ ЭКСПОРТЫ ДО ament_auto_package()
 ament_export_dependencies(fmt)
-ament_package()
+
+# АВТОМАТИЧЕСКАЯ НАСТРОЙКА (ВКЛЮЧАЕТ ament_package())
+ament_auto_package()
