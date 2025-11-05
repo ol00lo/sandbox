@@ -1,6 +1,6 @@
 #include <geometry_msgs/msg/point.hpp>
 #include <rclcpp/rclcpp.hpp>
-#include "sensor_saver_impl.hpp"
+#include "sensor_saver_impl/sensor_saver_impl.hpp"
 
 constexpr int64_t SENSOR_DATA_TTL_DAYS_DEFAULT = 7;
 constexpr const char* HOST_DEFAULT = "db";

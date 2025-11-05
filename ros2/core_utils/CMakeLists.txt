@@ -1,12 +1,15 @@
 cmake_minimum_required(VERSION 3.8)
 project(core_utils)
 
-# Используем ament_auto
 find_package(ament_cmake_auto REQUIRED)
-ament_auto_find_build_dependencies()  # Автоматически найдет зависимости из package.xml
+find_package(fmt REQUIRED)
+ament_auto_find_build_dependencies()
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+add_subdirectory(src)
+add_subdirectory(test)
 
 add_compile_options(
   $<$<CONFIG:Release>:-Werror>
@@ -33,10 +36,5 @@ add_compile_options(
   -Wmissing-field-initializers
 )
 
-add_subdirectory(src)
 
-# ДОПОЛНИТЕЛЬНЫЕ ЭКСПОРТЫ ДО ament_auto_package()
-ament_export_dependencies(fmt)
-
-# АВТОМАТИЧЕСКАЯ НАСТРОЙКА (ВКЛЮЧАЕТ ament_package())
 ament_auto_package()
