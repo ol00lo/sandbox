@@ -1,3 +1,16 @@
+cmake_minimum_required(VERSION 3.8)
+project(core_utils)
+
+find_package(ament_cmake_auto REQUIRED)
+find_package(fmt REQUIRED)
+ament_auto_find_build_dependencies()
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+add_subdirectory(src)
+add_subdirectory(test)
+
 add_compile_options(
   $<$<CONFIG:Release>:-Werror>
   $<$<CONFIG:Debug>:-Wno-error>
@@ -23,5 +36,5 @@ add_compile_options(
   -Wmissing-field-initializers
 )
 
-add_subdirectory(sensor_saver_impl)
-add_subdirectory(sensor_saver_node)
+
+ament_auto_package()

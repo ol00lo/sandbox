@@ -1,11 +1,10 @@
-find_package(rclcpp REQUIRED)
-find_package(geometry_msgs REQUIRED)
+ament_auto_add_executable(sensor_saver_node
+  sensor_saver_node.cpp
+)
 
-add_executable(sensor_saver_node sensor_saver_node.cpp)
-target_link_libraries(sensor_saver_node PRIVATE
+target_link_libraries(sensor_saver_node
   sensor_saver_impl
   rclcpp::rclcpp
-  ${geometry_msgs_TARGETS}
 )
 
 install(TARGETS sensor_saver_node
