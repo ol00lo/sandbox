@@ -1,0 +1,30 @@
+from dataclasses import dataclass
+
+@dataclass
+class DrawConfig:
+    WIDTH = 1350
+    HEIGHT = 800
+    PREY_COLOR_BGR = (255, 0, 255) #pink
+    PREDATOR_COLOR_BGR = (0, 0, 0) #black
+
+    UPDATE_HTML_INTERVAL = 200 # ms
+
+@dataclass
+class WorldConfig:
+    PREY_SIZE = 12
+    PREDATOR_SIZE = 13
+
+    PREY_FOV = 60  # degrees
+    PREDATOR_FOV = 30  # degrees
+    PREY_DETECTION_RANGE = 200  # pixels
+    PREDATOR_DETECTION_RANGE = 500  # pixels
+    PREY_RESOLUTION = 40  # number of vision rays
+    PREDATOR_RESOLUTION = 40  # number of vision rays
+
+    PREDATOR_EAT_DISTANCE = 40
+
+    PREY_STEP_SIZE = 5
+    PREDATOR_STEP_SIZE = 8
+
+    PREY_WAIT_TIME = 0.1
+    PREDATOR_WAIT_TIME = 0.2
