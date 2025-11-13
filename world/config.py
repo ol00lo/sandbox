@@ -21,5 +21,10 @@ class WorldConfig:
     PREY_RESOLUTION = 40  # number of vision rays
     PREDATOR_RESOLUTION = 40  # number of vision rays
 
+    PREDATOR_EAT_DISTANCE = 40
+
+    PREY_STEP_SIZE = 5
+    PREDATOR_STEP_SIZE = 8
+
     PREY_WAIT_TIME = 0.1
     PREDATOR_WAIT_TIME = 0.2

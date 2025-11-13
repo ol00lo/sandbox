@@ -34,13 +34,12 @@ class World:
         entity.y = new_y
 
         if dx != 0 or dy != 0:
-            entity.direction = math.degrees(math.atan2(dy, dx))
+            entity.direction = math.atan2(dy, dx) % (2 * math.pi)
         return True
 
     def get_entities_snapshot(self) -> List[Entity]:
         entities = []
         for e in self.entities.values():
-            e.sensor.scan(self.entities, e)
             if isinstance(e, Prey):
                 entity = Prey(
                     id=e.id, x=e.x, y=e.y,
@@ -56,13 +55,7 @@ class World:
             entities.append(entity)
         return entities
 
-    async def get_sensor_data(self, entity_id):
-        if entity_id not in self.entities:
-            return np.array([]), np.array([])
 
-        entity = self.entities[entity_id]
-        entity.sensor.scan(self.entities, entity)
-        return entity.sensor.rdistances, entity.sensor.hit_types
 
     def kill_entity(self, entity_id: int) -> None:
         if entity_id in self.entities:

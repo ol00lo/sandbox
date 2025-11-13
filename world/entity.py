@@ -3,9 +3,8 @@ import random
 import math
 from dataclasses import dataclass
 import numpy as np
-from config import WorldConfig, DrawConfig
+from config import WorldConfig
 from enum import Enum
-
 
 class EntityType(Enum):
     NONE = 0
@@ -18,9 +17,7 @@ class Sensor:
         self.detection_range = detection_range
         self.resolution = resolution
 
-        self.ray_angles = np.linspace(
-            -fov / 2, fov / 2, resolution
-        )
+        self.ray_angles = np.radians(np.linspace(-fov / 2, fov / 2, resolution))
 
         self.hit_distances = np.full(resolution, np.inf, dtype=np.float32)
         self.hit_types = np.zeros(resolution, dtype=np.uint8)
@@ -28,15 +25,14 @@ class Sensor:
         self.rdistances = np.zeros(resolution, dtype=np.float32)
 
     def scan(self, entities, entity):
-        angles_rad = np.radians(self.ray_angles + entity.direction)
+        angles_rad = self.ray_angles + entity.direction
         dxs = np.cos(angles_rad).astype(np.float32)
         dys = np.sin(angles_rad).astype(np.float32)
         self.hit_distances, self.hit_types, self.hit_ids = self.cast_ray(
             entities,
             entity.x,
             entity.y,
-            dxs,
-            dys,
+            dxs, dys,
             float(self.detection_range),
             entity.id,
         )
@@ -61,7 +57,7 @@ class Sensor:
         types = np.fromiter((EntityType.PREY.value if isinstance(e, Prey)
                              else EntityType.PREDATOR.value for e in entities), dtype=np.uint8)
         sizes = np.where(
-            types == EntityType.PREY,
+            types == EntityType.PREY.value,
             float(WorldConfig.PREY_SIZE/2),
             float(WorldConfig.PREDATOR_SIZE/2),
         ).astype(np.float32)
@@ -74,9 +70,9 @@ class Sensor:
 
         ahead_mask = projections >= 0.0
 
-        perp2 = r2[:, None] - projections * projections
+        perp2 = r2[:, None] - projections ** 2
         np.maximum(perp2, 0.0, out=perp2)
-        perp_dist = np.sqrt(perp2, dtype=np.float32)
+        perp_dist = np.sqrt(perp2).astype(np.float32)
 
         hit_mask = perp_dist <= sizes[:, None]
         within_range_mask = projections <= float(max_distance)
@@ -105,10 +101,8 @@ class Entity:
     id: int
     x: int
     y: int
-    direction: float = 0.0
+    direction: float = 0.0 # radians
     sensor: Sensor = None
-    sensor_distances: np.ndarray = None
-    sensor_types: np.ndarray = None
 
     async def behavior(self, world):
         while True:
@@ -118,7 +112,7 @@ class Entity:
             self.act(world)
             await asyncio.sleep(self.delay())
 
-    def find_nearby_entities(self, entities, distance, use_sensor=True):
+    def find_nearby_entities(self, entities, distance = float('inf'), use_sensor = True):
         if use_sensor:
             mask = self.sensor.hit_distances < float(distance)
             if not np.any(mask):
@@ -126,7 +120,7 @@ class Entity:
 
             hit_ids = self.sensor.hit_ids[mask]
             result = []
-            for entity_id in hit_ids:
+            for entity_id in set(hit_ids):
                 if entity_id in entities and entity_id != self.id:
                     result.append(entities[entity_id])
             return result
@@ -142,8 +136,8 @@ class Entity:
                     result.append(entity)
             return result
 
-    def find_nearby_prey(self, entities, distance, use_sensor = True):
-        entities = self.find_nearby_entities(entities, distance, use_sensor)
+    def find_prey_to_kill(self, entities, use_sensor = True):
+        entities = self.find_nearby_entities(entities, WorldConfig.PREDATOR_EAT_DISTANCE, use_sensor)
         return [e for e in entities if isinstance(e, Prey)]
 
     def act(self):
@@ -166,22 +160,22 @@ class Prey(Entity):
 
     def act(self, world):
         types = self.sensor.hit_types
-        predator_mask = (types == 2)
+        predator_mask = (types == EntityType.PREDATOR.value)
+        step = WorldConfig.PREY_STEP_SIZE
         if np.any(predator_mask):
-            predator_angles = self.sensor.ray_angles[predator_mask]
-            sin_mean = np.mean(np.sin(np.radians(predator_angles)))
-            cos_mean = np.mean(np.cos(np.radians(predator_angles)))
-            avg_angle = (math.degrees(math.atan2(sin_mean, cos_mean)) + 360) % 360
+            predator_distances = self.sensor.hit_distances[predator_mask]
+            closest_idx = np.argmin(predator_distances)
+            predator_angle = self.sensor.ray_angles[predator_mask][closest_idx]
 
-            flee_angle = (avg_angle + 180) % 360
-            flee_dx = int(5 * math.cos(math.radians(flee_angle)))
-            flee_dy = int(5 * math.sin(math.radians(flee_angle)))
+            flee_angle = self.direction + predator_angle + math.pi
+            flee_dx = int(step * math.cos(flee_angle))
+            flee_dy = int(step * math.sin(flee_angle))
 
             world.move_entity(self.id, flee_dx, flee_dy)
         else:
             if random.random() < 0.7:
-                dx = random.randint(-5, 5)
-                dy = random.randint(-5, 5)
+                dx = random.randint(-step, step)
+                dy = random.randint(-step, step)
                 world.move_entity(self.id, dx, dy)
 
     def delay(self):
@@ -193,7 +187,6 @@ class Predator(Entity):
             id=id, x=x, y=y,
             direction=direction
         )
-        self.eat_distance = 30
         self.sensor = Sensor(
             WorldConfig.PREDATOR_FOV,
             WorldConfig.PREDATOR_DETECTION_RANGE,
@@ -203,29 +196,27 @@ class Predator(Entity):
     def act(self, world):
         types = self.sensor.hit_types
         prey_mask = (types == EntityType.PREY.value)
+        step = WorldConfig.PREDATOR_STEP_SIZE
         if np.any(prey_mask):
             closest_prey_idx = np.argmin(self.sensor.hit_distances[prey_mask])
 
             prey_angles = self.sensor.ray_angles[prey_mask]
             relative_angle = prey_angles[closest_prey_idx]
 
-            absolute_angle = (self.direction + relative_angle) % 360
+            absolute_angle = self.direction + relative_angle
 
-            chase_dx = int(8 * math.cos(math.radians(absolute_angle)))
-            chase_dy = int(8 * math.sin(math.radians(absolute_angle)))
+            chase_dx = int(step * math.cos(absolute_angle))
+            chase_dy = int(step * math.sin(absolute_angle))
 
             world.move_entity(self.id, chase_dx, chase_dy)
-
-            nearby_prey = self.find_nearby_prey(world.entities, self.eat_distance, False)
-            if nearby_prey:
-                world.kill_entity(nearby_prey[0].id)
         else:
-            dx = random.randint(-10, 10)
-            dy = random.randint(-10, 10)
+            dx = random.randint(-step, step)
+            dy = random.randint(-step, step)
             world.move_entity(self.id, dx, dy)
-            nearby_prey = self.find_nearby_prey(world.entities, self.eat_distance, False)
-            if nearby_prey:
-                 world.kill_entity(nearby_prey[0].id)
+
+        nearby_prey = self.find_prey_to_kill(world.entities)
+        if nearby_prey:
+             world.kill_entity(nearby_prey[0].id)
 
     def delay(self):
         return WorldConfig.PREDATOR_WAIT_TIME
