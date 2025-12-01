@@ -2,32 +2,47 @@
 #define TASK_HPP
 
 #include <coroutine>
-#include <iostream>
+#include <queue>
 
-struct Task {
+class Scheduler {
+public:
+    static Scheduler& instance() {
+        static Scheduler inst;
+        return inst;
+    }
+
+    void schedule(std::coroutine_handle<> h) { tasks.push(h); }
+    void run() {
+        while (!tasks.empty()) {
+            auto h = tasks.front();
+            tasks.pop();
+            h();
+        }
+    }
+    bool empty() const { return tasks.empty(); }
+
+
+private:
+    std::queue<std::coroutine_handle<>> tasks;
+};
+
+struct YieldOnce {
+    bool await_ready() const noexcept { return false; }
+    void await_suspend(std::coroutine_handle<> h) const { Scheduler::instance().schedule(h); }
+    void await_resume() const noexcept {}
+};
+
+struct Task
+{
     struct promise_type {
-        Task get_return_object();
+        Task get_return_object() { return {}; }
 
-        std::suspend_always initial_suspend() noexcept;
+        std::suspend_never initial_suspend() { return {}; }
+        std::suspend_never final_suspend() noexcept { return {}; }
 
-        std::suspend_always final_suspend() noexcept;
-
-        void return_void() noexcept;
-        void unhandled_exception();
+        void return_void() {}
+        void unhandled_exception() { std::terminate(); }
     };
-
-    std::coroutine_handle<promise_type> handle;
-
-    explicit Task(std::coroutine_handle<promise_type> h);
-    Task(Task&& other) noexcept;
-
-    Task(const Task&) = delete;
-    Task& operator=(const Task&) = delete;
-
-    ~Task();
-
-    void start();
-    bool done() const;
 };
 
 #endif

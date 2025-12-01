@@ -3,28 +3,41 @@
 #include <chrono>
 #include <random>
 #include <vector>
+#include "task.hpp"
 
 struct Lot {
     int id;
-    int price = 1;
+    int price = 0;
     int winner = -1;
 };
 
 class Player {
    public:
-    Player(int coins);
+    Player(int coins, std::mt19937& gen);
+
     int bid(const Lot& lot, std::mt19937& gen) const;
     void buy(const Lot& lot);
+
     int getId() const;
     int getLots() const;
+    int getCoins() const;
+    double getProbability() const;
+    void updateBitTime();
 
    private:
     static int next_id;
     int id;
     int coins;
     int lots = 0;
-    std::chrono::steady_clock::time_point last_bid_time = std::chrono::steady_clock::now();
-    bool is_human = false;
+
+    double probability;
+    double risk;
+    std::chrono::steady_clock::time_point last_bid_time;
 };
+
+
+Task bidder(Player& p, Lot& lot, std::mt19937& gen, bool& someone_bid);
+
+void run_round(std::vector<Player>& players, int lot_id, std::mt19937& gen);
 
 #endif
