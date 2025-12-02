@@ -15,7 +15,7 @@ class Player {
    public:
     Player(int coins, std::mt19937& gen);
 
-    int bid(const Lot& lot, std::mt19937& gen) const;
+    int bid(const Lot& lot, std::mt19937& gen);
     void buy(const Lot& lot);
 
     int getId() const;
@@ -23,6 +23,7 @@ class Player {
     int getCoins() const;
     double getProbability() const;
     void updateBitTime();
+    std::chrono::steady_clock::time_point last_bid_time;
 
    private:
     static int next_id;
@@ -32,7 +33,6 @@ class Player {
 
     double probability;
     double risk;
-    std::chrono::steady_clock::time_point last_bid_time;
 };
 
 
