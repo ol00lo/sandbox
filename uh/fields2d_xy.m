@@ -1,24 +1,16 @@
-function fields2d_xy(reports, rock, nx, ny, nz, x_coords, y_coords, field)
+function fields2d_xy(reports, rock, nx, ny, nz, x_coords, y_coords, field, iPV1, iPV2)
 % Визуализация толщинно-усреднённых 2D полей (x–y)
-% Строит 3 субплота в один ряд для разных моментов времени
-%
-% reports - cell array с результатами simulateScheduleAD
-% field   - 's' для насыщенности, 'p' для давления
 
-    % Моменты времени для субплотов (доли от начала до конца)
-    times_frac = [0.33, 0.66, 1];
-    nplots = numel(times_frac);
-
-    % Создаём широкую фигуру
+    step_ids = [iPV1, iPV2, numel(reports)];
+    nplots = numel(step_ids);
+    pv_labels = {'1 PV', '2 PV', '3 PV'};
+    
     figure('Position',[100,100,1800,500]);
-    t = tiledlayout(1,nplots,'TileSpacing','Compact','Padding','Compact');
+    tiledlayout(1,nplots,'TileSpacing','Compact','Padding','Compact');
     s_x = {};
     for i = 1:nplots
-        % Индекс шага
-        step_idx = max(1, round(times_frac(i) * numel(reports)));
-        step_idx = min(step_idx, numel(reports));
+        step_idx = step_ids(i);
 
-        % Выбор поля
         switch field
             case 'p'
                 P_3D = reshape(reports{step_idx}.pressure, [nx, ny, nz]);
@@ -48,27 +40,17 @@ function fields2d_xy(reports, rock, nx, ny, nz, x_coords, y_coords, field)
         colorbar;
         xlabel('x, m');
         ylabel('y, m');
-        tlabel = sprintf('%s, step %d/%d', title_str, step_idx, numel(reports));
-        title(tlabel);
+        title(sprintf('%s – %s', title_str, pv_labels{i}));
     end
 
     if field == "s"
         figure;
-        legends = {};
-        colors = ["r-", "g-", "b-", "k-", "c-"];
         for i = 1:nplots
-            % Индекс шага
-            step_idx = max(1, round(times_frac(i) * numel(reports)));
-            step_idx = min(step_idx, numel(reports));
-  
-            % Субплот
             plot(x_coords, s_x{i}, 'LineWidth', 1.5); hold on;
             xlabel('x, m');
             ylabel('water saturation');
-            legends{end+1} = sprintf('step %d/%d', step_idx, numel(reports));
-            title(tlabel);
         end
-        legend(legends);
+        legend(pv_labels, 'Location', 'best');
         grid on;
     end
 end

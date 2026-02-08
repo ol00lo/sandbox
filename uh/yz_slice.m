@@ -1,13 +1,9 @@
-function yz_slice(G, reports, nx, ny, nz, hy, x_coords, z_coords, field)
+function yz_slice(G, reports, nx, ny, nz, hy, x_coords, z_coords, field, iPV1, iPV2)
 % Построение вертикального среза y = const для нескольких моментов времени
-% в один ряд (subplot 1x4)
-%
-% reports - cell array с результатами simulateScheduleAD
-% field   - 's' для насыщенности, 'p' для давления
 
-    % Моменты времени для субплотов (доли от начала до конца)
-    times_frac = [0.33, 0.66, 1];  % начало, 1/3, 2/3, конец
-    nplots = numel(times_frac);
+    step_ids = [iPV1, iPV2, numel(reports)];
+    nplots = numel(step_ids);
+    pv_labels = {'1 PV', '2 PV', '3 PV'};
 
     % Плоскость среза
     y_slice = hy * (floor(ny/2) + 0.5);
@@ -19,15 +15,11 @@ function yz_slice(G, reports, nx, ny, nz, hy, x_coords, z_coords, field)
     % Сетка для построения
     [x, z] = meshgrid(x_coords, z_coords);
 
-    % Создаём figure
-    figure('Position',[100,100,1400,400]); % широкий график для 4 субплотов в ряд
-
+    figure('Position',[100,100,1800,600]);
+    tiledlayout(1,nplots,'TileSpacing','Compact','Padding','Compact');
     for i = 1:nplots
-        % Определяем индекс шага
-        step_idx = max(1, round(times_frac(i) * numel(reports)));
-        step_idx = min(step_idx, numel(reports));
+        step_idx = step_ids(i);
 
-        % Выбор поля
         switch field
             case 's'
                 data = reshape(reports{step_idx}.s(cells_slice), [nx, nz]);
@@ -41,7 +33,6 @@ function yz_slice(G, reports, nx, ny, nz, hy, x_coords, z_coords, field)
                 error('Unknown field type');
         end
 
-        % Субплот в один ряд
         subplot(1,nplots,i);
         contourf(x, z, transpose(data), 20);
         colormap(cmap);
@@ -49,7 +40,6 @@ function yz_slice(G, reports, nx, ny, nz, hy, x_coords, z_coords, field)
         set(gca,'YDir','normal');
         xlabel('X [m]');
         ylabel('Z [m]');
-        tlabel = sprintf('%s, step %d/%d', title_str, step_idx, numel(reports));
-        title(tlabel);
+        title(sprintf('%s – %s', title_str, pv_labels{i}));
     end
 end

@@ -1,25 +1,20 @@
-function fields3d(G, reports, Lx, Ly, hy, field)
+function fields3d(G, reports, Lx, Ly, hy, field, iPV1, iPV2)
 % Визуализация 3D поля давления или насыщенности
 
-    % Моменты времени для субплотов (доли от начала до конца)
-    times_frac = [0.33, 0.66, 1]; % три графика
-    nplots = numel(times_frac);
+    step_ids = [iPV1, iPV2, numel(reports)];
+    nplots = numel(step_ids);
+    pv_labels = {'1 PV', '2 PV', '3 PV'};
 
     % Индексы для отображения (как в твоей оригинальной функции)
     indices3d = ( ...
         G.cells.centroids(:,1) > Lx/2 | ...
         G.cells.centroids(:,2) + hy > Ly/2 );
 
-    % Создаём широкую фигуру
     figure('Position',[100,100,1800,600]);
-    t = tiledlayout(1,nplots,'TileSpacing','Compact','Padding','Compact');
-
+    tiledlayout(1,nplots,'TileSpacing','Compact','Padding','Compact');
     for i = 1:nplots
-        % Индекс шага
-        step_idx = max(1, round(times_frac(i) * numel(reports)));
-        step_idx = min(step_idx, numel(reports));
+        step_idx = step_ids(i);
 
-        % Выбор поля
         switch field
             case 'p'
                 data = reports{step_idx}.pressure / barsa();
@@ -33,7 +28,6 @@ function fields3d(G, reports, Lx, Ly, hy, field)
                 error('Unknown field type');
         end
 
-        % Субплот
         nexttile;
         shading interp;
         plotCellData(G, data, indices3d);
@@ -42,7 +36,6 @@ function fields3d(G, reports, Lx, Ly, hy, field)
         xlabel('X'); ylabel('Y'); zlabel('Z');
         view(-45,30);
 
-        tlabel = sprintf('%s, step %d/%d', title_str, step_idx, numel(reports));
-        title(tlabel);
+        title(sprintf('%s – %s', title_str, pv_labels{i}));
     end
 end

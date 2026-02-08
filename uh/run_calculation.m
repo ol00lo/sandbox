@@ -16,18 +16,31 @@ function result = run_calculation(G, rock, fluid, schedule, state)
     qP  = zeros(nstep,1);
     wcP = zeros(nstep,1);
 
+    PV = sum(G.cells.volumes .* rock.poro);
+    Q = 0; iPV1 = NaN; iPV2 = NaN;
+
     for it = 1:nstep
         ws = states{it};
 
         WI = strcmp({ws.name}, 'WI');
         WP = strcmp({ws.name}, 'WP');
 
+        qW      = ws(WI).qWs;
         qI(it)  = sum([ws(WI).qWs]);
         qPo(it) = sum([ws(WP).qOs]);
         qPw     = sum([ws(WP).qWs]);
         qP(it)  = sum([ws(WP).qWs] + [ws(WP).qOs]);
 
         wcP(it) = qPw / qP(it);
+
+        dt = schedule.step.val(it);
+        Q = Q + qW * dt;
+        if isnan(iPV1) && Q >= 1*PV
+            iPV1 = it;
+        end
+        if isnan(iPV2) && Q >= 2*PV
+            iPV2 = it;
+        end
     end
 
     QI  = cumtrapz(time_vec*day(), qI);
@@ -42,4 +55,6 @@ function result = run_calculation(G, rock, fluid, schedule, state)
     result.qI       = qI;
     result.qP       = qP;
     result.qPo      = qPo;
+    result.iPV1     = iPV1;
+    result.iPV2     = iPV2;
 end
