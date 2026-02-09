@@ -6,26 +6,22 @@ mrstModule add ad-core ad-blackoil ad-props mrst-gui
 
 gravity off
 %% ----------------------------
-% ГЕОМЕТРИЯ ПЛАСТА
+% геометрия
 nx = 40; ny = 20; nz = 6;
 Lx = 400; Ly = 200; Lz = 30;
 hx = Lx/nx; hy = Ly/ny; hz = Lz/nz;
 
 G = cartGrid([nx, ny, nz], [Lx, Ly, Lz]);
 G = computeGeometry(G);
-
-x_coords = unique(G.cells.centroids(:,1));
-y_coords = unique(G.cells.centroids(:,2));
-z_coords = unique(G.cells.centroids(:,3));
 %% ----------------------------
-% ПОРОДА (ОДНОРОДНАЯ)
+% однородная порода
 m0 = 0.1;           
 k0 = 1*darcy();     
 
 rock.poro = m0 * ones(G.cells.num,1);
 rock.perm = k0 * ones(G.cells.num,1);
 %% ----------------------------
-% ФЛЮИД
+% флюид
 Kmu = 0.5;
 a = 2;
 mu_w = 1*centi*poise;
@@ -37,11 +33,11 @@ fluid = initSimpleFluid( ...
     'rho', [1000, 800], ...
     'n',   [a, a]);
 %% ----------------------------
-% НАЧАЛЬНОЕ СОСТОЯНИЕ
+% начальное состояние
 p0 = 100*barsa();
 state = initState(G, [], p0, [0, 1]);
 %% ----------------------------
-% СКВАЖИНЫ
+% идеальные скважины
 W = [];
 xWI = Lx/4;   yWI = Ly/2;
 xWP = 3*Lx/4; yWP = Ly/2;
@@ -51,54 +47,40 @@ cells_WP = findColumnAtPoint(G, xWP, yWP);
 
 pI = 110*barsa();
 pP = 90*barsa();
-
+%%
 W = addWell(W, G, rock, cells_WI, ...
     'Type', 'bhp', 'Val', pI, 'Name', 'WI', 'compi', [1 0]);
 
 W = addWell(W, G, rock, cells_WP, ...
     'Type', 'bhp', 'Val', pP, 'Name', 'WP', 'compi', [1 0]);
 %% ----------------------------
-% ВРЕМЕННОЕ РАСПИСАНИЕ
+% время
 Tmax = 800*day();
 dt   = 20*day();
 nstep = ceil(Tmax/dt);
-
+%%
 schedule = simpleSchedule(repmat(dt, nstep, 1), 'W', W);
-%% ---------- Scenario I ----------
+
+%% ---------------------------- 
+% сценарий I
 result_I = run_calculation(G, rock, fluid, schedule, state);
-reportsI = result_I.reports;
-%%
-% dynamic_plots(G, reportsI, nx, ny, nz, hy, x_coords, z_coords, Lx, Ly);
-%% ГРАФИКИ
-% 2D Фронт насыщенности и давления между скважинами (1)
-yz_slice(G, reportsI, nx, ny, nz, hy, x_coords, z_coords, 's');
-yz_slice(G, reportsI, nx, ny, nz, hy, x_coords, z_coords, 'p');
-
-% 3D поле насыщенности и давления (2)
-fields3d(G, reportsI, Lx, Ly, hy, 's');
-fields3d(G, reportsI, Lx, Ly, hy, 'p');
-%%
-% Горизонтально усреднённое поле насыщенности и давления (2)
-fields2d_xy(reportsI, rock, nx, ny, nz, x_coords, y_coords, 's');
-fields2d_xy(reportsI, rock, nx, ny, nz, x_coords, y_coords, 'p');
-
-%% (3)
-plot_Q(result_I.time, result_I.QI, result_I.QPo, result_I.wcP, result_I.qI, result_I.qP, result_I.qPo);
-
-%% (4)
-plot_Qz(G, W(2), result_I.reports);
-%% ---------- Scenario II ----------
+%% ---------------------------- 
+% графики
+plots(G, nx, ny, nz, Lx, Ly, rock, result_I, W);
+%% ---------------------------- 
+% неоднородный пласт
+nlayers = 3;
 alpha = [1, 0.9, 1.1];
 beta  = [1, 0.5, 2];
 
-layers = round(linspace(1, nz+1, 4)); 
+cellsPerLayer = nz / nlayers;
 
 poro = zeros(nx, ny, nz);
 perm = zeros(nx, ny, nz);
 
-for i = 1:3
-    k1 = layers(i);
-    k2 = layers(i+1) - 1;
+for i = 1:nlayers
+    k1 = (i-1)*cellsPerLayer + 1;
+    k2 = i * cellsPerLayer;
 
     poro(:,:,k1:k2) = m0 * alpha(i);
     perm(:,:,k1:k2) = k0 * beta(i);
@@ -107,29 +89,74 @@ end
 rock_het.poro = poro(:);
 rock_het.perm = perm(:);
 
-%% Расчёт
+%% ---------------------------- 
+% сценарий II 
 result_II = run_calculation(G, rock_het, fluid, schedule, state);
-reportsII = result_II.reports;
 
-%% ГРАФИКИ
-yz_slice(G, reportsII, nx, ny, nz, hy, x_coords, z_coords, 's');
-yz_slice(G, reportsII, nx, ny, nz, hy, x_coords, z_coords, 'p');
+%% ---------------------------- 
+% графики
+plots(G, nx, ny, nz, Lx, Ly, rock_het, result_II, W)
 
-fields3d(G, reportsII, Lx, Ly, hy, 's');
-fields3d(G, reportsII, Lx, Ly, hy, 'p');
+%% ---------------------------- 
+% несовершенные скважин
+zeta_WI_0 = 0; zeta_WI_1 = 2/3; zeta_WP_0 = 1/3; zeta_WP_1 = 1;
 
-fields2d_xy(reportsII, rock, nx, ny, nz, x_coords, y_coords, 's');
-fields2d_xy(reportsII, rock, nx, ny, nz, x_coords, y_coords, 'p');
+cells_WI_all = findColumnAtPoint(G, xWI, yWI);
+cells_WP_all = findColumnAtPoint(G, xWP, yWP);
 
-%% ---------- Scenario II ----------
-% Несовершенные интервалы скважин
-zeta_WI = [0, 2/3];   % скважина WI: 0 - 2/3 от всего пласта
-zeta_WP = [1/3, 1];   % скважина WP: 1/3 - 1 (верхний слой)
+zWI = G.cells.centroids(cells_WI_all, 3);
+zWP = G.cells.centroids(cells_WP_all, 3);
+
+cells_WI = cells_WI_all( zWI >= zeta_WI_0 * Lz & zWI <= zeta_WI_1 * Lz );
+cells_WP = cells_WP_all( zWP >= zeta_WP_0 * Lz & zWP <= zeta_WP_1 * Lz );
+
+
+W= [];
+W= addWell(W, G, rock_het, cells_WI, ...
+    'Type', 'bhp', 'Val', pI, ...
+    'Name', 'WI', 'compi', [1 0]);
+W= addWell(W, G, rock_het, cells_WP, ...
+    'Type', 'bhp', 'Val', pP, ...
+    'Name', 'WP', 'compi', [1 0]);
+
+schedule = simpleSchedule(repmat(dt, nstep, 1), 'W', W );
+
+%% ---------------------------- 
+% сценарий III
+result_III = run_calculation(G, rock_het, fluid, schedule, state);
+%% ---------------------------- 
+% графики
+plots(G, nx, ny, nz, Lx, Ly, rock_het, result_III, W)
+
+%%
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+zeta_WI = [0, 2/3];   % вскрыты нижние 2/3 пласта
+zeta_WP = [1/3, 1];   % верхние 2/3
 
 layer_WI = max(1, round(zeta_WI * nz));
 layer_WP = max(1, round(zeta_WP * nz));
 
 %% Скважины
+x_coords = unique(G.cells.centroids(:,1));
+y_coords = unique(G.cells.centroids(:,2));
+z_coords = unique(G.cells.centroids(:,3));
 cells_WI_all = findColumnAtPoint(G, xWI, yWI);
 cells_WI = cells_WI_all(G.cells.centroids(cells_WI_all,3) >= z_coords(layer_WI(1)) & ...
                         G.cells.centroids(cells_WI_all,3) <= z_coords(layer_WI(2)));
@@ -148,17 +175,17 @@ W = addWell(W, G, rock_het, cells_WP, ...
 
 %% РАССЧЁТ
 result_III = run_calculation(G, rock_het, fluid, schedule, state);
-reportsIII = result_III.reports;
 
-%% Графики
-yz_slice(G, reportsIII, nx, ny, nz, hy, x_coords, z_coords, 's');
-yz_slice(G, reportsIII, nx, ny, nz, hy, x_coords, z_coords, 'p');
+
 %%
-fields3d(G, reportsIII, Lx, Ly, hy, 's');
-fields3d(G, reportsIII, Lx, Ly, hy, 'p');
 
-fields2d_xy(reportsIII, rock_het, nx, ny, nz, x_coords, y_coords, 's');
-fields2d_xy(reportsIII, rock_het, nx, ny, nz, x_coords, y_coords, 'p');
+
+
+
+
+
+
+
 
 
 
@@ -313,15 +340,3 @@ function result = run_calculation2D(G, rock, fluid, schedule, state)
     result.QPo     = QPo;
     result.wcP     = wcP;
 end
-
-
-%% Может пригодится ещё
-
-%% ----------------------------
-% Зависимость добытой нефти от закачанной воды
-%figure;
-%plot(QI/PV, QPo, 'r','LineWidth',1.5);
-%xlabel('Injected Water [PV]');
-%ylabel('Produced Oil [m^3]');
-%title('Cumulative Oil Production vs Injected Water');
-%grid on;

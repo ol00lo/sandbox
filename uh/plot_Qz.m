@@ -1,9 +1,11 @@
-function plot_Qz(G, WP, reports, iPV1, iPV2)
+function plot_Qz(G, WP, reports, iPVs)
 
     z = G.cells.centroids(WP.cells, 3);
-    step_ids = [iPV1, iPV2, numel(reports)];
+    %xWP = 3*400/4; yWP = 200/2;
+    %z = G.cells.centroids(findColumnAtPoint(G, xWP, yWP), 3);
+    step_ids = [iPVs(:).' , numel(reports)];
     nplots = numel(step_ids);
-    pv_labels = {'1 PV', '2 PV', '3 PV'};
+    pv_labels = {'0.5 PV', '1 PV', '2 PV', '3 PV'};
 
     figure;
     tiledlayout(1,nplots,'TileSpacing','Compact','Padding','Compact');
@@ -22,8 +24,8 @@ function plot_Qz(G, WP, reports, iPV1, iPV2)
         xlabel("q, m3/day");
         ylabel("z, m");
         legend("q_{oil}", "q_{water}", "q_{total}")
-        xlim([0 350]);
+        xlim([0 490]);
         tlabel = sprintf('Rate(z), %s', pv_labels{i});
         title(tlabel);
-    end 
+    end
 end

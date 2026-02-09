@@ -17,7 +17,7 @@ function result = run_calculation(G, rock, fluid, schedule, state)
     wcP = zeros(nstep,1);
 
     PV = sum(G.cells.volumes .* rock.poro);
-    Q = 0; iPV1 = NaN; iPV2 = NaN;
+    Q = 0; iPV05 = NaN; iPV1 = NaN; iPV2 = NaN;
 
     for it = 1:nstep
         ws = states{it};
@@ -35,6 +35,9 @@ function result = run_calculation(G, rock, fluid, schedule, state)
 
         dt = schedule.step.val(it);
         Q = Q + qW * dt;
+        if isnan(iPV05) && Q >= 0.5*PV
+            iPV05 = it;
+        end
         if isnan(iPV1) && Q >= 1*PV
             iPV1 = it;
         end
@@ -45,7 +48,7 @@ function result = run_calculation(G, rock, fluid, schedule, state)
 
     QI  = cumtrapz(time_vec*day(), qI);
     QPo = cumtrapz(time_vec*day(), qPo);
-
+    iPVs = [iPV05, iPV1, iPV2];
     result.states   = states;
     result.reports  = reports;
     result.time     = time_vec;
@@ -55,6 +58,5 @@ function result = run_calculation(G, rock, fluid, schedule, state)
     result.qI       = qI;
     result.qP       = qP;
     result.qPo      = qPo;
-    result.iPV1     = iPV1;
-    result.iPV2     = iPV2;
+    result.iPVs     = iPVs;
 end

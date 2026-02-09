@@ -1,24 +1,26 @@
-function fields2d_xy(reports, rock, nx, ny, nz, x_coords, y_coords, field, iPV1, iPV2)
+function fields2d_xy(reports, rock, nx, ny, nz, x_coords, y_coords, field, iPVs)
 % Визуализация толщинно-усреднённых 2D полей (x–y)
 
-    step_ids = [iPV1, iPV2, numel(reports)];
+    step_ids = [iPVs(:).' , numel(reports)];
     nplots = numel(step_ids);
-    pv_labels = {'1 PV', '2 PV', '3 PV'};
-    
-    figure('Position',[100,100,1800,500]);
-    tiledlayout(1,nplots,'TileSpacing','Compact','Padding','Compact');
+    pv_labels = {'0.5 PV', '1 PV', '2 PV', '3 PV'};
+
+    figure('Position',[100,100,1000,700]);
+    tiledlayout(2,2,'TileSpacing','Compact','Padding','Compact');
     s_x = {};
     for i = 1:nplots
         step_idx = step_ids(i);
 
         switch field
             case 'p'
+                clim([90 105])
                 P_3D = reshape(reports{step_idx}.pressure, [nx, ny, nz]);
                 P_2D = mean(P_3D, 3);
                 data = P_2D / barsa();
                 title_str = 'Thickness-averaged pressure [atm]';
                 cmap = readmatrix("map_pressure.txt");
             case 's'
+                clim([0 1])
                 % 3D массивы для выбранного шага
                 M_3D = reshape(rock.poro, [nx, ny, nz]);
                 S_3D = reshape(reports{step_idx}.s(:,1), [nx, ny, nz]);
