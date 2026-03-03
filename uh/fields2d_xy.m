@@ -13,14 +13,16 @@ function fields2d_xy(reports, rock, nx, ny, nz, x_coords, y_coords, field, iPVs)
 
         switch field
             case 'p'
-                clim([90 105])
+                cmin = 94;
+                cmax = 106;
                 P_3D = reshape(reports{step_idx}.pressure, [nx, ny, nz]);
                 P_2D = mean(P_3D, 3);
                 data = P_2D / barsa();
                 title_str = 'Thickness-averaged pressure [atm]';
                 cmap = readmatrix("map_pressure.txt");
             case 's'
-                clim([0 1])
+                cmin = 0;
+                cmax = 1;
                 % 3D массивы для выбранного шага
                 M_3D = reshape(rock.poro, [nx, ny, nz]);
                 S_3D = reshape(reports{step_idx}.s(:,1), [nx, ny, nz]);
@@ -40,6 +42,7 @@ function fields2d_xy(reports, rock, nx, ny, nz, x_coords, y_coords, field, iPVs)
         contourf(x_coords, y_coords, transpose(data), 15);
         colormap(cmap);
         colorbar;
+        caxis([cmin cmax]);
         xlabel('x, m');
         ylabel('y, m');
         title(sprintf('%s – %s', title_str, pv_labels{i}));

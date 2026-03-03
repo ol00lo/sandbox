@@ -23,11 +23,13 @@ function yz_slice(G, reports, nx, ny, nz, hy, x_coords, z_coords, field, iPVs)
         switch field
             case 's'
                 data = reshape(reports{step_idx}.s(cells_slice), [nx, nz]);
-                clim([0 1]);
+                cmin = 0;
+                cmax = 1;
                 title_str = 'Water Saturation';
                 cmap = readmatrix("map_saturation.txt");
             case 'p'
-                clim([90 110]);
+                cmin = 95;
+                cmax = 106;
                 data = reshape(reports{step_idx}.pressure(cells_slice)/barsa(), [nx, nz]);
                 title_str = 'Pressure [atm]';
                 cmap = readmatrix("map_pressure.txt");
@@ -40,6 +42,7 @@ function yz_slice(G, reports, nx, ny, nz, hy, x_coords, z_coords, field, iPVs)
         contourf(x, z, transpose(data), 20);
         colormap(cmap);
         colorbar;
+        caxis([cmin cmax])
         set(gca,'YDir','normal');
         xlabel('X [m]');
         ylabel('Z [m]');

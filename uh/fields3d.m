@@ -17,12 +17,14 @@ function fields3d(G, reports, Lx, Ly, hy, field, iPVs)
 
         switch field
             case 'p'
-                clim([95 110])
+                cmin = 95;
+                cmax = 107;
                 data = reports{step_idx}.pressure / barsa();
                 title_str = 'Pressure [atm]';
                 cmap = readmatrix("map_pressure.txt");
             case 's'
-                clim ([0 1])
+                cmin = 0;
+                cmax = 1;
                 data = reports{step_idx}.s(:,1);
                 title_str = 'Water saturation';
                 cmap = readmatrix("map_saturation.txt");
@@ -35,6 +37,7 @@ function fields3d(G, reports, Lx, Ly, hy, field, iPVs)
         plotCellData(G, data, indices3d);
         colormap(cmap);
         colorbar;
+        caxis([cmin cmax]);
         xlabel('X'); ylabel('Y'); zlabel('Z');
         view(-45,30);
 
